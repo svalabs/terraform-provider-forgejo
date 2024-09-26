@@ -16,11 +16,17 @@ import (
 )
 
 // Ensure the implementation satisfies the expected interfaces.
-var (
-	_ provider.Provider = &forgejoProvider{}
-)
+var _ provider.Provider = &forgejoProvider{}
 
-// forgejoProviderModel maps provider schema data to a Go type.
+// forgejoProvider defines the provider implementation.
+type forgejoProvider struct {
+	// version is set to the provider version on release, "dev" when the
+	// provider is built and ran locally, and "test" when running acceptance
+	// testing.
+	version string
+}
+
+// forgejoProviderModel describes the provider data model.
 type forgejoProviderModel struct {
 	Host     types.String `tfsdk:"host"`
 	Username types.String `tfsdk:"username"`
@@ -36,14 +42,6 @@ func New(version string) func() provider.Provider {
 	}
 }
 
-// forgejoProvider is the provider implementation.
-type forgejoProvider struct {
-	// version is set to the provider version on release, "dev" when the
-	// provider is built and ran locally, and "test" when running acceptance
-	// testing.
-	version string
-}
-
 // Metadata returns the provider type name.
 func (p *forgejoProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "forgejo"
@@ -55,14 +53,17 @@ func (p *forgejoProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
-				Optional: true,
+				Description: "",
+				Optional:    true,
 			},
 			"username": schema.StringAttribute{
-				Optional: true,
+				Description: "",
+				Optional:    true,
 			},
 			"password": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
+				Description: "",
+				Optional:    true,
+				Sensitive:   true,
 			},
 		},
 	}

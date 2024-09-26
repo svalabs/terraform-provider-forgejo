@@ -48,41 +48,41 @@ func (d *organizationDataSource) Metadata(_ context.Context, req datasource.Meta
 // Schema defines the schema for the data source.
 func (d *organizationDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Organization data source",
+		Description: "Organization data source",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "",
+				Computed:    true,
 			},
 			"name": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            false,
-				Required:            true,
+				Description: "",
+				Computed:    false,
+				Required:    true,
 			},
 			"full_name": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "",
+				Computed:    true,
 			},
 			"avatar_url": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "",
+				Computed:    true,
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "",
+				Computed:    true,
 			},
 			"website": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "",
+				Computed:    true,
 			},
 			"location": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "",
+				Computed:    true,
 			},
 			"visibility": schema.StringAttribute{
-				MarkdownDescription: "",
-				Computed:            true,
+				Description: "",
+				Computed:    true,
 			},
 		},
 	}
