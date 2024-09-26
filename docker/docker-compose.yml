@@ -1,0 +1,28 @@
+version: '3'
+
+volumes:
+  forgejo:
+  forgejo_db:
+
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:8.0  # source: https://codeberg.org/forgejo/-/packages/container/forgejo/versions
+    container_name: forgejo
+    restart: always
+    volumes:
+      - forgejo:/data
+    depends_on:
+      - forgejo_db
+    ports:
+      - '3000:3000'
+      - '10022:22'
+  forgejo_db:
+    image: mariadb:10.5
+    container_name: forgejo_db
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: always
+    volumes:
+      - forgejo_db:/var/lib/mysql
+    env_file:
+      - env.forgejo_db
+

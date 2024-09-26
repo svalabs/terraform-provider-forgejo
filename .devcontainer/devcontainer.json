@@ -1,0 +1,25 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "hashicorp.terraform",
+        "golang.go"
+      ]
+    }
+  },
+
+  "securityOpt": ["label=disable"],
+  "mounts": [],
+
+  "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/src,ro=false",
+  "workspaceFolder": "/src",
+
+  "runArgs": ["--net=host"],
+
+  "remoteEnv": {}
+}
