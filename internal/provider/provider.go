@@ -70,7 +70,7 @@ func (p *forgejoProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 }
 
 func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	tflog.Info(ctx, "Configuring Forgejo client")
+	tflog.Trace(ctx, "Configure provider - begin")
 
 	// Retrieve provider data from configuration
 	var config forgejoProviderModel
@@ -170,12 +170,11 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-	ctx = tflog.SetField(ctx, "forgejo_host", host)
-	ctx = tflog.SetField(ctx, "forgejo_username", username)
-	ctx = tflog.SetField(ctx, "forgejo_password", password)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "forgejo_password")
-
-	tflog.Debug(ctx, "Creating Forgejo client")
+	tflog.Info(ctx, "Create Forgejo client", map[string]any{
+		"forgejo_host":     host,
+		"forgejo_username": username,
+		"forgejo_password": "***",
+	})
 
 	// Create a new Forgejo client using the configuration values
 	client, err := forgejo.NewClient(host, forgejo.SetBasicAuth(username, password))
@@ -194,7 +193,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	resp.DataSourceData = client
 	resp.ResourceData = client
 
-	tflog.Info(ctx, "Configured Forgejo client", map[string]any{"success": true})
+	tflog.Trace(ctx, "Configure provider - end", map[string]any{"success": true})
 }
 
 // DataSources defines the data sources implemented in the provider.

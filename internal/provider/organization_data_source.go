@@ -111,6 +111,8 @@ func (d *organizationDataSource) Configure(_ context.Context, req datasource.Con
 
 // Read refreshes the Terraform state with the latest data.
 func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	tflog.Trace(ctx, "Read organization data source - begin")
+
 	var data organizationDataSourceModel
 
 	// Read Terraform configuration data into model
@@ -120,18 +122,12 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	// Write logs using tflog package
-	tflog.Trace(ctx, "get organization by name", map[string]interface{}{
-		"name": data.Name.ValueString(),
-	})
+	tflog.Info(ctx, "Get organization by name", map[string]any{"name": data.Name.ValueString()})
 
-	// Use forgejo.Client to get organization by name
+	// Use Forgejo client to get organization by name
 	o, r, err := d.client.GetOrg(data.Name.ValueString())
 	if err != nil {
-		// Log HTTP status
-		tflog.Error(ctx, "error", map[string]interface{}{
-			"status": r.Status,
-		})
+		tflog.Error(ctx, "Error", map[string]any{"status": r.Status})
 
 		msg := err.Error()
 		if r.StatusCode == 404 {
@@ -155,4 +151,6 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
+
+	tflog.Trace(ctx, "Read organization data source - end", map[string]any{"success": true})
 }
