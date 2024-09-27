@@ -129,11 +129,14 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{"status": r.Status})
 
-		msg := err.Error()
-		if r.StatusCode == 404 {
+		var msg string
+		switch r.StatusCode {
+		case 404:
 			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+		default:
+			msg = fmt.Sprintf("Unknow error %s.", err.Error())
 		}
-		resp.Diagnostics.AddError("Unable to read Forgejo organization", msg)
+		resp.Diagnostics.AddError("Unable to get organization by name", msg)
 
 		return
 	}
