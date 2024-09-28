@@ -34,5 +34,4 @@ RUN dnf -y update && \
     make \
     terraform && \
   dnf clean all && \
-  rm -rf /usr/local/go && \
   curl -L https://go.dev/dl/go${goversion}.linux-amd64.tar.gz | tar -C /usr/local -xzf -
