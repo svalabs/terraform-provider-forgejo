@@ -7,9 +7,7 @@ terraform {
 }
 
 provider "forgejo" {
-  host     = "http://localhost:3000"
-  username = "achim"
-  password = "password"
+  host = "http://localhost:3000"
 }
 
 data "forgejo_organization" "this" {

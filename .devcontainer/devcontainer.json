@@ -1,4 +1,6 @@
 {
+  "name": "terraform-provider-forgejo",
+
   "build": {
     "dockerfile": "Dockerfile"
   },
@@ -21,5 +23,9 @@
 
   "runArgs": ["--net=host"],
 
-  "remoteEnv": {}
+  "remoteEnv": {
+    // "FORGEJO_USERNAME": "${localEnv:FORGEJO_USERNAME}",
+    // "FORGEJO_PASSWORD": "${localEnv:FORGEJO_PASSWORD}",
+    "FORGEJO_API_TOKEN": "${localEnv:FORGEJO_API_TOKEN}"
+  }
 }
