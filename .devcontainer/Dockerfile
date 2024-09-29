@@ -34,4 +34,5 @@ RUN dnf -y update && \
     make \
     terraform && \
   dnf clean all && \
-  curl -L https://go.dev/dl/go${goversion}.linux-amd64.tar.gz | tar -C /usr/local -xzf -
+  curl --location https://go.dev/dl/go${goversion}.linux-amd64.tar.gz | tar -C /usr/local -xzf - && \
+  curl --location https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin
