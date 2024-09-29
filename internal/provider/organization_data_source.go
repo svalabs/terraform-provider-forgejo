@@ -142,7 +142,7 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(int64(o.ID))
+	data.ID = types.Int64Value(o.ID)
 	data.Name = types.StringValue(o.UserName)
 	data.FullName = types.StringValue(o.FullName)
 	data.AvatarURL = types.StringValue(o.AvatarURL)
