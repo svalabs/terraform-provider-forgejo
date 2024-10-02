@@ -1,9 +1,13 @@
 package provider
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func TestAccOrganizationDataSource(t *testing.T) {
@@ -14,17 +18,48 @@ func TestAccOrganizationDataSource(t *testing.T) {
 			// Read testing
 			{
 				Config: providerConfig + `data "forgejo_organization" "test" { name = "test1" }`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify organization to ensure all attributes are set
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "avatar_url", "http://localhost:3000/avatars/5a105e8b9d40e1329780d62ea2265d8a"),
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "description", ""),
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "full_name", ""),
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "id", "2"),
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "location", ""),
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "name", "test1"),
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "visibility", "public"),
-					resource.TestCheckResourceAttr("data.forgejo_organization.test", "website", ""),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("avatar_url"),
+						knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$")),
+					),
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("description"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("full_name"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("id"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("location"),
+						knownvalue.NotNull(),
+					),
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("name"),
+						knownvalue.StringExact("test1"),
+					),
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("visibility"),
+						knownvalue.StringRegexp(regexp.MustCompile("^(public)|(limited)|(private)$")),
+					),
+					statecheck.ExpectKnownValue(
+						"data.forgejo_organization.test",
+						tfjsonpath.New("website"),
+						knownvalue.NotNull(),
+					),
+				},
 			},
 		},
 	})
