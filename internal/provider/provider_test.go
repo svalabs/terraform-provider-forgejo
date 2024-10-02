@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package provider_test
 
 import (
 	"os"
@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+
+	"terraform-provider-forgejo/internal/provider"
 )
 
 const (
@@ -16,10 +18,7 @@ const (
 	// test configuration so the Forgejo client is properly configured.
 	// It is also possible to use the FORGEJO_ environment variables instead,
 	// such as updating the Makefile and running the testing through that tool.
-	providerConfig = `
-provider "forgejo" {
-  host     = "http://localhost:3000"
-}
+	providerConfig = `provider "forgejo" { host = "http://localhost:3000" }
 `
 )
 
@@ -28,7 +27,7 @@ provider "forgejo" {
 // CLI command executed to create a provider server to which the CLI can
 // reattach.
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"forgejo": providerserver.NewProtocol6WithError(New("test")()),
+	"forgejo": providerserver.NewProtocol6WithError(provider.New("test")()),
 }
 
 func testAccPreCheck(t *testing.T) {
