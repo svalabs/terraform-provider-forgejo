@@ -155,7 +155,13 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 		Visibility:  forgejo.VisibleType(data.Visibility.ValueString()),
 	}
 
-	// TODO: opts.validate()
+	// Validate API request body
+	err := opts.Validate()
+	if err != nil {
+		resp.Diagnostics.AddError("Input Validation Error", fmt.Sprintf("Error '%s'.", err))
+
+		return
+	}
 
 	// Use Forgejo client to create new organization
 	o, re, err := r.client.CreateOrg(opts)
@@ -273,7 +279,14 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		Visibility:  forgejo.VisibleType(data.Visibility.ValueString()),
 	}
 
-	// TODO: opts.validate()
+	// Validate API request body
+	err := opts.Validate()
+	if err != nil {
+
+		resp.Diagnostics.AddError("Input Validation Error", fmt.Sprintf("Error '%s'.", err))
+
+		return
+	}
 
 	// Use Forgejo client to update existing organization
 	re, err := r.client.EditOrg(data.Name.ValueString(), opts)
