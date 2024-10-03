@@ -58,11 +58,11 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "",
+				Description: "Organization name",
 				Required:    true,
 			},
 			"full_name": schema.StringAttribute{
-				Description: "",
+				Description: "Organization full name",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
@@ -76,25 +76,25 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"description": schema.StringAttribute{
-				Description: "",
+				Description: "Description",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"website": schema.StringAttribute{
-				Description: "",
+				Description: "Website",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"location": schema.StringAttribute{
-				Description: "",
+				Description: "Location",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"visibility": schema.StringAttribute{
-				Description: "",
+				Description: "Visibility",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString("public"),

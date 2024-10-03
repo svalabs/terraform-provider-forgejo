@@ -51,12 +51,11 @@ func (d *organizationDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:    true,
 			},
 			"name": schema.StringAttribute{
-				Description: "",
-				Computed:    false,
+				Description: "Organization name",
 				Required:    true,
 			},
 			"full_name": schema.StringAttribute{
-				Description: "",
+				Description: "Organization full name",
 				Computed:    true,
 			},
 			"avatar_url": schema.StringAttribute{
@@ -64,19 +63,19 @@ func (d *organizationDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "",
+				Description: "Description",
 				Computed:    true,
 			},
 			"website": schema.StringAttribute{
-				Description: "",
+				Description: "Website",
 				Computed:    true,
 			},
 			"location": schema.StringAttribute{
-				Description: "",
+				Description: "Location",
 				Computed:    true,
 			},
 			"visibility": schema.StringAttribute{
-				Description: "",
+				Description: "Visibility",
 				Computed:    true,
 			},
 		},
