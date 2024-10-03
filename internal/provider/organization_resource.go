@@ -6,6 +6,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -49,35 +53,51 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 			"id": schema.Int64Attribute{
 				Description: "",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Description: "",
-				Computed:    false,
 				Required:    true,
 			},
 			"full_name": schema.StringAttribute{
 				Description: "",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"avatar_url": schema.StringAttribute{
 				Description: "",
+				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Description: "",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"website": schema.StringAttribute{
 				Description: "",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"location": schema.StringAttribute{
 				Description: "",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"visibility": schema.StringAttribute{
 				Description: "",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("public"),
 			},
 		},
 	}
@@ -135,6 +155,8 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 		Visibility:  forgejo.VisibleType(data.Visibility.ValueString()),
 	}
 
+	// TODO: opts.validate()
+
 	// Use Forgejo client to create new organization
 	o, re, err := r.client.CreateOrg(opts)
 	if err != nil {
@@ -173,14 +195,170 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 
 // Read refreshes the Terraform state with the latest data.
 func (r *organizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	tflog.Trace(ctx, "Read organization resource - begin")
+
+	var data organizationDataSourceModel
+
+	// Read Terraform configuration data into model
+	diags := req.State.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Info(ctx, "Get organization by name", map[string]any{"name": data.Name.ValueString()})
+
+	// Use Forgejo client to get organization by name
+	o, re, err := r.client.GetOrg(data.Name.ValueString())
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+
+		var msg string
+		switch re.StatusCode {
+		case 404:
+			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+		default:
+			msg = fmt.Sprintf("Unknown error '%s'.", err)
+		}
+		resp.Diagnostics.AddError("Unable to get organization by name", msg)
+
+		return
+	}
+
+	// Map response body to model
+	data.ID = types.Int64Value(o.ID)
+	data.Name = types.StringValue(o.UserName)
+	data.FullName = types.StringValue(o.FullName)
+	data.AvatarURL = types.StringValue(o.AvatarURL)
+	data.Description = types.StringValue(o.Description)
+	data.Website = types.StringValue(o.Website)
+	data.Location = types.StringValue(o.Location)
+	data.Visibility = types.StringValue(o.Visibility)
+
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+
+	tflog.Trace(ctx, "Read organization resource - end", map[string]any{"success": true})
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	tflog.Trace(ctx, "Update organization resource - begin")
+
+	var data organizationResourceModel
+
+	// Read Terraform plan data into model
+	diags := req.Plan.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Info(ctx, "Update organization", map[string]any{
+		"name":        data.Name.ValueString(),
+		"full_name":   data.FullName.ValueString(),
+		"description": data.Description.ValueString(),
+		"website":     data.Website.ValueString(),
+		"location":    data.Location.ValueString(),
+		"visibility":  data.Visibility.ValueString(),
+	})
+
+	// Generate API request body from plan
+	opts := forgejo.EditOrgOption{
+		FullName:    data.FullName.ValueString(),
+		Description: data.Description.ValueString(),
+		Website:     data.Website.ValueString(),
+		Location:    data.Location.ValueString(),
+		Visibility:  forgejo.VisibleType(data.Visibility.ValueString()),
+	}
+
+	// TODO: opts.validate()
+
+	// Use Forgejo client to update existing organization
+	re, err := r.client.EditOrg(data.Name.ValueString(), opts)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+
+		var msg string
+		switch re.StatusCode {
+		case 404:
+			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+		default:
+			msg = fmt.Sprintf("Unknown error '%s'.", err)
+		}
+		resp.Diagnostics.AddError("Unable to update organization", msg)
+
+		return
+	}
+
+	// Use Forgejo client to fetch updated organization
+	o, re, err := r.client.GetOrg(data.Name.ValueString())
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+
+		var msg string
+		switch re.StatusCode {
+		case 404:
+			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+		default:
+			msg = fmt.Sprintf("Unknown error '%s'.", err)
+		}
+		resp.Diagnostics.AddError("Unable to get organization by name", msg)
+
+		return
+	}
+
+	// Map response body to model
+	data.ID = types.Int64Value(o.ID)
+	data.Name = types.StringValue(o.UserName)
+	data.FullName = types.StringValue(o.FullName)
+	data.AvatarURL = types.StringValue(o.AvatarURL)
+	data.Description = types.StringValue(o.Description)
+	data.Website = types.StringValue(o.Website)
+	data.Location = types.StringValue(o.Location)
+	data.Visibility = types.StringValue(o.Visibility)
+
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+
+	tflog.Trace(ctx, "Update organization resource - end", map[string]any{"success": true})
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	tflog.Trace(ctx, "Delete organization resource - begin")
+
+	var data organizationResourceModel
+
+	// Read Terraform prior state data into the model
+	diags := req.State.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Info(ctx, "Delete organization", map[string]any{"name": data.Name.ValueString()})
+
+	// Use Forgejo client to delete existing organization
+	re, err := r.client.DeleteOrg(data.Name.ValueString())
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+
+		var msg string
+		switch re.StatusCode {
+		case 404:
+			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+		default:
+			msg = fmt.Sprintf("Unknown error '%s'.", err)
+		}
+		resp.Diagnostics.AddError("Unable to delete organization", msg)
+
+		return
+	}
+
+	tflog.Trace(ctx, "Delete organization resource - end", map[string]any{"success": true})
 }
 
 // NewOrganizationResource is a helper function to simplify the provider implementation.

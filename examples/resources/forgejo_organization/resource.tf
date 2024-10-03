@@ -11,7 +11,9 @@ provider "forgejo" {
 }
 
 resource "forgejo_organization" "this" {
-  name = "tftest"
+  name        = "tftest"
+  full_name   = "Terraform Test Org"
+  description = "Purely for testing..."
 }
 
 output "debug" {
