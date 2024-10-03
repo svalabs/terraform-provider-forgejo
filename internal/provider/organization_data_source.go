@@ -18,11 +18,6 @@ var (
 	_ datasource.DataSourceWithConfigure = &organizationDataSource{}
 )
 
-// NewOrganizationDataSource is a helper function to simplify the provider implementation.
-func NewOrganizationDataSource() datasource.DataSource {
-	return &organizationDataSource{}
-}
-
 // organizationDataSource is the data source implementation.
 type organizationDataSource struct {
 	client *forgejo.Client
@@ -90,8 +85,7 @@ func (d *organizationDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 
 // Configure adds the provider configured client to the data source.
 func (d *organizationDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Add a nil check when handling ProviderData because Terraform
-	// sets that data after it calls the ConfigureProvider RPC.
+	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
 	}
@@ -134,7 +128,7 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		case 404:
 			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
 		default:
-			msg = fmt.Sprintf("Unknow error %s.", err.Error())
+			msg = fmt.Sprintf("Unknown error '%s'.", err)
 		}
 		resp.Diagnostics.AddError("Unable to get organization by name", msg)
 
@@ -156,4 +150,9 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	resp.Diagnostics.Append(diags...)
 
 	tflog.Trace(ctx, "Read organization data source - end", map[string]any{"success": true})
+}
+
+// NewOrganizationDataSource is a helper function to simplify the provider implementation.
+func NewOrganizationDataSource() datasource.DataSource {
+	return &organizationDataSource{}
 }
