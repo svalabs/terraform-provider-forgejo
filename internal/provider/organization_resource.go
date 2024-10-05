@@ -51,24 +51,24 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Description: "",
+				Description: "Numeric identifier of the organization.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Organization name",
+				Description: "Name of the organization.",
 				Required:    true,
 			},
 			"full_name": schema.StringAttribute{
-				Description: "Organization full name",
+				Description: "Full name of the organization.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"avatar_url": schema.StringAttribute{
-				Description: "",
+				Description: "Avatar URI of the organization",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
@@ -76,25 +76,25 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"description": schema.StringAttribute{
-				Description: "Description",
+				Description: "Description of the organization.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"website": schema.StringAttribute{
-				Description: "Website",
+				Description: "Website of the organization.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"location": schema.StringAttribute{
-				Description: "Location",
+				Description: "Location of the organization.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"visibility": schema.StringAttribute{
-				Description: "Visibility",
+				Description: "Visibility of the organization. Possible values are 'public' (default), 'limited', or 'private'.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString("public"),

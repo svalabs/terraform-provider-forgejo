@@ -47,35 +47,35 @@ func (d *organizationDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Description: "",
+				Description: "Numeric identifier of the organization.",
 				Computed:    true,
 			},
 			"name": schema.StringAttribute{
-				Description: "Organization name",
+				Description: "Name of the organization.",
 				Required:    true,
 			},
 			"full_name": schema.StringAttribute{
-				Description: "Organization full name",
+				Description: "Full name of the organization.",
 				Computed:    true,
 			},
 			"avatar_url": schema.StringAttribute{
-				Description: "",
+				Description: "Avatar URI of the organization",
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{
-				Description: "Description",
+				Description: "Description of the organization.",
 				Computed:    true,
 			},
 			"website": schema.StringAttribute{
-				Description: "Website",
+				Description: "Website of the organization.",
 				Computed:    true,
 			},
 			"location": schema.StringAttribute{
-				Description: "Location",
+				Description: "Location of the organization.",
 				Computed:    true,
 			},
 			"visibility": schema.StringAttribute{
-				Description: "Visibility",
+				Description: "Visibility of the organization.",
 				Computed:    true,
 			},
 		},

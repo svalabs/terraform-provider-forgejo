@@ -54,20 +54,20 @@ func (p *forgejoProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
-				Description: "",
+				Description: "URI for Forgejo API. May also be provided via FORGEJO_HOST environment variable.",
 				Optional:    true,
 			},
 			"username": schema.StringAttribute{
-				Description: "",
+				Description: "Username for Forgejo API. May also be provided via FORGEJO_USERNAME environment variable.",
 				Optional:    true,
 			},
 			"password": schema.StringAttribute{
-				Description: "",
+				Description: "Password for Forgejo API. May also be provided via FORGEJO_PASSWORD environment variable.",
 				Optional:    true,
 				Sensitive:   true,
 			},
 			"api_token": schema.StringAttribute{
-				Description: "",
+				Description: "Token for Forgejo API. May also be provided via FORGEJO_PASSWORD environment variable.",
 				Optional:    true,
 				Sensitive:   true,
 			},
@@ -230,6 +230,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 				"If the error is not clear, please contact the provider developers.\n\n"+
 				"Forgejo Client Error: "+err.Error(),
 		)
+
 		return
 	}
 
