@@ -158,7 +158,7 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	// Validate API request body
 	err := opts.Validate()
 	if err != nil {
-		resp.Diagnostics.AddError("Input Validation Error", fmt.Sprintf("Error '%s'.", err))
+		resp.Diagnostics.AddError("Input validation error", err.Error())
 
 		return
 	}
@@ -171,11 +171,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 		var msg string
 		switch re.StatusCode {
 		case 403:
-			msg = fmt.Sprintf("Permission error '%s'.", err)
+			msg = fmt.Sprintf("Organization with name %s forbidden: %s", data.Name.String(), err)
 		case 422:
-			msg = fmt.Sprintf("Input validation error '%s'.", err)
+			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:
-			msg = fmt.Sprintf("Unknown error '%s'.", err)
+			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to create organization", msg)
 
@@ -222,9 +222,9 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 		var msg string
 		switch re.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
-			msg = fmt.Sprintf("Unknown error '%s'.", err)
+			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to get organization by name", msg)
 
@@ -283,7 +283,7 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	err := opts.Validate()
 	if err != nil {
 
-		resp.Diagnostics.AddError("Input Validation Error", fmt.Sprintf("Error '%s'.", err))
+		resp.Diagnostics.AddError("Input validation rrror", err.Error())
 
 		return
 	}
@@ -296,9 +296,9 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		var msg string
 		switch re.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
-			msg = fmt.Sprintf("Unknown error '%s'.", err)
+			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to update organization", msg)
 
@@ -313,9 +313,9 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		var msg string
 		switch re.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
-			msg = fmt.Sprintf("Unknown error '%s'.", err)
+			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to get organization by name", msg)
 
@@ -362,9 +362,9 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 		var msg string
 		switch re.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
-			msg = fmt.Sprintf("Unknown error '%s'.", err)
+			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to delete organization", msg)
 

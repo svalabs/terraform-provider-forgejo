@@ -125,9 +125,9 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		var msg string
 		switch r.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found.", data.Name.String())
+			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
-			msg = fmt.Sprintf("Unknown error '%s'.", err)
+			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to get organization by name", msg)
 
