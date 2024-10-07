@@ -1,6 +1,6 @@
 module terraform-provider-forgejo
 
-go 1.23.1
+go 1.23
 
 require (
 	codeberg.org/mvdkleijn/forgejo-sdk/forgejo v1.1.1
