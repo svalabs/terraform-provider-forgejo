@@ -3,12 +3,12 @@
 page_title: "forgejo_organization Resource - forgejo"
 subcategory: ""
 description: |-
-  Organization resource
+  Forgejo organization resource
 ---
 
 # forgejo_organization (Resource)
 
-Organization resource
+Forgejo organization resource
 
 ## Example Usage
 

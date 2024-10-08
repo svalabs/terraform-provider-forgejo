@@ -3,12 +3,12 @@
 page_title: "forgejo Provider"
 subcategory: ""
 description: |-
-  
+  Terraform provider for Forgejo — self-hosted lightweight software forge
 ---
 
 # forgejo Provider
 
-
+Terraform provider for Forgejo — self-hosted lightweight software forge
 
 ## Example Usage
 
