@@ -34,15 +34,6 @@ type forgejoProviderModel struct {
 	ApiToken types.String `tfsdk:"api_token"`
 }
 
-// New is a helper function to simplify provider server and testing implementation.
-func New(version string) func() provider.Provider {
-	return func() provider.Provider {
-		return &forgejoProvider{
-			version: version,
-		}
-	}
-}
-
 // Metadata returns the provider type name.
 func (p *forgejoProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "forgejo"
@@ -239,7 +230,9 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	resp.DataSourceData = client
 	resp.ResourceData = client
 
-	tflog.Trace(ctx, "Configure provider - end", map[string]any{"success": true})
+	tflog.Trace(ctx, "Configure provider - end", map[string]any{
+		"success": true,
+	})
 }
 
 // DataSources defines the data sources implemented in the provider.
@@ -253,5 +246,14 @@ func (p *forgejoProvider) DataSources(_ context.Context) []func() datasource.Dat
 func (p *forgejoProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewOrganizationResource,
+	}
+}
+
+// New is a helper function to simplify provider server and testing implementation.
+func New(version string) func() provider.Provider {
+	return func() provider.Provider {
+		return &forgejoProvider{
+			version: version,
+		}
 	}
 }

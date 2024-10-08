@@ -22,7 +22,9 @@ func TestAccOrganizationDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_organization.test",
 						tfjsonpath.New("avatar_url"),
-						knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$")),
+						knownvalue.StringRegexp(
+							regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"),
+						),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_organization.test",
@@ -52,7 +54,9 @@ func TestAccOrganizationDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_organization.test",
 						tfjsonpath.New("visibility"),
-						knownvalue.StringRegexp(regexp.MustCompile("^(public)|(limited)|(private)$")),
+						knownvalue.StringRegexp(
+							regexp.MustCompile("^(public)|(limited)|(private)$"),
+						),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_organization.test",

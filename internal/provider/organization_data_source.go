@@ -93,7 +93,10 @@ func (d *organizationDataSource) Configure(_ context.Context, req datasource.Con
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *forgejo.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf(
+				"Expected *forgejo.Client, got: %T. Please report this issue to the provider developers.",
+				req.ProviderData,
+			),
 		)
 
 		return
@@ -115,12 +118,16 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	tflog.Info(ctx, "Get organization by name", map[string]any{"name": data.Name.ValueString()})
+	tflog.Info(ctx, "Get organization by name", map[string]any{
+		"name": data.Name.ValueString(),
+	})
 
 	// Use Forgejo client to get organization by name
 	o, r, err := d.client.GetOrg(data.Name.ValueString())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{"status": r.Status})
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": r.Status,
+		})
 
 		var msg string
 		switch r.StatusCode {
@@ -148,7 +155,9 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 
-	tflog.Trace(ctx, "Read organization data source - end", map[string]any{"success": true})
+	tflog.Trace(ctx, "Read organization data source - end", map[string]any{
+		"success": true,
+	})
 }
 
 // NewOrganizationDataSource is a helper function to simplify the provider implementation.

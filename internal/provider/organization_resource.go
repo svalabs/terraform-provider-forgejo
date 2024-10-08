@@ -114,7 +114,10 @@ func (r *organizationResource) Configure(_ context.Context, req resource.Configu
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *forgejo.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf(
+				"Expected *forgejo.Client, got: %T. Please report this issue to the provider developers.",
+				req.ProviderData,
+			),
 		)
 
 		return
@@ -166,7 +169,9 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	// Use Forgejo client to create new organization
 	o, re, err := r.client.CreateOrg(opts)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": re.Status,
+		})
 
 		var msg string
 		switch re.StatusCode {
@@ -196,7 +201,9 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 
-	tflog.Trace(ctx, "Create organization resource - end", map[string]any{"success": true})
+	tflog.Trace(ctx, "Create organization resource - end", map[string]any{
+		"success": true,
+	})
 }
 
 // Read refreshes the Terraform state with the latest data.
@@ -212,12 +219,16 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	tflog.Info(ctx, "Get organization by name", map[string]any{"name": data.Name.ValueString()})
+	tflog.Info(ctx, "Get organization by name", map[string]any{
+		"name": data.Name.ValueString(),
+	})
 
 	// Use Forgejo client to get organization by name
 	o, re, err := r.client.GetOrg(data.Name.ValueString())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": re.Status,
+		})
 
 		var msg string
 		switch re.StatusCode {
@@ -245,7 +256,9 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 
-	tflog.Trace(ctx, "Read organization resource - end", map[string]any{"success": true})
+	tflog.Trace(ctx, "Read organization resource - end", map[string]any{
+		"success": true,
+	})
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -291,7 +304,9 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	// Use Forgejo client to update existing organization
 	re, err := r.client.EditOrg(data.Name.ValueString(), opts)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": re.Status,
+		})
 
 		var msg string
 		switch re.StatusCode {
@@ -308,7 +323,9 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	// Use Forgejo client to fetch updated organization
 	o, re, err := r.client.GetOrg(data.Name.ValueString())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": re.Status,
+		})
 
 		var msg string
 		switch re.StatusCode {
@@ -336,7 +353,9 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 
-	tflog.Trace(ctx, "Update organization resource - end", map[string]any{"success": true})
+	tflog.Trace(ctx, "Update organization resource - end", map[string]any{
+		"success": true,
+	})
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -352,12 +371,16 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	tflog.Info(ctx, "Delete organization", map[string]any{"name": data.Name.ValueString()})
+	tflog.Info(ctx, "Delete organization", map[string]any{
+		"name": data.Name.ValueString(),
+	})
 
 	// Use Forgejo client to delete existing organization
 	re, err := r.client.DeleteOrg(data.Name.ValueString())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{"status": re.Status})
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": re.Status,
+		})
 
 		var msg string
 		switch re.StatusCode {
@@ -371,7 +394,9 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	tflog.Trace(ctx, "Delete organization resource - end", map[string]any{"success": true})
+	tflog.Trace(ctx, "Delete organization resource - end", map[string]any{
+		"success": true,
+	})
 }
 
 // NewOrganizationResource is a helper function to simplify the provider implementation.
