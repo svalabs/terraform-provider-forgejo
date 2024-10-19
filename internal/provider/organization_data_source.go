@@ -107,7 +107,7 @@ func (d *organizationDataSource) Configure(_ context.Context, req datasource.Con
 
 // Read refreshes the Terraform state with the latest data.
 func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	tflog.Trace(ctx, "Read organization data source - begin")
+	defer un(trace(ctx, "Read organization data source"))
 
 	var data organizationDataSourceModel
 
@@ -154,10 +154,6 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
-
-	tflog.Trace(ctx, "Read organization data source - end", map[string]any{
-		"success": true,
-	})
 }
 
 // NewOrganizationDataSource is a helper function to simplify the provider implementation.

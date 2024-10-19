@@ -128,7 +128,7 @@ func (r *organizationResource) Configure(_ context.Context, req resource.Configu
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *organizationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Trace(ctx, "Create organization resource - begin")
+	defer un(trace(ctx, "Create organization resource"))
 
 	var data organizationResourceModel
 
@@ -200,15 +200,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
-
-	tflog.Trace(ctx, "Create organization resource - end", map[string]any{
-		"success": true,
-	})
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (r *organizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Trace(ctx, "Read organization resource - begin")
+	defer un(trace(ctx, "Read organization resource"))
 
 	var data organizationDataSourceModel
 
@@ -255,15 +251,11 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
-
-	tflog.Trace(ctx, "Read organization resource - end", map[string]any{
-		"success": true,
-	})
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Trace(ctx, "Update organization resource - begin")
+	defer un(trace(ctx, "Update organization resource"))
 
 	var data organizationResourceModel
 
@@ -352,15 +344,11 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
-
-	tflog.Trace(ctx, "Update organization resource - end", map[string]any{
-		"success": true,
-	})
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	tflog.Trace(ctx, "Delete organization resource - begin")
+	defer un(trace(ctx, "Delete organization resource"))
 
 	var data organizationResourceModel
 
@@ -393,10 +381,6 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 
 		return
 	}
-
-	tflog.Trace(ctx, "Delete organization resource - end", map[string]any{
-		"success": true,
-	})
 }
 
 // NewOrganizationResource is a helper function to simplify the provider implementation.

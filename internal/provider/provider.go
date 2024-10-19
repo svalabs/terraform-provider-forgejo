@@ -69,7 +69,7 @@ func (p *forgejoProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 }
 
 func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	tflog.Trace(ctx, "Configure provider - begin")
+	defer un(trace(ctx, "Configure provider"))
 
 	// Retrieve provider data from configuration
 	var config forgejoProviderModel
@@ -231,10 +231,6 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	// type Configure methods.
 	resp.DataSourceData = client
 	resp.ResourceData = client
-
-	tflog.Trace(ctx, "Configure provider - end", map[string]any{
-		"success": true,
-	})
 }
 
 // DataSources defines the data sources implemented in the provider.
@@ -258,4 +254,13 @@ func New(version string) func() provider.Provider {
 			version: version,
 		}
 	}
+}
+
+// Internal helper functions for tracing function execution.
+func trace(ctx context.Context, s string) (context.Context, string) {
+	tflog.Trace(ctx, s+" - begin")
+	return ctx, s
+}
+func un(ctx context.Context, s string) {
+	tflog.Trace(ctx, s+" - end")
 }
