@@ -287,8 +287,7 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	// Validate API request body
 	err := opts.Validate()
 	if err != nil {
-
-		resp.Diagnostics.AddError("Input validation rrror", err.Error())
+		resp.Diagnostics.AddError("Input validation error", err.Error())
 
 		return
 	}
