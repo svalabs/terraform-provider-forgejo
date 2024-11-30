@@ -237,6 +237,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 func (p *forgejoProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewOrganizationDataSource,
+		NewRepositoryDataSource,
 	}
 }
 

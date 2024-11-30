@@ -24,6 +24,7 @@ type organizationDataSource struct {
 }
 
 // organizationDataSourceModel maps the data source schema data.
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Organization
 type organizationDataSourceModel struct {
 	ID          types.Int64  `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
@@ -132,7 +133,11 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		var msg string
 		switch r.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
+			msg = fmt.Sprintf(
+				"Organization with name %s not found: %s",
+				data.Name.String(),
+				err,
+			)
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
