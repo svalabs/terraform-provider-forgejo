@@ -60,7 +60,7 @@ func (d *organizationDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:    true,
 			},
 			"avatar_url": schema.StringAttribute{
-				Description: "Avatar URI of the organization",
+				Description: "Avatar URL of the organization.",
 				Computed:    true,
 			},
 			"description": schema.StringAttribute{

@@ -28,6 +28,7 @@ type organizationResource struct {
 }
 
 // organizationResourceModel maps the resource schema data.
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Organization
 type organizationResourceModel struct {
 	ID          types.Int64  `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
@@ -68,7 +69,7 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				Default:     stringdefault.StaticString(""),
 			},
 			"avatar_url": schema.StringAttribute{
-				Description: "Avatar URI of the organization",
+				Description: "Avatar URL of the organization.",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{

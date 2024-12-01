@@ -175,7 +175,7 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 						Computed:    true,
 					},
 					"login": schema.StringAttribute{
-						Description: "User name of the user.",
+						Description: "Name of the user.",
 						Required:    true,
 					},
 					"login_name": schema.StringAttribute{
@@ -297,15 +297,15 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			"permissions": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"admin": schema.BoolAttribute{
-						Description: "",
+						Description: "Allowed to administer?",
 						Computed:    true,
 					},
 					"push": schema.BoolAttribute{
-						Description: "",
+						Description: "Allowed to push?",
 						Computed:    true,
 					},
 					"pull": schema.BoolAttribute{
-						Description: "",
+						Description: "Allowed to pull?",
 						Computed:    true,
 					},
 				},
@@ -407,23 +407,23 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Computed:    true,
 			},
 			"avatar_url": schema.StringAttribute{
-				Description: "",
+				Description: "Avatar URL of the repository.",
 				Computed:    true,
 			},
 			"internal": schema.BoolAttribute{
-				Description: "",
+				Description: "Is the repository internal?",
 				Computed:    true,
 			},
 			"mirror_interval": schema.StringAttribute{
-				Description: "",
+				Description: "Mirror interval of the repository.",
 				Computed:    true,
 			},
 			"mirror_updated": schema.StringAttribute{
-				Description: "",
+				Description: "Time at which the repository mirror was updated.",
 				Computed:    true,
 			},
 			"default_merge_style": schema.StringAttribute{
-				Description: "",
+				Description: "Default merge style of the repository.",
 				Computed:    true,
 			},
 		},
