@@ -43,7 +43,7 @@ output "debug" {
 
 ### Read-Only
 
-- `avatar_url` (String) Avatar URI of the organization
+- `avatar_url` (String) Avatar URL of the organization.
 - `description` (String) Description of the organization.
 - `full_name` (String) Full name of the organization.
 - `id` (Number) Numeric identifier of the organization.

@@ -51,7 +51,7 @@ output "debug" {
 
 ### Optional
 
-- `avatar_url` (String) Avatar URI of the organization
+- `avatar_url` (String) Avatar URL of the organization.
 - `description` (String) Description of the organization.
 - `full_name` (String) Full name of the organization.
 - `location` (String) Location of the organization.
