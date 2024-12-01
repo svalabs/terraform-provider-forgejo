@@ -17,7 +17,10 @@ func TestAccOrganizationDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: providerConfig + `data "forgejo_organization" "test" { name = "test1" }`,
+				Config: providerConfig + `
+data "forgejo_organization" "test" {
+  name = "test1"
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"data.forgejo_organization.test",
