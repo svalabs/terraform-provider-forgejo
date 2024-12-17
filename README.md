@@ -13,6 +13,7 @@ Resources:
 Data Sources:
 
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
+- `forgejo_repository` ([documentation](docs/data-sources/repository.md))
 
 ### Directory Layout
 
@@ -81,6 +82,13 @@ resource "forgejo_organization" "example" {
   website     = "https://forgejo.org/"
   location    = "Mêlée Island"
   visibility  = "private"
+}
+
+data "forgejo_repository" "example" {
+  owner = {
+    login = "user"
+  }
+  name = "existing_repo"
 }
 ```
 
