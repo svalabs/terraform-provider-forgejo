@@ -599,8 +599,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 		var msg string
 		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf("Repository with name %s forbidden: %s", data.Name.String(), err)
+		case 409:
+			msg = fmt.Sprintf("Repository with name %s already exists: %s", data.Name.String(), err)
 		case 422:
 			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:
@@ -1134,6 +1134,13 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 		var msg string
 		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s forbidden: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
 		case 404:
 			msg = fmt.Sprintf(
 				"Repository with owner %s and name %s not found: %s",
