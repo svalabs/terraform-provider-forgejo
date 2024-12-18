@@ -568,20 +568,12 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// Use Forgejo client to check if owner is org or user
-	ownerIsOrg := false
-	_, _, err = r.client.GetOrg(owner.UserName.ValueString())
-	if err == nil {
-		// Owner is org
-		ownerIsOrg = true
-	}
-
 	var (
 		rep *forgejo.Repository
 		res *forgejo.Response
 	)
 
-	switch ownerIsOrg {
+	switch owner.UserName.ValueString() != "" {
 	case true:
 		// Use Forgejo client to create new org repository
 		rep, res, err = r.client.CreateOrgRepo(
