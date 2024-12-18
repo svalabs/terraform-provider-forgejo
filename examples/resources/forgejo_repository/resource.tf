@@ -16,9 +16,14 @@ resource "forgejo_repository" "user_defaults" {
 resource "forgejo_repository" "user_non_defaults" {
   name        = "user_tftest_non_defaults"
   description = "Terraform Test Repo owned by user with non-default attributes"
-  private     = true
-  template    = false
-  auto_init   = true
+  # website        = "http://localhost:3000"
+  private        = true
+  template       = true
+  default_branch = "custom"
+  issue_labels   = "Default"
+  auto_init      = true
+  readme         = "Default"
+  trust_model    = "custom"
 }
 
 resource "forgejo_repository" "org_defaults" {
@@ -33,15 +38,19 @@ resource "forgejo_repository" "org_non_defaults" {
   }
   name        = "org_tftest_non_defaults"
   description = "Terraform Test Repo owned by org with non-default attributes"
-  private     = true
-  template    = false
-  auto_init   = true
+  # website        = "http://localhost:3000"
+  private        = true
+  template       = true
+  default_branch = "custom"
+  issue_labels   = "Default"
+  auto_init      = true
+  readme         = "Default"
+  trust_model    = "custom"
 }
 
 output "user_debug_defaults" {
   value = forgejo_repository.user_defaults
 }
-
 output "user_debug_non_defaults" {
   value = forgejo_repository.user_non_defaults
 }
@@ -49,7 +58,6 @@ output "user_debug_non_defaults" {
 output "org_debug_defaults" {
   value = forgejo_repository.org_defaults
 }
-
 output "org_debug_non_defaults" {
   value = forgejo_repository.org_non_defaults
 }

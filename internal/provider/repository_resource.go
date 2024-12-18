@@ -8,7 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -119,6 +125,13 @@ func (m repositoryResourcePermissions) AttributeTypes() map[string]attr.Type {
 		"pull":  types.BoolType,
 	}
 }
+func (m repositoryResourcePermissions) DefaultObject() map[string]attr.Value {
+	return map[string]attr.Value{
+		"admin": types.BoolValue(true),
+		"push":  types.BoolValue(true),
+		"pull":  types.BoolValue(true),
+	}
+}
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#InternalTracker
 type repositoryResourceInternalTracker struct {
@@ -132,6 +145,13 @@ func (m repositoryResourceInternalTracker) AttributeTypes() map[string]attr.Type
 		"enable_time_tracker":                   types.BoolType,
 		"allow_only_contributors_to_track_time": types.BoolType,
 		"enable_issue_dependencies":             types.BoolType,
+	}
+}
+func (m repositoryResourceInternalTracker) DefaultObject() map[string]attr.Value {
+	return map[string]attr.Value{
+		"enable_time_tracker":                   types.BoolValue(true),
+		"allow_only_contributors_to_track_time": types.BoolValue(true),
+		"enable_issue_dependencies":             types.BoolValue(true),
 	}
 }
 
@@ -175,12 +195,18 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"id": schema.Int64Attribute{
 				Description: "Numeric identifier of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"owner": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"id": schema.Int64Attribute{
 						Description: "Numeric identifier of the user.",
 						Computed:    true,
+						PlanModifiers: []planmodifier.Int64{
+							int64planmodifier.UseStateForUnknown(),
+						},
 					},
 					"login": schema.StringAttribute{
 						Description: "Name of the user.",
@@ -189,19 +215,29 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					"login_name": schema.StringAttribute{
 						Description: "Login name of the user.",
 						Computed:    true,
+						Default:     stringdefault.StaticString(""),
 					},
 					"full_name": schema.StringAttribute{
 						Description: "Full name of the user.",
 						Computed:    true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"email": schema.StringAttribute{
 						Description: "Email address of the user.",
 						Computed:    true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 				},
 				Description: "Owner of the repository.",
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the repository.",
@@ -210,6 +246,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"full_name": schema.StringAttribute{
 				Description: "Full name of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Description: "Description of the repository.",
@@ -220,6 +259,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"empty": schema.BoolAttribute{
 				Description: "Is the repository empty?",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"private": schema.BoolAttribute{
 				Description: "Is the repository private?",
@@ -230,6 +272,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"fork": schema.BoolAttribute{
 				Description: "Is the repository a fork?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"template": schema.BoolAttribute{
 				Description: "Is the repository a template?",
@@ -239,59 +282,93 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"parent_id": schema.Int64Attribute{
 				Description: "Numeric identifier of the parent repository.",
-				Computed:    true,
+				Optional:    true,
 			},
 			"mirror": schema.BoolAttribute{
 				Description: "Is the repository a mirror?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"size": schema.Int64Attribute{
 				Description: "Size of the repository in KiB.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"html_url": schema.StringAttribute{
 				Description: "HTML URL of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"ssh_url": schema.StringAttribute{
 				Description: "SSH URL of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"clone_url": schema.StringAttribute{
 				Description: "Clone URL of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"original_url": schema.StringAttribute{
 				Description: "Original URL of the repository.",
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"website": schema.StringAttribute{
 				Description: "Website of the repository.",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"stars_count": schema.Int64Attribute{
 				Description: "Number of stars of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"forks_count": schema.Int64Attribute{
 				Description: "Number of forks of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"watchers_count": schema.Int64Attribute{
 				Description: "Number of watchers of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"open_issues_count": schema.Int64Attribute{
 				Description: "Number of open issues of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"open_pr_counter": schema.Int64Attribute{
 				Description: "Number of open pull requests of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"release_counter": schema.Int64Attribute{
 				Description: "Number of releases of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"default_branch": schema.StringAttribute{
 				Description: "Default branch of the repository.",
@@ -302,54 +379,80 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"archived": schema.BoolAttribute{
 				Description: "Is the repository archived?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"created_at": schema.StringAttribute{
 				Description: "Time at which the repository was created.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"updated_at": schema.StringAttribute{
 				Description: "Time at which the repository was updated.",
 				Computed:    true,
+				// PlanModifiers: []planmodifier.String{
+				// 	stringplanmodifier.UseStateForUnknown(),
+				// },
 			},
 			"permissions": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"admin": schema.BoolAttribute{
 						Description: "Allowed to administer?",
 						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 					"push": schema.BoolAttribute{
 						Description: "Allowed to push?",
 						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 					"pull": schema.BoolAttribute{
 						Description: "Allowed to pull?",
 						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 				},
 				Description: "Permissions of the repository.",
 				Computed:    true,
+				Default: objectdefault.StaticValue(
+					types.ObjectValueMust(
+						repositoryResourcePermissions{}.AttributeTypes(),
+						repositoryResourcePermissions{}.DefaultObject(),
+					),
+				),
 			},
 			"has_issues": schema.BoolAttribute{
 				Description: "Is the repository issue tracker enabled?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"internal_tracker": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"enable_time_tracker": schema.BoolAttribute{
 						Description: "Enable time tracking.",
 						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 					"allow_only_contributors_to_track_time": schema.BoolAttribute{
 						Description: "Let only contributors track time.",
 						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 					"enable_issue_dependencies": schema.BoolAttribute{
 						Description: "Enable dependencies for issues and pull requests.",
 						Computed:    true,
+						Default:     booldefault.StaticBool(true),
 					},
 				},
 				Description: "Settings for built-in issue tracker.",
 				Computed:    true,
+				Default: objectdefault.StaticValue(
+					types.ObjectValueMust(
+						repositoryResourceInternalTracker{}.AttributeTypes(),
+						repositoryResourceInternalTracker{}.DefaultObject(),
+					),
+				),
 			},
 			"external_tracker": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -368,10 +471,16 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 				Description: "Settings for external issue tracker.",
 				Computed:    true,
+				Default: objectdefault.StaticValue(
+					types.ObjectNull(
+						repositoryResourceExternalTracker{}.AttributeTypes(),
+					),
+				),
 			},
 			"has_wiki": schema.BoolAttribute{
 				Description: "Is the repository wiki enabled?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"external_wiki": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
@@ -382,66 +491,88 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 				Description: "Settings for external wiki.",
 				Computed:    true,
+				Default: objectdefault.StaticValue(
+					types.ObjectNull(
+						repositoryResourceExternalWiki{}.AttributeTypes(),
+					),
+				),
 			},
 			"has_pull_requests": schema.BoolAttribute{
 				Description: "Are repository pull requests enabled?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"has_projects": schema.BoolAttribute{
 				Description: "Are repository projects enabled?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"has_releases": schema.BoolAttribute{
 				Description: "Are repository releases enabled?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"has_packages": schema.BoolAttribute{
 				Description: "Is the repository package registry enabled?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"has_actions": schema.BoolAttribute{
 				Description: "Are integrated CI/CD pipelines enabled?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"ignore_whitespace_conflicts": schema.BoolAttribute{
 				Description: "Are whitespace conflicts ignored?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"allow_merge_commits": schema.BoolAttribute{
 				Description: "Allowed to create merge commit?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"allow_rebase": schema.BoolAttribute{
 				Description: "Allowed to rebase then fast-forward?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"allow_rebase_explicit": schema.BoolAttribute{
 				Description: "Allowed to rebase then create merge commit?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"allow_squash_merge": schema.BoolAttribute{
 				Description: "Allowed to create squash commit?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the repository.",
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"internal": schema.BoolAttribute{
 				Description: "Is the repository internal?",
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"mirror_interval": schema.StringAttribute{
 				Description: "Mirror interval of the repository.",
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"mirror_updated": schema.StringAttribute{
 				Description: "Time at which the repository mirror was updated.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"default_merge_style": schema.StringAttribute{
 				Description: "Default merge style of the repository.",
 				Computed:    true,
+				Default:     stringdefault.StaticString("merge"),
 			},
 			"issue_labels": schema.StringAttribute{
 				Description: "Issue Label set to use",
@@ -453,7 +584,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Whether the repository should be auto-intialized?",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
+				Default:     booldefault.StaticBool(true),
 			},
 			"gitignores": schema.StringAttribute{
 				Description: "Gitignores to use",
@@ -592,7 +723,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		var msg string
 		switch res.StatusCode {
 		case 409:
-			msg = fmt.Sprintf("Repository with name %s already exists: %s", data.Name.String(), err)
+			msg = fmt.Sprintf(
+				"Repository with name %s already exists: %s",
+				data.Name.String(),
+				err,
+			)
 		case 422:
 			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:
@@ -602,6 +737,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 		return
 	}
+
+	// TODO: Call API again to modify remaining attributes (e.g. website)
 
 	// Map response body to model
 	data.ID = types.Int64Value(rep.ID)
@@ -998,34 +1135,97 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer un(trace(ctx, "Update repository resource"))
 
-	// var data repositoryResourceModel
+	var (
+		data  repositoryResourceModel
+		state repositoryResourceModel
+		owner repositoryResourceUser
+	)
 
-	// // Read Terraform plan data into model
-	// diags := req.Plan.Get(ctx, &data)
-	// resp.Diagnostics.Append(diags...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
+	// Read Terraform plan data into model
+	diags := req.Plan.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// tflog.Info(ctx, "Update repository", map[string]any{
-	// 	"name":        data.Name.ValueString(),
-	// 	"full_name":   data.FullName.ValueString(),
-	// 	"description": data.Description.ValueString(),
-	// 	"website":     data.Website.ValueString(),
-	// 	"location":    data.Location.ValueString(),
-	// 	"visibility":  data.Visibility.ValueString(),
-	// })
+	// Read Terraform prior state data into the model
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// // Generate API request body from plan
-	// opts := forgejo.EditOrgOption{
-	// 	FullName:    data.FullName.ValueString(),
-	// 	Description: data.Description.ValueString(),
-	// 	Website:     data.Website.ValueString(),
-	// 	Location:    data.Location.ValueString(),
-	// 	Visibility:  forgejo.VisibleType(data.Visibility.ValueString()),
-	// }
+	// Read repository owner into model
+	if !data.Owner.IsUnknown() {
+		diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+	} else {
+		diags = state.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+	}
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// // Validate API request body
+	tflog.Info(ctx, "Update repository", map[string]any{
+		"name":                        data.Name.ValueString(),
+		"description":                 data.Description.ValueString(),
+		"website":                     data.Website.ValueString(),
+		"private":                     data.Private.ValueBool(),
+		"template":                    data.Template.ValueBool(),
+		"has_issues":                  data.HasIssues.ValueBool(),
+		"internal_tracker":            data.InternalTracker.String(),
+		"external_tracker":            data.ExternalTracker.String(),
+		"has_wiki":                    data.HasWiki.ValueBool(),
+		"external_wiki":               data.ExternalWiki.String(),
+		"default_branch":              data.DefaultBranch.ValueString(),
+		"has_pull_requests":           data.HasPullRequests.ValueBool(),
+		"has_projects":                data.HasProjects.ValueBool(),
+		"has_releases":                data.HasReleases.ValueBool(),
+		"has_packages":                data.HasPackages.ValueBool(),
+		"has_actions":                 data.HasActions.ValueBool(),
+		"ignore_whitespace_conflicts": data.IgnoreWhitespaceConflicts.ValueBool(),
+		"allow_merge_commits":         data.AllowMerge.ValueBool(),
+		"allow_rebase":                data.AllowRebase.ValueBool(),
+		"allow_rebase_explicit":       data.AllowRebaseMerge.ValueBool(),
+		"allow_squash_merge":          data.AllowSquash.ValueBool(),
+		"archived":                    data.Archived.ValueBool(),
+		"mirror_interval":             data.MirrorInterval.ValueString(),
+		// "allow_manual_merge": data.AllowManualMerge.ValueBool(),
+		// "autodetect_manual_merge": data.AutodetectManualMerge.ValueBool(),
+		// "default_merge_style":
+	})
+
+	// Generate API request body from plan
+	opts := forgejo.EditRepoOption{
+		Name:        data.Name.ValueStringPointer(),
+		Description: data.Description.ValueStringPointer(),
+		Website:     data.Website.ValueStringPointer(),
+		Private:     data.Private.ValueBoolPointer(),
+		Template:    data.Template.ValueBoolPointer(),
+		HasIssues:   data.HasIssues.ValueBoolPointer(),
+		// InternalTracker: data.InternalTracker.to...(),
+		// ExternalTracker: data.ExternalTracker.to...(),
+		HasWiki: data.HasWiki.ValueBoolPointer(),
+		// ExternalWiki: data.ExternalWiki.to...(),
+		DefaultBranch:             data.DefaultBranch.ValueStringPointer(),
+		HasPullRequests:           data.HasPullRequests.ValueBoolPointer(),
+		HasProjects:               data.HasProjects.ValueBoolPointer(),
+		HasReleases:               data.HasReleases.ValueBoolPointer(),
+		HasPackages:               data.HasPackages.ValueBoolPointer(),
+		HasActions:                data.HasActions.ValueBoolPointer(),
+		IgnoreWhitespaceConflicts: data.IgnoreWhitespaceConflicts.ValueBoolPointer(),
+		AllowMerge:                data.AllowMerge.ValueBoolPointer(),
+		AllowRebase:               data.AllowRebase.ValueBoolPointer(),
+		AllowRebaseMerge:          data.AllowRebaseMerge.ValueBoolPointer(),
+		AllowSquash:               data.AllowSquash.ValueBoolPointer(),
+		Archived:                  data.Archived.ValueBoolPointer(),
+		MirrorInterval:            data.MirrorInterval.ValueStringPointer(),
+		// AllowManualMerge: data.AllowManualMerge.ValueBoolPointer(),
+		// AutodetectManualMerge: data.AutodetectManualMerge.ValueBoolPointer(),
+		// DefaultMergeStyle:
+	}
+
+	// Validate API request body
 	// err := opts.Validate()
 	// if err != nil {
 	// 	resp.Diagnostics.AddError("Input validation error", err.Error())
@@ -1033,57 +1233,236 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	// 	return
 	// }
 
-	// // Use Forgejo client to update existing repository
-	// re, err := r.client.EditOrg(data.Name.ValueString(), opts)
-	// if err != nil {
-	// 	tflog.Error(ctx, "Error", map[string]any{
-	// 		"status": re.Status,
-	// 	})
+	// Use Forgejo client to update existing repository
+	_, res, err := r.client.EditRepo(
+		owner.UserName.ValueString(),
+		data.Name.ValueString(),
+		opts,
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
 
-	// 	var msg string
-	// 	switch re.StatusCode {
-	// 	case 404:
-	// 		msg = fmt.Sprintf("Repository with name %s not found: %s", data.Name.String(), err)
-	// 	default:
-	// 		msg = fmt.Sprintf("Unknown error: %s", err)
-	// 	}
-	// 	resp.Diagnostics.AddError("Unable to update repository", msg)
+		var msg string
+		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s forbidden: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s not found: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
+		case 422:
+			msg = fmt.Sprintf("Input validation error: %s", err)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to update repository", msg)
 
-	// 	return
-	// }
+		return
+	}
 
-	// // Use Forgejo client to fetch updated repository
-	// o, re, err := r.client.GetOrg(data.Name.ValueString())
-	// if err != nil {
-	// 	tflog.Error(ctx, "Error", map[string]any{
-	// 		"status": re.Status,
-	// 	})
+	// Use Forgejo client to fetch updated repository
+	rep, res, err := r.client.GetRepo(
+		owner.UserName.ValueString(),
+		data.Name.ValueString(),
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
 
-	// 	var msg string
-	// 	switch re.StatusCode {
-	// 	case 404:
-	// 		msg = fmt.Sprintf("Repository with name %s not found: %s", data.Name.String(), err)
-	// 	default:
-	// 		msg = fmt.Sprintf("Unknown error: %s", err)
-	// 	}
-	// 	resp.Diagnostics.AddError("Unable to get repository by name", msg)
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s not found: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to get repository by name", msg)
 
-	// 	return
-	// }
+		return
+	}
 
-	// // Map response body to model
-	// data.ID = types.Int64Value(o.ID)
-	// data.Name = types.StringValue(o.UserName)
-	// data.FullName = types.StringValue(o.FullName)
-	// data.AvatarURL = types.StringValue(o.AvatarURL)
-	// data.Description = types.StringValue(o.Description)
-	// data.Website = types.StringValue(o.Website)
-	// data.Location = types.StringValue(o.Location)
-	// data.Visibility = types.StringValue(o.Visibility)
+	// Map response body to model
+	data.ID = types.Int64Value(rep.ID)
+	data.FullName = types.StringValue(rep.FullName)
+	data.Description = types.StringValue(rep.Description)
+	data.Empty = types.BoolValue(rep.Empty)
+	data.Private = types.BoolValue(rep.Private)
+	data.Fork = types.BoolValue(rep.Fork)
+	data.Template = types.BoolValue(rep.Template)
+	if rep.Parent != nil {
+		data.ParentID = types.Int64Value(rep.Parent.ID)
+	} else {
+		data.ParentID = types.Int64Null()
+	}
+	data.Mirror = types.BoolValue(rep.Mirror)
+	data.Size = types.Int64Value(int64(rep.Size))
+	data.HTMLURL = types.StringValue(rep.HTMLURL)
+	data.SSHURL = types.StringValue(rep.SSHURL)
+	data.CloneURL = types.StringValue(rep.CloneURL)
+	data.OriginalURL = types.StringValue(rep.OriginalURL)
+	data.Website = types.StringValue(rep.Website)
+	data.Stars = types.Int64Value(int64(rep.Stars))
+	data.Forks = types.Int64Value(int64(rep.Forks))
+	data.Watchers = types.Int64Value(int64(rep.Watchers))
+	data.OpenIssues = types.Int64Value(int64(rep.OpenIssues))
+	data.OpenPulls = types.Int64Value(int64(rep.OpenPulls))
+	data.Releases = types.Int64Value(int64(rep.Releases))
+	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
+	data.Archived = types.BoolValue(rep.Archived)
+	data.Created = types.StringValue(rep.Created.String())
+	data.Updated = types.StringValue(rep.Updated.String())
+	data.HasIssues = types.BoolValue(rep.HasIssues)
+	data.HasWiki = types.BoolValue(rep.HasWiki)
+	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
+	data.HasProjects = types.BoolValue(rep.HasProjects)
+	data.HasReleases = types.BoolValue(rep.HasReleases)
+	data.HasPackages = types.BoolValue(rep.HasPackages)
+	data.HasActions = types.BoolValue(rep.HasActions)
+	data.IgnoreWhitespaceConflicts = types.BoolValue(rep.IgnoreWhitespaceConflicts)
+	data.AllowMerge = types.BoolValue(rep.AllowMerge)
+	data.AllowRebase = types.BoolValue(rep.AllowRebase)
+	data.AllowRebaseMerge = types.BoolValue(rep.AllowRebaseMerge)
+	data.AllowSquash = types.BoolValue(rep.AllowSquash)
+	data.AvatarURL = types.StringValue(rep.AvatarURL)
+	data.Internal = types.BoolValue(rep.Internal)
+	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
+	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
+	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
 
-	// // Save data into Terraform state
-	// diags = resp.State.Set(ctx, &data)
-	// resp.Diagnostics.Append(diags...)
+	// Repository owner
+	if rep.Owner != nil {
+		ownerElement := repositoryResourceUser{
+			ID:        types.Int64Value(rep.Owner.ID),
+			UserName:  types.StringValue(rep.Owner.UserName),
+			LoginName: types.StringValue(rep.Owner.LoginName),
+			FullName:  types.StringValue(rep.Owner.FullName),
+			Email:     types.StringValue(rep.Owner.Email),
+		}
+		ownerValue, diags := types.ObjectValueFrom(
+			ctx,
+			ownerElement.AttributeTypes(),
+			ownerElement,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.Owner = ownerValue
+	} else {
+		data.Owner = types.ObjectNull(
+			repositoryResourceUser{}.AttributeTypes(),
+		)
+	}
+
+	// Repository permissions
+	if rep.Permissions != nil {
+		perms := repositoryResourcePermissions{
+			Admin: types.BoolValue(rep.Permissions.Admin),
+			Push:  types.BoolValue(rep.Permissions.Push),
+			Pull:  types.BoolValue(rep.Permissions.Pull),
+		}
+		permsValue, diags := types.ObjectValueFrom(
+			ctx,
+			perms.AttributeTypes(),
+			perms,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.Permissions = permsValue
+	} else {
+		data.Permissions = types.ObjectNull(
+			repositoryResourcePermissions{}.AttributeTypes(),
+		)
+	}
+
+	// Internal issue tracker
+	if rep.InternalTracker != nil {
+		intTracker := repositoryResourceInternalTracker{
+			EnableTimeTracker:                types.BoolValue(rep.InternalTracker.EnableTimeTracker),
+			AllowOnlyContributorsToTrackTime: types.BoolValue(rep.InternalTracker.AllowOnlyContributorsToTrackTime),
+			EnableIssueDependencies:          types.BoolValue(rep.InternalTracker.EnableIssueDependencies),
+		}
+		intTrackerValue, diags := types.ObjectValueFrom(
+			ctx,
+			intTracker.AttributeTypes(),
+			intTracker,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.InternalTracker = intTrackerValue
+	} else {
+		data.InternalTracker = types.ObjectNull(
+			repositoryResourceInternalTracker{}.AttributeTypes(),
+		)
+	}
+
+	// External issue tracker
+	if rep.ExternalTracker != nil {
+		extTracker := repositoryResourceExternalTracker{
+			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
+			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
+			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
+		}
+		extTrackerValue, diags := types.ObjectValueFrom(
+			ctx,
+			extTracker.AttributeTypes(),
+			extTracker,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.ExternalTracker = extTrackerValue
+	} else {
+		data.ExternalTracker = types.ObjectNull(
+			repositoryResourceExternalTracker{}.AttributeTypes(),
+		)
+	}
+
+	// External wiki
+	if rep.ExternalWiki != nil {
+		wiki := repositoryResourceExternalWiki{
+			ExternalWikiURL: types.StringValue(rep.ExternalWiki.ExternalWikiURL),
+		}
+		wikiValue, diags := types.ObjectValueFrom(
+			ctx,
+			wiki.AttributeTypes(),
+			wiki,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.ExternalWiki = wikiValue
+	} else {
+		data.ExternalWiki = types.ObjectNull(
+			repositoryResourceExternalWiki{}.AttributeTypes(),
+		)
+	}
+
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
