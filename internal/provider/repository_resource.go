@@ -780,51 +780,223 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer un(trace(ctx, "Read repository resource"))
 
-	// var data repositoryResourceModel
+	var (
+		data  repositoryResourceModel
+		owner repositoryResourceUser
+	)
 
-	// // Read Terraform configuration data into model
-	// diags := req.State.Get(ctx, &data)
-	// resp.Diagnostics.Append(diags...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
+	// Read Terraform prior state data into the model
+	diags := req.State.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// tflog.Info(ctx, "Get repository by name", map[string]any{
-	// 	"name": data.Name.ValueString(),
-	// })
+	// Read repository owner into model
+	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// // Use Forgejo client to get repository by name
-	// o, re, err := r.client.GetOrg(data.Name.ValueString())
-	// if err != nil {
-	// 	tflog.Error(ctx, "Error", map[string]any{
-	// 		"status": re.Status,
-	// 	})
+	tflog.Info(ctx, "Get repository by name", map[string]any{
+		"owner": owner.UserName.ValueString(),
+		"name":  data.Name.ValueString(),
+	})
 
-	// 	var msg string
-	// 	switch re.StatusCode {
-	// 	case 404:
-	// 		msg = fmt.Sprintf("Repository with name %s not found: %s", data.Name.String(), err)
-	// 	default:
-	// 		msg = fmt.Sprintf("Unknown error: %s", err)
-	// 	}
-	// 	resp.Diagnostics.AddError("Unable to get repository by name", msg)
+	// Use Forgejo client to get repository by owner and name
+	rep, res, err := r.client.GetRepo(
+		owner.UserName.ValueString(),
+		data.Name.ValueString(),
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
 
-	// 	return
-	// }
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s not found: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to get repository by name", msg)
 
-	// // Map response body to model
-	// data.ID = types.Int64Value(o.ID)
-	// data.Name = types.StringValue(o.UserName)
-	// data.FullName = types.StringValue(o.FullName)
-	// data.AvatarURL = types.StringValue(o.AvatarURL)
-	// data.Description = types.StringValue(o.Description)
-	// data.Website = types.StringValue(o.Website)
-	// data.Location = types.StringValue(o.Location)
-	// data.Visibility = types.StringValue(o.Visibility)
+		return
+	}
 
-	// // Save data into Terraform state
-	// diags = resp.State.Set(ctx, &data)
-	// resp.Diagnostics.Append(diags...)
+	// Map response body to model
+	data.ID = types.Int64Value(rep.ID)
+	data.FullName = types.StringValue(rep.FullName)
+	data.Description = types.StringValue(rep.Description)
+	data.Empty = types.BoolValue(rep.Empty)
+	data.Private = types.BoolValue(rep.Private)
+	data.Fork = types.BoolValue(rep.Fork)
+	data.Template = types.BoolValue(rep.Template)
+	if rep.Parent != nil {
+		data.ParentID = types.Int64Value(rep.Parent.ID)
+	} else {
+		data.ParentID = types.Int64Null()
+	}
+	data.Mirror = types.BoolValue(rep.Mirror)
+	data.Size = types.Int64Value(int64(rep.Size))
+	data.HTMLURL = types.StringValue(rep.HTMLURL)
+	data.SSHURL = types.StringValue(rep.SSHURL)
+	data.CloneURL = types.StringValue(rep.CloneURL)
+	data.OriginalURL = types.StringValue(rep.OriginalURL)
+	data.Website = types.StringValue(rep.Website)
+	data.Stars = types.Int64Value(int64(rep.Stars))
+	data.Forks = types.Int64Value(int64(rep.Forks))
+	data.Watchers = types.Int64Value(int64(rep.Watchers))
+	data.OpenIssues = types.Int64Value(int64(rep.OpenIssues))
+	data.OpenPulls = types.Int64Value(int64(rep.OpenPulls))
+	data.Releases = types.Int64Value(int64(rep.Releases))
+	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
+	data.Archived = types.BoolValue(rep.Archived)
+	data.Created = types.StringValue(rep.Created.String())
+	data.Updated = types.StringValue(rep.Updated.String())
+	data.HasIssues = types.BoolValue(rep.HasIssues)
+	data.HasWiki = types.BoolValue(rep.HasWiki)
+	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
+	data.HasProjects = types.BoolValue(rep.HasProjects)
+	data.HasReleases = types.BoolValue(rep.HasReleases)
+	data.HasPackages = types.BoolValue(rep.HasPackages)
+	data.HasActions = types.BoolValue(rep.HasActions)
+	data.IgnoreWhitespaceConflicts = types.BoolValue(rep.IgnoreWhitespaceConflicts)
+	data.AllowMerge = types.BoolValue(rep.AllowMerge)
+	data.AllowRebase = types.BoolValue(rep.AllowRebase)
+	data.AllowRebaseMerge = types.BoolValue(rep.AllowRebaseMerge)
+	data.AllowSquash = types.BoolValue(rep.AllowSquash)
+	data.AvatarURL = types.StringValue(rep.AvatarURL)
+	data.Internal = types.BoolValue(rep.Internal)
+	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
+	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
+	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
+
+	// Repository owner
+	if rep.Owner != nil {
+		ownerElement := repositoryDataSourceUser{
+			ID:        types.Int64Value(rep.Owner.ID),
+			UserName:  types.StringValue(rep.Owner.UserName),
+			LoginName: types.StringValue(rep.Owner.LoginName),
+			FullName:  types.StringValue(rep.Owner.FullName),
+			Email:     types.StringValue(rep.Owner.Email),
+		}
+		ownerValue, diags := types.ObjectValueFrom(
+			ctx,
+			ownerElement.AttributeTypes(),
+			ownerElement,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.Owner = ownerValue
+	} else {
+		data.Owner = types.ObjectNull(
+			repositoryResourceUser{}.AttributeTypes(),
+		)
+	}
+
+	// Repository permissions
+	if rep.Permissions != nil {
+		perms := repositoryDataSourcePermissions{
+			Admin: types.BoolValue(rep.Permissions.Admin),
+			Push:  types.BoolValue(rep.Permissions.Push),
+			Pull:  types.BoolValue(rep.Permissions.Pull),
+		}
+		permsValue, diags := types.ObjectValueFrom(
+			ctx,
+			perms.AttributeTypes(),
+			perms,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.Permissions = permsValue
+	} else {
+		data.Permissions = types.ObjectNull(
+			repositoryResourcePermissions{}.AttributeTypes(),
+		)
+	}
+
+	// Internal issue tracker
+	if rep.InternalTracker != nil {
+		intTracker := repositoryDataSourceInternalTracker{
+			EnableTimeTracker:                types.BoolValue(rep.InternalTracker.EnableTimeTracker),
+			AllowOnlyContributorsToTrackTime: types.BoolValue(rep.InternalTracker.AllowOnlyContributorsToTrackTime),
+			EnableIssueDependencies:          types.BoolValue(rep.InternalTracker.EnableIssueDependencies),
+		}
+		intTrackerValue, diags := types.ObjectValueFrom(
+			ctx,
+			intTracker.AttributeTypes(),
+			intTracker,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.InternalTracker = intTrackerValue
+	} else {
+		data.InternalTracker = types.ObjectNull(
+			repositoryResourceInternalTracker{}.AttributeTypes(),
+		)
+	}
+
+	// External issue tracker
+	if rep.ExternalTracker != nil {
+		extTracker := repositoryDataSourceExternalTracker{
+			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
+			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
+			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
+		}
+		extTrackerValue, diags := types.ObjectValueFrom(
+			ctx,
+			extTracker.AttributeTypes(),
+			extTracker,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.ExternalTracker = extTrackerValue
+	} else {
+		data.ExternalTracker = types.ObjectNull(
+			repositoryResourceExternalTracker{}.AttributeTypes(),
+		)
+	}
+
+	// External wiki
+	if rep.ExternalWiki != nil {
+		wiki := repositoryDataSourceExternalWiki{
+			ExternalWikiURL: types.StringValue(rep.ExternalWiki.ExternalWikiURL),
+		}
+		wikiValue, diags := types.ObjectValueFrom(
+			ctx,
+			wiki.AttributeTypes(),
+			wiki,
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.ExternalWiki = wikiValue
+	} else {
+		data.ExternalWiki = types.ObjectNull(
+			repositoryResourceExternalWiki{}.AttributeTypes(),
+		)
+	}
+
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
