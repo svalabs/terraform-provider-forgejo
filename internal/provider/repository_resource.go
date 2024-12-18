@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -92,6 +93,56 @@ type repositoryResourceModel struct {
 	TrustModel                types.String `tfsdk:"trust_model"`
 }
 
+func (m *repositoryResourceModel) from(r *forgejo.Repository) {
+	m.ID = types.Int64Value(r.ID)
+	m.Name = types.StringValue(r.Name)
+	m.FullName = types.StringValue(r.FullName)
+	m.Description = types.StringValue(r.Description)
+	m.Empty = types.BoolValue(r.Empty)
+	m.Private = types.BoolValue(r.Private)
+	m.Fork = types.BoolValue(r.Fork)
+	m.Template = types.BoolValue(r.Template)
+	if r.Parent != nil {
+		m.ParentID = types.Int64Value(r.Parent.ID)
+	} else {
+		m.ParentID = types.Int64Null()
+	}
+	m.Mirror = types.BoolValue(r.Mirror)
+	m.Size = types.Int64Value(int64(r.Size))
+	m.HTMLURL = types.StringValue(r.HTMLURL)
+	m.SSHURL = types.StringValue(r.SSHURL)
+	m.CloneURL = types.StringValue(r.CloneURL)
+	m.OriginalURL = types.StringValue(r.OriginalURL)
+	m.Website = types.StringValue(r.Website)
+	m.Stars = types.Int64Value(int64(r.Stars))
+	m.Forks = types.Int64Value(int64(r.Forks))
+	m.Watchers = types.Int64Value(int64(r.Watchers))
+	m.OpenIssues = types.Int64Value(int64(r.OpenIssues))
+	m.OpenPulls = types.Int64Value(int64(r.OpenPulls))
+	m.Releases = types.Int64Value(int64(r.Releases))
+	m.DefaultBranch = types.StringValue(r.DefaultBranch)
+	m.Archived = types.BoolValue(r.Archived)
+	m.Created = types.StringValue(r.Created.String())
+	m.Updated = types.StringValue(r.Updated.String())
+	m.HasIssues = types.BoolValue(r.HasIssues)
+	m.HasWiki = types.BoolValue(r.HasWiki)
+	m.HasPullRequests = types.BoolValue(r.HasPullRequests)
+	m.HasProjects = types.BoolValue(r.HasProjects)
+	m.HasReleases = types.BoolValue(r.HasReleases)
+	m.HasPackages = types.BoolValue(r.HasPackages)
+	m.HasActions = types.BoolValue(r.HasActions)
+	m.IgnoreWhitespaceConflicts = types.BoolValue(r.IgnoreWhitespaceConflicts)
+	m.AllowMerge = types.BoolValue(r.AllowMerge)
+	m.AllowRebase = types.BoolValue(r.AllowRebase)
+	m.AllowRebaseMerge = types.BoolValue(r.AllowRebaseMerge)
+	m.AllowSquash = types.BoolValue(r.AllowSquash)
+	m.AvatarURL = types.StringValue(r.AvatarURL)
+	m.Internal = types.BoolValue(r.Internal)
+	m.MirrorInterval = types.StringValue(r.MirrorInterval)
+	m.MirrorUpdated = types.StringValue(r.MirrorUpdated.String())
+	m.DefaultMergeStyle = types.StringValue(string(r.DefaultMergeStyle))
+}
+
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#User
 type repositoryResourceUser struct {
 	ID        types.Int64  `tfsdk:"id"`
@@ -101,7 +152,7 @@ type repositoryResourceUser struct {
 	Email     types.String `tfsdk:"email"`
 }
 
-func (m repositoryResourceUser) AttributeTypes() map[string]attr.Type {
+func (m repositoryResourceUser) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id":         types.Int64Type,
 		"login":      types.StringType,
@@ -109,6 +160,34 @@ func (m repositoryResourceUser) AttributeTypes() map[string]attr.Type {
 		"full_name":  types.StringType,
 		"email":      types.StringType,
 	}
+}
+func (m *repositoryResourceModel) ownerFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
+	if r.Owner == nil {
+		m.Owner = types.ObjectNull(
+			repositoryResourceUser{}.attributeTypes(),
+		)
+		return nil
+	}
+
+	ownerElement := repositoryResourceUser{
+		ID:        types.Int64Value(r.Owner.ID),
+		UserName:  types.StringValue(r.Owner.UserName),
+		LoginName: types.StringValue(r.Owner.LoginName),
+		FullName:  types.StringValue(r.Owner.FullName),
+		Email:     types.StringValue(r.Owner.Email),
+	}
+
+	ownerValue, diags := types.ObjectValueFrom(
+		ctx,
+		ownerElement.attributeTypes(),
+		ownerElement,
+	)
+
+	if !diags.HasError() {
+		m.Owner = ownerValue
+	}
+
+	return diags
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Permission
@@ -118,19 +197,45 @@ type repositoryResourcePermissions struct {
 	Pull  types.Bool `tfsdk:"pull"`
 }
 
-func (m repositoryResourcePermissions) AttributeTypes() map[string]attr.Type {
+func (m repositoryResourcePermissions) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"admin": types.BoolType,
 		"push":  types.BoolType,
 		"pull":  types.BoolType,
 	}
 }
-func (m repositoryResourcePermissions) DefaultObject() map[string]attr.Value {
+func (m repositoryResourcePermissions) defaultObject() map[string]attr.Value {
 	return map[string]attr.Value{
 		"admin": types.BoolValue(true),
 		"push":  types.BoolValue(true),
 		"pull":  types.BoolValue(true),
 	}
+}
+func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
+	if r.Permissions == nil {
+		m.Permissions = types.ObjectNull(
+			repositoryResourcePermissions{}.attributeTypes(),
+		)
+		return nil
+	}
+
+	permsElement := repositoryResourcePermissions{
+		Admin: types.BoolValue(r.Permissions.Admin),
+		Push:  types.BoolValue(r.Permissions.Push),
+		Pull:  types.BoolValue(r.Permissions.Pull),
+	}
+
+	permsValue, diags := types.ObjectValueFrom(
+		ctx,
+		permsElement.attributeTypes(),
+		permsElement,
+	)
+
+	if !diags.HasError() {
+		m.Permissions = permsValue
+	}
+
+	return diags
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#InternalTracker
@@ -140,19 +245,45 @@ type repositoryResourceInternalTracker struct {
 	EnableIssueDependencies          types.Bool `tfsdk:"enable_issue_dependencies"`
 }
 
-func (m repositoryResourceInternalTracker) AttributeTypes() map[string]attr.Type {
+func (m repositoryResourceInternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"enable_time_tracker":                   types.BoolType,
 		"allow_only_contributors_to_track_time": types.BoolType,
 		"enable_issue_dependencies":             types.BoolType,
 	}
 }
-func (m repositoryResourceInternalTracker) DefaultObject() map[string]attr.Value {
+func (m repositoryResourceInternalTracker) defaultObject() map[string]attr.Value {
 	return map[string]attr.Value{
 		"enable_time_tracker":                   types.BoolValue(true),
 		"allow_only_contributors_to_track_time": types.BoolValue(true),
 		"enable_issue_dependencies":             types.BoolValue(true),
 	}
+}
+func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
+	if r.InternalTracker == nil {
+		m.InternalTracker = types.ObjectNull(
+			repositoryResourceInternalTracker{}.attributeTypes(),
+		)
+		return nil
+	}
+
+	intTrackerElement := repositoryResourceInternalTracker{
+		EnableTimeTracker:                types.BoolValue(r.InternalTracker.EnableTimeTracker),
+		AllowOnlyContributorsToTrackTime: types.BoolValue(r.InternalTracker.AllowOnlyContributorsToTrackTime),
+		EnableIssueDependencies:          types.BoolValue(r.InternalTracker.EnableIssueDependencies),
+	}
+
+	intTrackerValue, diags := types.ObjectValueFrom(
+		ctx,
+		intTrackerElement.attributeTypes(),
+		intTrackerElement,
+	)
+
+	if !diags.HasError() {
+		m.InternalTracker = intTrackerValue
+	}
+
+	return diags
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#ExternalTracker
@@ -162,12 +293,38 @@ type repositoryResourceExternalTracker struct {
 	ExternalTrackerStyle  types.String `tfsdk:"external_tracker_style"`
 }
 
-func (m repositoryResourceExternalTracker) AttributeTypes() map[string]attr.Type {
+func (m repositoryResourceExternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"external_tracker_url":    types.StringType,
 		"external_tracker_format": types.StringType,
 		"external_tracker_style":  types.StringType,
 	}
+}
+func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
+	if r.ExternalTracker == nil {
+		m.ExternalTracker = types.ObjectNull(
+			repositoryResourceExternalTracker{}.attributeTypes(),
+		)
+		return nil
+	}
+
+	extTrackerElement := repositoryResourceExternalTracker{
+		ExternalTrackerURL:    types.StringValue(r.ExternalTracker.ExternalTrackerURL),
+		ExternalTrackerFormat: types.StringValue(r.ExternalTracker.ExternalTrackerFormat),
+		ExternalTrackerStyle:  types.StringValue(r.ExternalTracker.ExternalTrackerStyle),
+	}
+
+	extTrackerValue, diags := types.ObjectValueFrom(
+		ctx,
+		extTrackerElement.attributeTypes(),
+		extTrackerElement,
+	)
+
+	if !diags.HasError() {
+		m.ExternalTracker = extTrackerValue
+	}
+
+	return diags
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#ExternalWiki
@@ -175,10 +332,34 @@ type repositoryResourceExternalWiki struct {
 	ExternalWikiURL types.String `tfsdk:"external_wiki_url"`
 }
 
-func (m repositoryResourceExternalWiki) AttributeTypes() map[string]attr.Type {
+func (m repositoryResourceExternalWiki) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"external_wiki_url": types.StringType,
 	}
+}
+func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
+	if r.ExternalWiki == nil {
+		m.ExternalWiki = types.ObjectNull(
+			repositoryResourceExternalWiki{}.attributeTypes(),
+		)
+		return nil
+	}
+
+	wikiElement := repositoryResourceExternalWiki{
+		ExternalWikiURL: types.StringValue(r.ExternalWiki.ExternalWikiURL),
+	}
+
+	wikiValue, diags := types.ObjectValueFrom(
+		ctx,
+		wikiElement.attributeTypes(),
+		wikiElement,
+	)
+
+	if !diags.HasError() {
+		m.ExternalWiki = wikiValue
+	}
+
+	return diags
 }
 
 // Metadata returns the resource type name.
@@ -417,8 +598,8 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				Default: objectdefault.StaticValue(
 					types.ObjectValueMust(
-						repositoryResourcePermissions{}.AttributeTypes(),
-						repositoryResourcePermissions{}.DefaultObject(),
+						repositoryResourcePermissions{}.attributeTypes(),
+						repositoryResourcePermissions{}.defaultObject(),
 					),
 				),
 			},
@@ -449,8 +630,8 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				Default: objectdefault.StaticValue(
 					types.ObjectValueMust(
-						repositoryResourceInternalTracker{}.AttributeTypes(),
-						repositoryResourceInternalTracker{}.DefaultObject(),
+						repositoryResourceInternalTracker{}.attributeTypes(),
+						repositoryResourceInternalTracker{}.defaultObject(),
 					),
 				),
 			},
@@ -473,7 +654,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				Default: objectdefault.StaticValue(
 					types.ObjectNull(
-						repositoryResourceExternalTracker{}.AttributeTypes(),
+						repositoryResourceExternalTracker{}.attributeTypes(),
 					),
 				),
 			},
@@ -493,7 +674,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				Default: objectdefault.StaticValue(
 					types.ObjectNull(
-						repositoryResourceExternalWiki{}.AttributeTypes(),
+						repositoryResourceExternalWiki{}.attributeTypes(),
 					),
 				),
 			},
@@ -741,166 +922,36 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	// TODO: Call API again to modify remaining attributes (e.g. website)
 
 	// Map response body to model
-	data.ID = types.Int64Value(rep.ID)
-	data.FullName = types.StringValue(rep.FullName)
-	data.Description = types.StringValue(rep.Description)
-	data.Empty = types.BoolValue(rep.Empty)
-	data.Private = types.BoolValue(rep.Private)
-	data.Fork = types.BoolValue(rep.Fork)
-	data.Template = types.BoolValue(rep.Template)
-	if rep.Parent != nil {
-		data.ParentID = types.Int64Value(rep.Parent.ID)
-	} else {
-		data.ParentID = types.Int64Null()
-	}
-	data.Mirror = types.BoolValue(rep.Mirror)
-	data.Size = types.Int64Value(int64(rep.Size))
-	data.HTMLURL = types.StringValue(rep.HTMLURL)
-	data.SSHURL = types.StringValue(rep.SSHURL)
-	data.CloneURL = types.StringValue(rep.CloneURL)
-	data.OriginalURL = types.StringValue(rep.OriginalURL)
-	data.Website = types.StringValue(rep.Website)
-	data.Stars = types.Int64Value(int64(rep.Stars))
-	data.Forks = types.Int64Value(int64(rep.Forks))
-	data.Watchers = types.Int64Value(int64(rep.Watchers))
-	data.OpenIssues = types.Int64Value(int64(rep.OpenIssues))
-	data.OpenPulls = types.Int64Value(int64(rep.OpenPulls))
-	data.Releases = types.Int64Value(int64(rep.Releases))
-	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
-	data.Archived = types.BoolValue(rep.Archived)
-	data.Created = types.StringValue(rep.Created.String())
-	data.Updated = types.StringValue(rep.Updated.String())
-	data.HasIssues = types.BoolValue(rep.HasIssues)
-	data.HasWiki = types.BoolValue(rep.HasWiki)
-	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
-	data.HasProjects = types.BoolValue(rep.HasProjects)
-	data.HasReleases = types.BoolValue(rep.HasReleases)
-	data.HasPackages = types.BoolValue(rep.HasPackages)
-	data.HasActions = types.BoolValue(rep.HasActions)
-	data.IgnoreWhitespaceConflicts = types.BoolValue(rep.IgnoreWhitespaceConflicts)
-	data.AllowMerge = types.BoolValue(rep.AllowMerge)
-	data.AllowRebase = types.BoolValue(rep.AllowRebase)
-	data.AllowRebaseMerge = types.BoolValue(rep.AllowRebaseMerge)
-	data.AllowSquash = types.BoolValue(rep.AllowSquash)
-	data.AvatarURL = types.StringValue(rep.AvatarURL)
-	data.Internal = types.BoolValue(rep.Internal)
-	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
-	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
-	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
+	data.from(rep)
 
-	// Repository owner
-	if rep.Owner != nil {
-		ownerElement := repositoryResourceUser{
-			ID:        types.Int64Value(rep.Owner.ID),
-			UserName:  types.StringValue(rep.Owner.UserName),
-			LoginName: types.StringValue(rep.Owner.LoginName),
-			FullName:  types.StringValue(rep.Owner.FullName),
-			Email:     types.StringValue(rep.Owner.Email),
-		}
-		ownerValue, diags := types.ObjectValueFrom(
-			ctx,
-			ownerElement.AttributeTypes(),
-			ownerElement,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Owner = ownerValue
-	} else {
-		data.Owner = types.ObjectNull(
-			repositoryResourceUser{}.AttributeTypes(),
-		)
+	diags = data.ownerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Repository permissions
-	if rep.Permissions != nil {
-		perms := repositoryResourcePermissions{
-			Admin: types.BoolValue(rep.Permissions.Admin),
-			Push:  types.BoolValue(rep.Permissions.Push),
-			Pull:  types.BoolValue(rep.Permissions.Pull),
-		}
-		permsValue, diags := types.ObjectValueFrom(
-			ctx,
-			perms.AttributeTypes(),
-			perms,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Permissions = permsValue
-	} else {
-		data.Permissions = types.ObjectNull(
-			repositoryResourcePermissions{}.AttributeTypes(),
-		)
+	diags = data.permissionsFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Internal issue tracker
-	if rep.InternalTracker != nil {
-		intTracker := repositoryResourceInternalTracker{
-			EnableTimeTracker:                types.BoolValue(rep.InternalTracker.EnableTimeTracker),
-			AllowOnlyContributorsToTrackTime: types.BoolValue(rep.InternalTracker.AllowOnlyContributorsToTrackTime),
-			EnableIssueDependencies:          types.BoolValue(rep.InternalTracker.EnableIssueDependencies),
-		}
-		intTrackerValue, diags := types.ObjectValueFrom(
-			ctx,
-			intTracker.AttributeTypes(),
-			intTracker,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.InternalTracker = intTrackerValue
-	} else {
-		data.InternalTracker = types.ObjectNull(
-			repositoryResourceInternalTracker{}.AttributeTypes(),
-		)
+	diags = data.internalTrackerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// External issue tracker
-	if rep.ExternalTracker != nil {
-		extTracker := repositoryResourceExternalTracker{
-			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
-			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
-			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
-		}
-		extTrackerValue, diags := types.ObjectValueFrom(
-			ctx,
-			extTracker.AttributeTypes(),
-			extTracker,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.ExternalTracker = extTrackerValue
-	} else {
-		data.ExternalTracker = types.ObjectNull(
-			repositoryResourceExternalTracker{}.AttributeTypes(),
-		)
+	diags = data.externalTrackerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// External wiki
-	if rep.ExternalWiki != nil {
-		wiki := repositoryResourceExternalWiki{
-			ExternalWikiURL: types.StringValue(rep.ExternalWiki.ExternalWikiURL),
-		}
-		wikiValue, diags := types.ObjectValueFrom(
-			ctx,
-			wiki.AttributeTypes(),
-			wiki,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.ExternalWiki = wikiValue
-	} else {
-		data.ExternalWiki = types.ObjectNull(
-			repositoryResourceExternalWiki{}.AttributeTypes(),
-		)
+	diags = data.externalWikiFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Save data into Terraform state
@@ -964,166 +1015,36 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(rep.ID)
-	data.FullName = types.StringValue(rep.FullName)
-	data.Description = types.StringValue(rep.Description)
-	data.Empty = types.BoolValue(rep.Empty)
-	data.Private = types.BoolValue(rep.Private)
-	data.Fork = types.BoolValue(rep.Fork)
-	data.Template = types.BoolValue(rep.Template)
-	if rep.Parent != nil {
-		data.ParentID = types.Int64Value(rep.Parent.ID)
-	} else {
-		data.ParentID = types.Int64Null()
-	}
-	data.Mirror = types.BoolValue(rep.Mirror)
-	data.Size = types.Int64Value(int64(rep.Size))
-	data.HTMLURL = types.StringValue(rep.HTMLURL)
-	data.SSHURL = types.StringValue(rep.SSHURL)
-	data.CloneURL = types.StringValue(rep.CloneURL)
-	data.OriginalURL = types.StringValue(rep.OriginalURL)
-	data.Website = types.StringValue(rep.Website)
-	data.Stars = types.Int64Value(int64(rep.Stars))
-	data.Forks = types.Int64Value(int64(rep.Forks))
-	data.Watchers = types.Int64Value(int64(rep.Watchers))
-	data.OpenIssues = types.Int64Value(int64(rep.OpenIssues))
-	data.OpenPulls = types.Int64Value(int64(rep.OpenPulls))
-	data.Releases = types.Int64Value(int64(rep.Releases))
-	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
-	data.Archived = types.BoolValue(rep.Archived)
-	data.Created = types.StringValue(rep.Created.String())
-	data.Updated = types.StringValue(rep.Updated.String())
-	data.HasIssues = types.BoolValue(rep.HasIssues)
-	data.HasWiki = types.BoolValue(rep.HasWiki)
-	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
-	data.HasProjects = types.BoolValue(rep.HasProjects)
-	data.HasReleases = types.BoolValue(rep.HasReleases)
-	data.HasPackages = types.BoolValue(rep.HasPackages)
-	data.HasActions = types.BoolValue(rep.HasActions)
-	data.IgnoreWhitespaceConflicts = types.BoolValue(rep.IgnoreWhitespaceConflicts)
-	data.AllowMerge = types.BoolValue(rep.AllowMerge)
-	data.AllowRebase = types.BoolValue(rep.AllowRebase)
-	data.AllowRebaseMerge = types.BoolValue(rep.AllowRebaseMerge)
-	data.AllowSquash = types.BoolValue(rep.AllowSquash)
-	data.AvatarURL = types.StringValue(rep.AvatarURL)
-	data.Internal = types.BoolValue(rep.Internal)
-	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
-	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
-	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
+	data.from(rep)
 
-	// Repository owner
-	if rep.Owner != nil {
-		ownerElement := repositoryDataSourceUser{
-			ID:        types.Int64Value(rep.Owner.ID),
-			UserName:  types.StringValue(rep.Owner.UserName),
-			LoginName: types.StringValue(rep.Owner.LoginName),
-			FullName:  types.StringValue(rep.Owner.FullName),
-			Email:     types.StringValue(rep.Owner.Email),
-		}
-		ownerValue, diags := types.ObjectValueFrom(
-			ctx,
-			ownerElement.AttributeTypes(),
-			ownerElement,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Owner = ownerValue
-	} else {
-		data.Owner = types.ObjectNull(
-			repositoryResourceUser{}.AttributeTypes(),
-		)
+	diags = data.ownerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Repository permissions
-	if rep.Permissions != nil {
-		perms := repositoryDataSourcePermissions{
-			Admin: types.BoolValue(rep.Permissions.Admin),
-			Push:  types.BoolValue(rep.Permissions.Push),
-			Pull:  types.BoolValue(rep.Permissions.Pull),
-		}
-		permsValue, diags := types.ObjectValueFrom(
-			ctx,
-			perms.AttributeTypes(),
-			perms,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Permissions = permsValue
-	} else {
-		data.Permissions = types.ObjectNull(
-			repositoryResourcePermissions{}.AttributeTypes(),
-		)
+	diags = data.permissionsFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Internal issue tracker
-	if rep.InternalTracker != nil {
-		intTracker := repositoryDataSourceInternalTracker{
-			EnableTimeTracker:                types.BoolValue(rep.InternalTracker.EnableTimeTracker),
-			AllowOnlyContributorsToTrackTime: types.BoolValue(rep.InternalTracker.AllowOnlyContributorsToTrackTime),
-			EnableIssueDependencies:          types.BoolValue(rep.InternalTracker.EnableIssueDependencies),
-		}
-		intTrackerValue, diags := types.ObjectValueFrom(
-			ctx,
-			intTracker.AttributeTypes(),
-			intTracker,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.InternalTracker = intTrackerValue
-	} else {
-		data.InternalTracker = types.ObjectNull(
-			repositoryResourceInternalTracker{}.AttributeTypes(),
-		)
+	diags = data.internalTrackerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// External issue tracker
-	if rep.ExternalTracker != nil {
-		extTracker := repositoryDataSourceExternalTracker{
-			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
-			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
-			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
-		}
-		extTrackerValue, diags := types.ObjectValueFrom(
-			ctx,
-			extTracker.AttributeTypes(),
-			extTracker,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.ExternalTracker = extTrackerValue
-	} else {
-		data.ExternalTracker = types.ObjectNull(
-			repositoryResourceExternalTracker{}.AttributeTypes(),
-		)
+	diags = data.externalTrackerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// External wiki
-	if rep.ExternalWiki != nil {
-		wiki := repositoryDataSourceExternalWiki{
-			ExternalWikiURL: types.StringValue(rep.ExternalWiki.ExternalWikiURL),
-		}
-		wikiValue, diags := types.ObjectValueFrom(
-			ctx,
-			wiki.AttributeTypes(),
-			wiki,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.ExternalWiki = wikiValue
-	} else {
-		data.ExternalWiki = types.ObjectNull(
-			repositoryResourceExternalWiki{}.AttributeTypes(),
-		)
+	diags = data.externalWikiFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Save data into Terraform state
@@ -1271,6 +1192,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Use Forgejo client to fetch updated repository
+	// TODO: is this necessary? compare rep with return value of previous API call...
 	rep, res, err := r.client.GetRepo(
 		owner.UserName.ValueString(),
 		data.Name.ValueString(),
@@ -1298,166 +1220,36 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(rep.ID)
-	data.FullName = types.StringValue(rep.FullName)
-	data.Description = types.StringValue(rep.Description)
-	data.Empty = types.BoolValue(rep.Empty)
-	data.Private = types.BoolValue(rep.Private)
-	data.Fork = types.BoolValue(rep.Fork)
-	data.Template = types.BoolValue(rep.Template)
-	if rep.Parent != nil {
-		data.ParentID = types.Int64Value(rep.Parent.ID)
-	} else {
-		data.ParentID = types.Int64Null()
-	}
-	data.Mirror = types.BoolValue(rep.Mirror)
-	data.Size = types.Int64Value(int64(rep.Size))
-	data.HTMLURL = types.StringValue(rep.HTMLURL)
-	data.SSHURL = types.StringValue(rep.SSHURL)
-	data.CloneURL = types.StringValue(rep.CloneURL)
-	data.OriginalURL = types.StringValue(rep.OriginalURL)
-	data.Website = types.StringValue(rep.Website)
-	data.Stars = types.Int64Value(int64(rep.Stars))
-	data.Forks = types.Int64Value(int64(rep.Forks))
-	data.Watchers = types.Int64Value(int64(rep.Watchers))
-	data.OpenIssues = types.Int64Value(int64(rep.OpenIssues))
-	data.OpenPulls = types.Int64Value(int64(rep.OpenPulls))
-	data.Releases = types.Int64Value(int64(rep.Releases))
-	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
-	data.Archived = types.BoolValue(rep.Archived)
-	data.Created = types.StringValue(rep.Created.String())
-	data.Updated = types.StringValue(rep.Updated.String())
-	data.HasIssues = types.BoolValue(rep.HasIssues)
-	data.HasWiki = types.BoolValue(rep.HasWiki)
-	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
-	data.HasProjects = types.BoolValue(rep.HasProjects)
-	data.HasReleases = types.BoolValue(rep.HasReleases)
-	data.HasPackages = types.BoolValue(rep.HasPackages)
-	data.HasActions = types.BoolValue(rep.HasActions)
-	data.IgnoreWhitespaceConflicts = types.BoolValue(rep.IgnoreWhitespaceConflicts)
-	data.AllowMerge = types.BoolValue(rep.AllowMerge)
-	data.AllowRebase = types.BoolValue(rep.AllowRebase)
-	data.AllowRebaseMerge = types.BoolValue(rep.AllowRebaseMerge)
-	data.AllowSquash = types.BoolValue(rep.AllowSquash)
-	data.AvatarURL = types.StringValue(rep.AvatarURL)
-	data.Internal = types.BoolValue(rep.Internal)
-	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
-	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
-	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
+	data.from(rep)
 
-	// Repository owner
-	if rep.Owner != nil {
-		ownerElement := repositoryResourceUser{
-			ID:        types.Int64Value(rep.Owner.ID),
-			UserName:  types.StringValue(rep.Owner.UserName),
-			LoginName: types.StringValue(rep.Owner.LoginName),
-			FullName:  types.StringValue(rep.Owner.FullName),
-			Email:     types.StringValue(rep.Owner.Email),
-		}
-		ownerValue, diags := types.ObjectValueFrom(
-			ctx,
-			ownerElement.AttributeTypes(),
-			ownerElement,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Owner = ownerValue
-	} else {
-		data.Owner = types.ObjectNull(
-			repositoryResourceUser{}.AttributeTypes(),
-		)
+	diags = data.ownerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Repository permissions
-	if rep.Permissions != nil {
-		perms := repositoryResourcePermissions{
-			Admin: types.BoolValue(rep.Permissions.Admin),
-			Push:  types.BoolValue(rep.Permissions.Push),
-			Pull:  types.BoolValue(rep.Permissions.Pull),
-		}
-		permsValue, diags := types.ObjectValueFrom(
-			ctx,
-			perms.AttributeTypes(),
-			perms,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Permissions = permsValue
-	} else {
-		data.Permissions = types.ObjectNull(
-			repositoryResourcePermissions{}.AttributeTypes(),
-		)
+	diags = data.permissionsFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// Internal issue tracker
-	if rep.InternalTracker != nil {
-		intTracker := repositoryResourceInternalTracker{
-			EnableTimeTracker:                types.BoolValue(rep.InternalTracker.EnableTimeTracker),
-			AllowOnlyContributorsToTrackTime: types.BoolValue(rep.InternalTracker.AllowOnlyContributorsToTrackTime),
-			EnableIssueDependencies:          types.BoolValue(rep.InternalTracker.EnableIssueDependencies),
-		}
-		intTrackerValue, diags := types.ObjectValueFrom(
-			ctx,
-			intTracker.AttributeTypes(),
-			intTracker,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.InternalTracker = intTrackerValue
-	} else {
-		data.InternalTracker = types.ObjectNull(
-			repositoryResourceInternalTracker{}.AttributeTypes(),
-		)
+	diags = data.internalTrackerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// External issue tracker
-	if rep.ExternalTracker != nil {
-		extTracker := repositoryResourceExternalTracker{
-			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
-			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
-			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
-		}
-		extTrackerValue, diags := types.ObjectValueFrom(
-			ctx,
-			extTracker.AttributeTypes(),
-			extTracker,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.ExternalTracker = extTrackerValue
-	} else {
-		data.ExternalTracker = types.ObjectNull(
-			repositoryResourceExternalTracker{}.AttributeTypes(),
-		)
+	diags = data.externalTrackerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// External wiki
-	if rep.ExternalWiki != nil {
-		wiki := repositoryResourceExternalWiki{
-			ExternalWikiURL: types.StringValue(rep.ExternalWiki.ExternalWikiURL),
-		}
-		wikiValue, diags := types.ObjectValueFrom(
-			ctx,
-			wiki.AttributeTypes(),
-			wiki,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.ExternalWiki = wikiValue
-	} else {
-		data.ExternalWiki = types.ObjectNull(
-			repositoryResourceExternalWiki{}.AttributeTypes(),
-		)
+	diags = data.externalWikiFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Save data into Terraform state
