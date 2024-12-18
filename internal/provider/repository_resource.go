@@ -200,7 +200,8 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					},
 				},
 				Description: "Owner of the repository.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the repository.",
@@ -522,10 +523,12 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Read repository owner into model
-	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	if !data.Owner.IsUnknown() {
+		diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	tflog.Info(ctx, "Create repository", map[string]any{

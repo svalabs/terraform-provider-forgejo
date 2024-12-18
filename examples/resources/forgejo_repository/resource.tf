@@ -11,15 +11,9 @@ provider "forgejo" {
 }
 
 resource "forgejo_repository" "user_defaults" {
-  owner = {
-    login = "achim"
-  }
   name = "user_tftest_defaults"
 }
 resource "forgejo_repository" "user_non_defaults" {
-  owner = {
-    login = "achim"
-  }
   name        = "user_tftest_non_defaults"
   description = "Terraform Test Repo owned by user with non-default attributes"
   private     = true
