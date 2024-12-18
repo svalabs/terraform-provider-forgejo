@@ -78,7 +78,12 @@ type repositoryResourceModel struct {
 	MirrorInterval            types.String `tfsdk:"mirror_interval"`
 	MirrorUpdated             types.String `tfsdk:"mirror_updated"`
 	DefaultMergeStyle         types.String `tfsdk:"default_merge_style"`
+	IssueLabels               types.String `tfsdk:"issue_labels"`
 	AutoInit                  types.Bool   `tfsdk:"auto_init"`
+	Gitignores                types.String `tfsdk:"gitignores"`
+	License                   types.String `tfsdk:"license"`
+	Readme                    types.String `tfsdk:"readme"`
+	TrustModel                types.String `tfsdk:"trust_model"`
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#User
@@ -289,7 +294,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"default_branch": schema.StringAttribute{
 				Description: "Default branch of the repository.",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("main"),
 			},
 			"archived": schema.BoolAttribute{
 				Description: "Is the repository archived?",
@@ -435,11 +442,41 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Default merge style of the repository.",
 				Computed:    true,
 			},
+			"issue_labels": schema.StringAttribute{
+				Description: "Issue Label set to use",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+			},
 			"auto_init": schema.BoolAttribute{
 				Description: "Whether the repository should be auto-intialized?",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+			},
+			"gitignores": schema.StringAttribute{
+				Description: "Gitignores to use",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+			},
+			"license": schema.StringAttribute{
+				Description: "License to use",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+			},
+			"readme": schema.StringAttribute{
+				Description: "Readme of the repository to create",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+			},
+			"trust_model": schema.StringAttribute{
+				Description: "TrustModel of the repository",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 		},
 	}
@@ -485,32 +522,32 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	tflog.Info(ctx, "Create repository", map[string]any{
-		"name":        data.Name.ValueString(),
-		"description": data.Description.ValueString(),
-		"private":     data.Private.ValueBool(),
-		//"issue_labels": ,
-		"auto_init": data.AutoInit.ValueBool(),
-		"template":  data.Template.ValueBool(),
-		//"gitignores": ,
-		//"license": ,
-		//"readme": ,
-		//"default_branch" ,
-		//"trust_model": forgejo.TrustModel(),
+		"name":           data.Name.ValueString(),
+		"description":    data.Description.ValueString(),
+		"private":        data.Private.ValueBool(),
+		"issue_labels":   data.IssueLabels.ValueString(),
+		"auto_init":      data.AutoInit.ValueBool(),
+		"template":       data.Template.ValueBool(),
+		"gitignores":     data.Gitignores.ValueString(),
+		"license":        data.License.ValueString(),
+		"readme":         data.Readme.ValueString(),
+		"default_branch": data.DefaultBranch.ValueString(),
+		"trust_model":    forgejo.TrustModel(data.TrustModel.ValueString()),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.CreateRepoOption{
-		Name:        data.Name.ValueString(),
-		Description: data.Description.ValueString(),
-		Private:     data.Private.ValueBool(),
-		//IssueLabels: ,
-		AutoInit: data.AutoInit.ValueBool(),
-		Template: data.Template.ValueBool(),
-		//Gitignores: ,
-		//License: ,
-		//Readme: ,
-		//DefaultBranch ,
-		//TrustModel: forgejo.TrustModel(),
+		Name:          data.Name.ValueString(),
+		Description:   data.Description.ValueString(),
+		Private:       data.Private.ValueBool(),
+		IssueLabels:   data.IssueLabels.ValueString(),
+		AutoInit:      data.AutoInit.ValueBool(),
+		Template:      data.Template.ValueBool(),
+		Gitignores:    data.Gitignores.ValueString(),
+		License:       data.License.ValueString(),
+		Readme:        data.Readme.ValueString(),
+		DefaultBranch: data.DefaultBranch.ValueString(),
+		TrustModel:    forgejo.TrustModel(data.TrustModel.ValueString()),
 	}
 
 	// Validate API request body
