@@ -521,6 +521,13 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Read repository owner into model
+	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Create repository", map[string]any{
 		"name":           data.Name.ValueString(),
 		"description":    data.Description.ValueString(),
@@ -558,50 +565,43 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// Read repository owner into model
-	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var (
-		repo     *forgejo.Repository
-		response *forgejo.Response
-		error    error
-	)
-
-	tflog.Info(ctx, "Get organization by name", map[string]any{
-		"name": owner.UserName.ValueString(),
-	})
-
 	// Use Forgejo client to check if owner is org or user
+	ownerIsOrg := false
 	_, _, err = r.client.GetOrg(owner.UserName.ValueString())
 	if err == nil {
 		// Owner is org
-		// -> use Forgejo client to create new org repository
-		repo, response, error = r.client.CreateOrgRepo(
+		ownerIsOrg = true
+	}
+
+	var (
+		rep *forgejo.Repository
+		res *forgejo.Response
+	)
+
+	switch ownerIsOrg {
+	case true:
+		// Use Forgejo client to create new org repository
+		rep, res, err = r.client.CreateOrgRepo(
 			owner.UserName.ValueString(),
 			opts,
 		)
-	} else {
-		// Assume owner is user
-		// -> use Forgejo client to create new user repository
-		repo, response, error = r.client.CreateRepo(opts)
+	case false:
+		// Use Forgejo client to create new user repository
+		rep, res, err = r.client.CreateRepo(opts)
 	}
-	if error != nil {
+	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
-			"status": response.Status,
+			"status": res.Status,
 		})
 
 		var msg string
-		switch response.StatusCode {
+		switch res.StatusCode {
 		case 403:
-			msg = fmt.Sprintf("Repository with name %s forbidden: %s", data.Name.String(), error)
+			msg = fmt.Sprintf("Repository with name %s forbidden: %s", data.Name.String(), err)
 		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", error)
+			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", error)
+			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to create repository", msg)
 
@@ -609,61 +609,61 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(repo.ID)
-	data.FullName = types.StringValue(repo.FullName)
-	data.Description = types.StringValue(repo.Description)
-	data.Empty = types.BoolValue(repo.Empty)
-	data.Private = types.BoolValue(repo.Private)
-	data.Fork = types.BoolValue(repo.Fork)
-	data.Template = types.BoolValue(repo.Template)
-	if repo.Parent != nil {
-		data.ParentID = types.Int64Value(repo.Parent.ID)
+	data.ID = types.Int64Value(rep.ID)
+	data.FullName = types.StringValue(rep.FullName)
+	data.Description = types.StringValue(rep.Description)
+	data.Empty = types.BoolValue(rep.Empty)
+	data.Private = types.BoolValue(rep.Private)
+	data.Fork = types.BoolValue(rep.Fork)
+	data.Template = types.BoolValue(rep.Template)
+	if rep.Parent != nil {
+		data.ParentID = types.Int64Value(rep.Parent.ID)
 	} else {
 		data.ParentID = types.Int64Null()
 	}
-	data.Mirror = types.BoolValue(repo.Mirror)
-	data.Size = types.Int64Value(int64(repo.Size))
-	data.HTMLURL = types.StringValue(repo.HTMLURL)
-	data.SSHURL = types.StringValue(repo.SSHURL)
-	data.CloneURL = types.StringValue(repo.CloneURL)
-	data.OriginalURL = types.StringValue(repo.OriginalURL)
-	data.Website = types.StringValue(repo.Website)
-	data.Stars = types.Int64Value(int64(repo.Stars))
-	data.Forks = types.Int64Value(int64(repo.Forks))
-	data.Watchers = types.Int64Value(int64(repo.Watchers))
-	data.OpenIssues = types.Int64Value(int64(repo.OpenIssues))
-	data.OpenPulls = types.Int64Value(int64(repo.OpenPulls))
-	data.Releases = types.Int64Value(int64(repo.Releases))
-	data.DefaultBranch = types.StringValue(repo.DefaultBranch)
-	data.Archived = types.BoolValue(repo.Archived)
-	data.Created = types.StringValue(repo.Created.String())
-	data.Updated = types.StringValue(repo.Updated.String())
-	data.HasIssues = types.BoolValue(repo.HasIssues)
-	data.HasWiki = types.BoolValue(repo.HasWiki)
-	data.HasPullRequests = types.BoolValue(repo.HasPullRequests)
-	data.HasProjects = types.BoolValue(repo.HasProjects)
-	data.HasReleases = types.BoolValue(repo.HasReleases)
-	data.HasPackages = types.BoolValue(repo.HasPackages)
-	data.HasActions = types.BoolValue(repo.HasActions)
-	data.IgnoreWhitespaceConflicts = types.BoolValue(repo.IgnoreWhitespaceConflicts)
-	data.AllowMerge = types.BoolValue(repo.AllowMerge)
-	data.AllowRebase = types.BoolValue(repo.AllowRebase)
-	data.AllowRebaseMerge = types.BoolValue(repo.AllowRebaseMerge)
-	data.AllowSquash = types.BoolValue(repo.AllowSquash)
-	data.AvatarURL = types.StringValue(repo.AvatarURL)
-	data.Internal = types.BoolValue(repo.Internal)
-	data.MirrorInterval = types.StringValue(repo.MirrorInterval)
-	data.MirrorUpdated = types.StringValue(repo.MirrorUpdated.String())
-	data.DefaultMergeStyle = types.StringValue(string(repo.DefaultMergeStyle))
+	data.Mirror = types.BoolValue(rep.Mirror)
+	data.Size = types.Int64Value(int64(rep.Size))
+	data.HTMLURL = types.StringValue(rep.HTMLURL)
+	data.SSHURL = types.StringValue(rep.SSHURL)
+	data.CloneURL = types.StringValue(rep.CloneURL)
+	data.OriginalURL = types.StringValue(rep.OriginalURL)
+	data.Website = types.StringValue(rep.Website)
+	data.Stars = types.Int64Value(int64(rep.Stars))
+	data.Forks = types.Int64Value(int64(rep.Forks))
+	data.Watchers = types.Int64Value(int64(rep.Watchers))
+	data.OpenIssues = types.Int64Value(int64(rep.OpenIssues))
+	data.OpenPulls = types.Int64Value(int64(rep.OpenPulls))
+	data.Releases = types.Int64Value(int64(rep.Releases))
+	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
+	data.Archived = types.BoolValue(rep.Archived)
+	data.Created = types.StringValue(rep.Created.String())
+	data.Updated = types.StringValue(rep.Updated.String())
+	data.HasIssues = types.BoolValue(rep.HasIssues)
+	data.HasWiki = types.BoolValue(rep.HasWiki)
+	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
+	data.HasProjects = types.BoolValue(rep.HasProjects)
+	data.HasReleases = types.BoolValue(rep.HasReleases)
+	data.HasPackages = types.BoolValue(rep.HasPackages)
+	data.HasActions = types.BoolValue(rep.HasActions)
+	data.IgnoreWhitespaceConflicts = types.BoolValue(rep.IgnoreWhitespaceConflicts)
+	data.AllowMerge = types.BoolValue(rep.AllowMerge)
+	data.AllowRebase = types.BoolValue(rep.AllowRebase)
+	data.AllowRebaseMerge = types.BoolValue(rep.AllowRebaseMerge)
+	data.AllowSquash = types.BoolValue(rep.AllowSquash)
+	data.AvatarURL = types.StringValue(rep.AvatarURL)
+	data.Internal = types.BoolValue(rep.Internal)
+	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
+	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
+	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
 
 	// Repository owner
-	if repo.Owner != nil {
+	if rep.Owner != nil {
 		ownerElement := repositoryResourceUser{
-			ID:        types.Int64Value(repo.Owner.ID),
-			UserName:  types.StringValue(repo.Owner.UserName),
-			LoginName: types.StringValue(repo.Owner.LoginName),
-			FullName:  types.StringValue(repo.Owner.FullName),
-			Email:     types.StringValue(repo.Owner.Email),
+			ID:        types.Int64Value(rep.Owner.ID),
+			UserName:  types.StringValue(rep.Owner.UserName),
+			LoginName: types.StringValue(rep.Owner.LoginName),
+			FullName:  types.StringValue(rep.Owner.FullName),
+			Email:     types.StringValue(rep.Owner.Email),
 		}
 		ownerValue, diags := types.ObjectValueFrom(
 			ctx,
@@ -682,11 +682,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Repository permissions
-	if repo.Permissions != nil {
+	if rep.Permissions != nil {
 		perms := repositoryResourcePermissions{
-			Admin: types.BoolValue(repo.Permissions.Admin),
-			Push:  types.BoolValue(repo.Permissions.Push),
-			Pull:  types.BoolValue(repo.Permissions.Pull),
+			Admin: types.BoolValue(rep.Permissions.Admin),
+			Push:  types.BoolValue(rep.Permissions.Push),
+			Pull:  types.BoolValue(rep.Permissions.Pull),
 		}
 		permsValue, diags := types.ObjectValueFrom(
 			ctx,
@@ -705,11 +705,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Internal issue tracker
-	if repo.InternalTracker != nil {
+	if rep.InternalTracker != nil {
 		intTracker := repositoryResourceInternalTracker{
-			EnableTimeTracker:                types.BoolValue(repo.InternalTracker.EnableTimeTracker),
-			AllowOnlyContributorsToTrackTime: types.BoolValue(repo.InternalTracker.AllowOnlyContributorsToTrackTime),
-			EnableIssueDependencies:          types.BoolValue(repo.InternalTracker.EnableIssueDependencies),
+			EnableTimeTracker:                types.BoolValue(rep.InternalTracker.EnableTimeTracker),
+			AllowOnlyContributorsToTrackTime: types.BoolValue(rep.InternalTracker.AllowOnlyContributorsToTrackTime),
+			EnableIssueDependencies:          types.BoolValue(rep.InternalTracker.EnableIssueDependencies),
 		}
 		intTrackerValue, diags := types.ObjectValueFrom(
 			ctx,
@@ -728,11 +728,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// External issue tracker
-	if repo.ExternalTracker != nil {
+	if rep.ExternalTracker != nil {
 		extTracker := repositoryResourceExternalTracker{
-			ExternalTrackerURL:    types.StringValue(repo.ExternalTracker.ExternalTrackerURL),
-			ExternalTrackerFormat: types.StringValue(repo.ExternalTracker.ExternalTrackerFormat),
-			ExternalTrackerStyle:  types.StringValue(repo.ExternalTracker.ExternalTrackerStyle),
+			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
+			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
+			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
 		}
 		extTrackerValue, diags := types.ObjectValueFrom(
 			ctx,
@@ -751,9 +751,9 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// External wiki
-	if repo.ExternalWiki != nil {
+	if rep.ExternalWiki != nil {
 		wiki := repositoryResourceExternalWiki{
-			ExternalWikiURL: types.StringValue(repo.ExternalWiki.ExternalWikiURL),
+			ExternalWikiURL: types.StringValue(rep.ExternalWiki.ExternalWikiURL),
 		}
 		wikiValue, diags := types.ObjectValueFrom(
 			ctx,
