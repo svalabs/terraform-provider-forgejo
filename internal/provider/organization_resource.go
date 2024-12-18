@@ -168,14 +168,14 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Use Forgejo client to create new organization
-	o, re, err := r.client.CreateOrg(opts)
+	org, res, err := r.client.CreateOrg(opts)
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
-			"status": re.Status,
+			"status": res.Status,
 		})
 
 		var msg string
-		switch re.StatusCode {
+		switch res.StatusCode {
 		case 403:
 			msg = fmt.Sprintf("Organization with name %s forbidden: %s", data.Name.String(), err)
 		case 422:
@@ -189,14 +189,14 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(o.ID)
-	data.Name = types.StringValue(o.UserName)
-	data.FullName = types.StringValue(o.FullName)
-	data.AvatarURL = types.StringValue(o.AvatarURL)
-	data.Description = types.StringValue(o.Description)
-	data.Website = types.StringValue(o.Website)
-	data.Location = types.StringValue(o.Location)
-	data.Visibility = types.StringValue(o.Visibility)
+	data.ID = types.Int64Value(org.ID)
+	data.Name = types.StringValue(org.UserName)
+	data.FullName = types.StringValue(org.FullName)
+	data.AvatarURL = types.StringValue(org.AvatarURL)
+	data.Description = types.StringValue(org.Description)
+	data.Website = types.StringValue(org.Website)
+	data.Location = types.StringValue(org.Location)
+	data.Visibility = types.StringValue(org.Visibility)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -209,7 +209,7 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 
 	var data organizationDataSourceModel
 
-	// Read Terraform configuration data into model
+	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -221,14 +221,14 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 	})
 
 	// Use Forgejo client to get organization by name
-	o, re, err := r.client.GetOrg(data.Name.ValueString())
+	org, res, err := r.client.GetOrg(data.Name.ValueString())
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
-			"status": re.Status,
+			"status": res.Status,
 		})
 
 		var msg string
-		switch re.StatusCode {
+		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
@@ -240,14 +240,14 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(o.ID)
-	data.Name = types.StringValue(o.UserName)
-	data.FullName = types.StringValue(o.FullName)
-	data.AvatarURL = types.StringValue(o.AvatarURL)
-	data.Description = types.StringValue(o.Description)
-	data.Website = types.StringValue(o.Website)
-	data.Location = types.StringValue(o.Location)
-	data.Visibility = types.StringValue(o.Visibility)
+	data.ID = types.Int64Value(org.ID)
+	data.Name = types.StringValue(org.UserName)
+	data.FullName = types.StringValue(org.FullName)
+	data.AvatarURL = types.StringValue(org.AvatarURL)
+	data.Description = types.StringValue(org.Description)
+	data.Website = types.StringValue(org.Website)
+	data.Location = types.StringValue(org.Location)
+	data.Visibility = types.StringValue(org.Visibility)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -364,14 +364,14 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 	})
 
 	// Use Forgejo client to delete existing organization
-	re, err := r.client.DeleteOrg(data.Name.ValueString())
+	res, err := r.client.DeleteOrg(data.Name.ValueString())
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
-			"status": re.Status,
+			"status": res.Status,
 		})
 
 		var msg string
-		switch re.StatusCode {
+		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
