@@ -37,33 +37,34 @@ type repositoryResource struct {
 // repositoryResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Repository
 type repositoryResourceModel struct {
-	ID                        types.Int64  `tfsdk:"id"`
-	Owner                     types.Object `tfsdk:"owner"`
-	Name                      types.String `tfsdk:"name"`
-	FullName                  types.String `tfsdk:"full_name"`
-	Description               types.String `tfsdk:"description"`
-	Empty                     types.Bool   `tfsdk:"empty"`
-	Private                   types.Bool   `tfsdk:"private"`
-	Fork                      types.Bool   `tfsdk:"fork"`
-	Template                  types.Bool   `tfsdk:"template"`
-	ParentID                  types.Int64  `tfsdk:"parent_id"`
-	Mirror                    types.Bool   `tfsdk:"mirror"`
-	Size                      types.Int64  `tfsdk:"size"`
-	HTMLURL                   types.String `tfsdk:"html_url"`
-	SSHURL                    types.String `tfsdk:"ssh_url"`
-	CloneURL                  types.String `tfsdk:"clone_url"`
-	OriginalURL               types.String `tfsdk:"original_url"`
-	Website                   types.String `tfsdk:"website"`
-	Stars                     types.Int64  `tfsdk:"stars_count"`
-	Forks                     types.Int64  `tfsdk:"forks_count"`
-	Watchers                  types.Int64  `tfsdk:"watchers_count"`
-	OpenIssues                types.Int64  `tfsdk:"open_issues_count"`
-	OpenPulls                 types.Int64  `tfsdk:"open_pr_counter"`
-	Releases                  types.Int64  `tfsdk:"release_counter"`
-	DefaultBranch             types.String `tfsdk:"default_branch"`
-	Archived                  types.Bool   `tfsdk:"archived"`
-	Created                   types.String `tfsdk:"created_at"`
-	Updated                   types.String `tfsdk:"updated_at"`
+	ID            types.Int64  `tfsdk:"id"`
+	Owner         types.Object `tfsdk:"owner"`
+	Name          types.String `tfsdk:"name"`
+	FullName      types.String `tfsdk:"full_name"`
+	Description   types.String `tfsdk:"description"`
+	Empty         types.Bool   `tfsdk:"empty"`
+	Private       types.Bool   `tfsdk:"private"`
+	Fork          types.Bool   `tfsdk:"fork"`
+	Template      types.Bool   `tfsdk:"template"`
+	ParentID      types.Int64  `tfsdk:"parent_id"`
+	Mirror        types.Bool   `tfsdk:"mirror"`
+	Size          types.Int64  `tfsdk:"size"`
+	HTMLURL       types.String `tfsdk:"html_url"`
+	SSHURL        types.String `tfsdk:"ssh_url"`
+	CloneURL      types.String `tfsdk:"clone_url"`
+	OriginalURL   types.String `tfsdk:"original_url"`
+	Website       types.String `tfsdk:"website"`
+	Stars         types.Int64  `tfsdk:"stars_count"`
+	Forks         types.Int64  `tfsdk:"forks_count"`
+	Watchers      types.Int64  `tfsdk:"watchers_count"`
+	OpenIssues    types.Int64  `tfsdk:"open_issues_count"`
+	OpenPulls     types.Int64  `tfsdk:"open_pr_counter"`
+	Releases      types.Int64  `tfsdk:"release_counter"`
+	DefaultBranch types.String `tfsdk:"default_branch"`
+	Archived      types.Bool   `tfsdk:"archived"`
+	Created       types.String `tfsdk:"created_at"`
+	// changes with every update, so we're not including it in the model
+	// Updated                   types.String `tfsdk:"updated_at"`
 	Permissions               types.Object `tfsdk:"permissions"`
 	HasIssues                 types.Bool   `tfsdk:"has_issues"`
 	InternalTracker           types.Object `tfsdk:"internal_tracker"`
@@ -123,7 +124,7 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.DefaultBranch = types.StringValue(r.DefaultBranch)
 	m.Archived = types.BoolValue(r.Archived)
 	m.Created = types.StringValue(r.Created.String())
-	m.Updated = types.StringValue(r.Updated.String())
+	// m.Updated = types.StringValue(r.Updated.String())
 	m.HasIssues = types.BoolValue(r.HasIssues)
 	m.HasWiki = types.BoolValue(r.HasWiki)
 	m.HasPullRequests = types.BoolValue(r.HasPullRequests)
@@ -609,13 +610,10 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"updated_at": schema.StringAttribute{
-				Description: "Time at which the repository was updated.",
-				Computed:    true,
-				// PlanModifiers: []planmodifier.String{
-				// 	stringplanmodifier.UseStateForUnknown(),
-				// },
-			},
+			// "updated_at": schema.StringAttribute{
+			// 	Description: "Time at which the repository was updated.",
+			// 	Computed:    true,
+			// },
 			"permissions": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"admin": schema.BoolAttribute{
