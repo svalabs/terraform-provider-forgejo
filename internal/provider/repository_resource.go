@@ -10,10 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -446,7 +444,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					},
 					"login": schema.StringAttribute{
 						Description: "Name of the user.",
-						Required:    true,
+						Optional:    true,
+						Computed:    true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"login_name": schema.StringAttribute{
 						Description: "Login name of the user.",
@@ -469,11 +471,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					},
 				},
 				Description: "Owner of the repository.",
-				Optional:    true,
-				Computed:    true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
-				},
+				Required:    true,
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the repository.",
@@ -492,9 +490,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"empty": schema.BoolAttribute{
 				Description: "Is the repository empty?",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"private": schema.BoolAttribute{
 				Description: "Is the repository private?",
@@ -525,9 +520,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"size": schema.Int64Attribute{
 				Description: "Size of the repository in KiB.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
 			},
 			"html_url": schema.StringAttribute{
 				Description: "HTML URL of the repository.",
@@ -555,44 +547,26 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"stars_count": schema.Int64Attribute{
 				Description: "Number of stars of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
 			},
 			"forks_count": schema.Int64Attribute{
 				Description: "Number of forks of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
 			},
 			"watchers_count": schema.Int64Attribute{
 				Description: "Number of watchers of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
 			},
 			"open_issues_count": schema.Int64Attribute{
 				Description: "Number of open issues of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
 			},
 			"open_pr_counter": schema.Int64Attribute{
 				Description: "Number of open pull requests of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
 			},
 			"release_counter": schema.Int64Attribute{
 				Description: "Number of releases of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
 			},
 			"default_branch": schema.StringAttribute{
 				Description: "Default branch of the repository.",
@@ -786,9 +760,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"mirror_updated": schema.StringAttribute{
 				Description: "Time at which the repository mirror was updated.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"default_merge_style": schema.StringAttribute{
 				Description: "Default merge style of the repository.",
