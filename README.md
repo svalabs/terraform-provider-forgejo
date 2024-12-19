@@ -9,6 +9,7 @@ It is in a **very early** stage and currently contains the following...
 Resources:
 
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
+- `forgejo_repository` ([documentation](docs/resources/repository.md))
 
 Data Sources:
 
@@ -85,10 +86,17 @@ resource "forgejo_organization" "example" {
 }
 
 data "forgejo_repository" "example" {
-  owner = {
-    login = "user"
-  }
-  name = "existing_repo"
+  owner = {}
+  name  = "existing_repo"
+}
+
+resource "forgejo_repository" "example" {
+  owner          = {}
+  name           = "new_repo"
+  description    = "Purely for testing..."
+  private        = true
+  default_branch = "dev"
+  auto_init      = true
 }
 ```
 
