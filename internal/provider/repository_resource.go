@@ -63,7 +63,7 @@ type repositoryResourceModel struct {
 	DefaultBranch types.String `tfsdk:"default_branch"`
 	Archived      types.Bool   `tfsdk:"archived"`
 	Created       types.String `tfsdk:"created_at"`
-	// changes with every update, so we're not including it in the model
+	// updated_at changes with every update, so we're not including it in the model
 	// Updated                   types.String `tfsdk:"updated_at"`
 	Permissions               types.Object `tfsdk:"permissions"`
 	HasIssues                 types.Bool   `tfsdk:"has_issues"`
@@ -1172,7 +1172,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	// }
 
 	// Use Forgejo client to update existing repository
-	_, res, err := r.client.EditRepo(
+	rep, res, err := r.client.EditRepo(
 		owner.UserName.ValueString(),
 		state.Name.ValueString(),
 		opts,
@@ -1204,34 +1204,6 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 		resp.Diagnostics.AddError("Unable to update repository", msg)
-
-		return
-	}
-
-	// Use Forgejo client to fetch updated repository
-	// TODO: is this necessary? compare rep with return value of previous API call...
-	rep, res, err := r.client.GetRepo(
-		owner.UserName.ValueString(),
-		data.Name.ValueString(),
-	)
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				owner.UserName.String(),
-				data.Name.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by name", msg)
 
 		return
 	}
