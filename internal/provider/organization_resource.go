@@ -294,14 +294,17 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Use Forgejo client to update existing organization
-	re, err := r.client.EditOrg(data.Name.ValueString(), opts)
+	res, err := r.client.EditOrg(
+		data.Name.ValueString(),
+		opts,
+	)
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
-			"status": re.Status,
+			"status": res.Status,
 		})
 
 		var msg string
-		switch re.StatusCode {
+		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
@@ -313,14 +316,14 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Use Forgejo client to fetch updated organization
-	o, re, err := r.client.GetOrg(data.Name.ValueString())
+	org, res, err := r.client.GetOrg(data.Name.ValueString())
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
-			"status": re.Status,
+			"status": res.Status,
 		})
 
 		var msg string
-		switch re.StatusCode {
+		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
 		default:
@@ -332,14 +335,14 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(o.ID)
-	data.Name = types.StringValue(o.UserName)
-	data.FullName = types.StringValue(o.FullName)
-	data.AvatarURL = types.StringValue(o.AvatarURL)
-	data.Description = types.StringValue(o.Description)
-	data.Website = types.StringValue(o.Website)
-	data.Location = types.StringValue(o.Location)
-	data.Visibility = types.StringValue(o.Visibility)
+	data.ID = types.Int64Value(org.ID)
+	data.Name = types.StringValue(org.UserName)
+	data.FullName = types.StringValue(org.FullName)
+	data.AvatarURL = types.StringValue(org.AvatarURL)
+	data.Description = types.StringValue(org.Description)
+	data.Website = types.StringValue(org.Website)
+	data.Location = types.StringValue(org.Location)
+	data.Visibility = types.StringValue(org.Visibility)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)

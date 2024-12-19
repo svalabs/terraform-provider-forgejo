@@ -87,7 +87,7 @@ type repositoryDataSourceUser struct {
 	Email     types.String `tfsdk:"email"`
 }
 
-func (m repositoryDataSourceUser) AttributeTypes() map[string]attr.Type {
+func (m repositoryDataSourceUser) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id":         types.Int64Type,
 		"login":      types.StringType,
@@ -104,7 +104,7 @@ type repositoryDataSourcePermissions struct {
 	Pull  types.Bool `tfsdk:"pull"`
 }
 
-func (m repositoryDataSourcePermissions) AttributeTypes() map[string]attr.Type {
+func (m repositoryDataSourcePermissions) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"admin": types.BoolType,
 		"push":  types.BoolType,
@@ -119,7 +119,7 @@ type repositoryDataSourceInternalTracker struct {
 	EnableIssueDependencies          types.Bool `tfsdk:"enable_issue_dependencies"`
 }
 
-func (m repositoryDataSourceInternalTracker) AttributeTypes() map[string]attr.Type {
+func (m repositoryDataSourceInternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"enable_time_tracker":                   types.BoolType,
 		"allow_only_contributors_to_track_time": types.BoolType,
@@ -134,7 +134,7 @@ type repositoryDataSourceExternalTracker struct {
 	ExternalTrackerStyle  types.String `tfsdk:"external_tracker_style"`
 }
 
-func (m repositoryDataSourceExternalTracker) AttributeTypes() map[string]attr.Type {
+func (m repositoryDataSourceExternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"external_tracker_url":    types.StringType,
 		"external_tracker_format": types.StringType,
@@ -147,7 +147,7 @@ type repositoryDataSourceExternalWiki struct {
 	ExternalWikiURL types.String `tfsdk:"external_wiki_url"`
 }
 
-func (m repositoryDataSourceExternalWiki) AttributeTypes() map[string]attr.Type {
+func (m repositoryDataSourceExternalWiki) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"external_wiki_url": types.StringType,
 	}
@@ -565,7 +565,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 		ownerValue, diags := types.ObjectValueFrom(
 			ctx,
-			ownerElement.AttributeTypes(),
+			ownerElement.attributeTypes(),
 			ownerElement,
 		)
 		resp.Diagnostics.Append(diags...)
@@ -584,7 +584,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 		permsValue, diags := types.ObjectValueFrom(
 			ctx,
-			perms.AttributeTypes(),
+			perms.attributeTypes(),
 			perms,
 		)
 		resp.Diagnostics.Append(diags...)
@@ -603,7 +603,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 		intTrackerValue, diags := types.ObjectValueFrom(
 			ctx,
-			intTracker.AttributeTypes(),
+			intTracker.attributeTypes(),
 			intTracker,
 		)
 		resp.Diagnostics.Append(diags...)
@@ -622,7 +622,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 		extTrackerValue, diags := types.ObjectValueFrom(
 			ctx,
-			extTracker.AttributeTypes(),
+			extTracker.attributeTypes(),
 			extTracker,
 		)
 		resp.Diagnostics.Append(diags...)
@@ -639,7 +639,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		}
 		wikiValue, diags := types.ObjectValueFrom(
 			ctx,
-			wiki.AttributeTypes(),
+			wiki.attributeTypes(),
 			wiki,
 		)
 		resp.Diagnostics.Append(diags...)
