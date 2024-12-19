@@ -924,31 +924,14 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 	// Map response body to model
 	data.from(rep)
-
 	diags = data.ownerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.permissionsFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.internalTrackerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.externalTrackerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.externalWikiFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -1017,31 +1000,14 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Map response body to model
 	data.from(rep)
-
 	diags = data.ownerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.permissionsFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.internalTrackerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.externalTrackerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.externalWikiFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -1080,10 +1046,11 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Read repository owner into model
 	if !data.Owner.IsUnknown() {
 		diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+		resp.Diagnostics.Append(diags...)
 	} else {
 		diags = state.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+		resp.Diagnostics.Append(diags...)
 	}
-	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1223,31 +1190,14 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Map response body to model
 	data.from(rep)
-
 	diags = data.ownerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.permissionsFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.internalTrackerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.externalTrackerFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	diags = data.externalWikiFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
