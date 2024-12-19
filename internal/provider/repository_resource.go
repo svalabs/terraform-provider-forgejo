@@ -913,20 +913,21 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		_, res, _ := r.client.GetOrg(owner.UserName.ValueString())
 		if res.StatusCode == 404 {
 			// Use Forgejo client to check if owner is user
-			// TODO: check to see if owner is user or raise an error
+			_, res, _ = r.client.GetUserInfo(owner.UserName.ValueString())
+			if res.StatusCode == 404 {
+				resp.Diagnostics.AddError(
+					"Owner not found",
+					fmt.Sprintf(
+						"Neither organization nor user with name %s exists.",
+						owner.UserName.String(),
+					),
+				)
 
-			resp.Diagnostics.AddError(
-				"Owner not found",
-				fmt.Sprintf(
-					"Neither organization nor user with name %s exists.",
-					owner.UserName.String(),
-				),
-			)
-
-			return
+				return
+			}
 
 			// User exists -> user repository
-			// ownerType = "user"
+			ownerType = "user"
 		} else {
 			// Org exists -> org repository
 			ownerType = "org"
@@ -948,6 +949,12 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	case "personal":
 		// Use Forgejo client to create new personal repository
 		rep, res, err = r.client.CreateRepo(opts)
+	case "user":
+		// Use Forgejo client to create new user repository
+		rep, res, err = r.client.AdminCreateRepo(
+			owner.UserName.ValueString(),
+			opts,
+		)
 	}
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
@@ -956,6 +963,19 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 		var msg string
 		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s forbidden: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository owner with name %s not found: %s",
+				owner.UserName.String(),
+				err,
+			)
 		case 409:
 			msg = fmt.Sprintf(
 				"Repository with name %s already exists: %s",
