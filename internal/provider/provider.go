@@ -238,6 +238,7 @@ func (p *forgejoProvider) DataSources(_ context.Context) []func() datasource.Dat
 	return []func() datasource.DataSource{
 		NewOrganizationDataSource,
 		NewRepositoryDataSource,
+		NewUserDataSource,
 	}
 }
 
