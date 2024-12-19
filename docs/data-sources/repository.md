@@ -31,7 +31,6 @@ data "forgejo_repository" "user" {
   }
   name = "user_test_repo_1"
 }
-
 data "forgejo_repository" "org" {
   owner = {
     login = "test_org_1"
@@ -42,7 +41,6 @@ data "forgejo_repository" "org" {
 output "user_debug" {
   value = data.forgejo_repository.user
 }
-
 output "org_debug" {
   value = data.forgejo_repository.org
 }

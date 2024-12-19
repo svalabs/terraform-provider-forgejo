@@ -15,6 +15,7 @@ Data Sources:
 
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
+- `forgejo_user` ([documentation](docs/data-sources/user.md))
 
 ### Directory Layout
 
@@ -97,6 +98,10 @@ resource "forgejo_repository" "example" {
   private        = true
   default_branch = "dev"
   auto_init      = true
+}
+
+data "forgejo_user" "example" {
+  login = "existing_user"
 }
 ```
 

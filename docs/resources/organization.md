@@ -40,7 +40,6 @@ resource "forgejo_organization" "non_defaults" {
 output "debug_defaults" {
   value = forgejo_organization.defaults
 }
-
 output "debug_non_defaults" {
   value = forgejo_organization.non_defaults
 }
