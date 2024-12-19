@@ -23,7 +23,7 @@ resource "forgejo_repository" "user_non_defaults" {
   issue_labels   = "Default"
   auto_init      = true
   readme         = "Default"
-  trust_model    = "custom"
+  trust_model    = "collaborator"
 }
 
 resource "forgejo_repository" "org_defaults" {
@@ -45,7 +45,7 @@ resource "forgejo_repository" "org_non_defaults" {
   issue_labels   = "Default"
   auto_init      = true
   readme         = "Default"
-  trust_model    = "custom"
+  trust_model    = "collaborator"
 }
 
 output "user_debug_defaults" {
