@@ -285,6 +285,24 @@ func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, r *fo
 
 	return diags
 }
+func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, it *forgejo.InternalTracker) diag.Diagnostics {
+	if m.InternalTracker.IsNull() {
+		return nil
+	}
+
+	var intTracker repositoryResourceInternalTracker
+	diags := m.InternalTracker.As(ctx, &intTracker, basetypes.ObjectAsOptions{})
+
+	if !diags.HasError() {
+		it = &forgejo.InternalTracker{
+			EnableTimeTracker:                intTracker.EnableTimeTracker.ValueBool(),
+			AllowOnlyContributorsToTrackTime: intTracker.AllowOnlyContributorsToTrackTime.ValueBool(),
+			EnableIssueDependencies:          intTracker.EnableIssueDependencies.ValueBool(),
+		}
+	}
+
+	return diags
+}
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#ExternalTracker
 type repositoryResourceExternalTracker struct {
@@ -326,6 +344,24 @@ func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, r *fo
 
 	return diags
 }
+func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, et *forgejo.ExternalTracker) diag.Diagnostics {
+	if m.ExternalTracker.IsNull() {
+		return nil
+	}
+
+	var extTracker repositoryResourceExternalTracker
+	diags := m.ExternalTracker.As(ctx, &extTracker, basetypes.ObjectAsOptions{})
+
+	if !diags.HasError() {
+		et = &forgejo.ExternalTracker{
+			ExternalTrackerURL:    extTracker.ExternalTrackerURL.ValueString(),
+			ExternalTrackerFormat: extTracker.ExternalTrackerFormat.ValueString(),
+			ExternalTrackerStyle:  extTracker.ExternalTrackerStyle.ValueString(),
+		}
+	}
+
+	return diags
+}
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#ExternalWiki
 type repositoryResourceExternalWiki struct {
@@ -357,6 +393,22 @@ func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, r *forge
 
 	if !diags.HasError() {
 		m.ExternalWiki = wikiValue
+	}
+
+	return diags
+}
+func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, ew *forgejo.ExternalWiki) diag.Diagnostics {
+	if m.ExternalWiki.IsNull() {
+		return nil
+	}
+
+	var extWiki repositoryResourceExternalWiki
+	diags := m.ExternalWiki.As(ctx, &extWiki, basetypes.ObjectAsOptions{})
+
+	if !diags.HasError() {
+		ew = &forgejo.ExternalWiki{
+			ExternalWikiURL: extWiki.ExternalWikiURL.ValueString(),
+		}
 	}
 
 	return diags
@@ -1087,16 +1139,13 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Generate API request body from plan
 	opts := forgejo.EditRepoOption{
-		Name:        data.Name.ValueStringPointer(),
-		Description: data.Description.ValueStringPointer(),
-		Website:     data.Website.ValueStringPointer(),
-		Private:     data.Private.ValueBoolPointer(),
-		Template:    data.Template.ValueBoolPointer(),
-		HasIssues:   data.HasIssues.ValueBoolPointer(),
-		// InternalTracker: data.InternalTracker.to...(),
-		// ExternalTracker: data.ExternalTracker.to...(),
-		HasWiki: data.HasWiki.ValueBoolPointer(),
-		// ExternalWiki: data.ExternalWiki.to...(),
+		Name:                      data.Name.ValueStringPointer(),
+		Description:               data.Description.ValueStringPointer(),
+		Website:                   data.Website.ValueStringPointer(),
+		Private:                   data.Private.ValueBoolPointer(),
+		Template:                  data.Template.ValueBoolPointer(),
+		HasIssues:                 data.HasIssues.ValueBoolPointer(),
+		HasWiki:                   data.HasWiki.ValueBoolPointer(),
 		DefaultBranch:             data.DefaultBranch.ValueStringPointer(),
 		HasPullRequests:           data.HasPullRequests.ValueBoolPointer(),
 		HasProjects:               data.HasProjects.ValueBoolPointer(),
@@ -1113,6 +1162,17 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		// AllowManualMerge: data.AllowManualMerge.ValueBoolPointer(),
 		// AutodetectManualMerge: data.AutodetectManualMerge.ValueBoolPointer(),
 		// DefaultMergeStyle:
+	}
+
+	// Read objects into request body
+	diags = data.internalTrackerTo(ctx, opts.InternalTracker)
+	resp.Diagnostics.Append(diags...)
+	diags = data.externalTrackerTo(ctx, opts.ExternalTracker)
+	resp.Diagnostics.Append(diags...)
+	diags = data.externalWikiTo(ctx, opts.ExternalWiki)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Validate API request body
