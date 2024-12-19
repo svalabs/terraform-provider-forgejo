@@ -844,6 +844,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	tflog.Info(ctx, "Create repository", map[string]any{
+		"owner":          owner.UserName.ValueString(),
 		"name":           data.Name.ValueString(),
 		"description":    data.Description.ValueString(),
 		"private":        data.Private.ValueBool(),
@@ -1088,6 +1089,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	tflog.Info(ctx, "Update repository", map[string]any{
+		"owner":                       owner.UserName.ValueString(),
 		"name":                        data.Name.ValueString(),
 		"description":                 data.Description.ValueString(),
 		"website":                     data.Website.ValueString(),
