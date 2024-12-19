@@ -479,9 +479,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"full_name": schema.StringAttribute{
 				Description: "Full name of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"description": schema.StringAttribute{
 				Description: "Description of the repository.",
@@ -532,23 +529,14 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"html_url": schema.StringAttribute{
 				Description: "HTML URL of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"ssh_url": schema.StringAttribute{
 				Description: "SSH URL of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"clone_url": schema.StringAttribute{
 				Description: "Clone URL of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"original_url": schema.StringAttribute{
 				Description: "Original URL of the repository.",
@@ -933,6 +921,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// TODO: check to see if owner is org or user
+
 	var (
 		rep *forgejo.Repository
 		res *forgejo.Response
@@ -1186,7 +1176,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Use Forgejo client to update existing repository
 	_, res, err := r.client.EditRepo(
 		owner.UserName.ValueString(),
-		data.Name.ValueString(),
+		state.Name.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -1200,14 +1190,14 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 			msg = fmt.Sprintf(
 				"Repository with owner %s and name %s forbidden: %s",
 				owner.UserName.String(),
-				data.Name.String(),
+				state.Name.String(),
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
 				"Repository with owner %s and name %s not found: %s",
 				owner.UserName.String(),
-				data.Name.String(),
+				state.Name.String(),
 				err,
 			)
 		case 422:
