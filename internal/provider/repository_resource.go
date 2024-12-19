@@ -929,22 +929,50 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// TODO: check to see if owner is org or user
+	// Determine type of repository
+	var ownerType string
+	if owner.UserName.ValueString() == "" {
+		// No owner -> personal repository
+		ownerType = "personal"
+	} else {
+		// Use Forgejo client to check if owner is org
+		_, res, _ := r.client.GetOrg(owner.UserName.ValueString())
+		if res.StatusCode == 404 {
+			// Use Forgejo client to check if owner is user
+			// TODO: check to see if owner is user or raise an error
+
+			resp.Diagnostics.AddError(
+				"Owner not found",
+				fmt.Sprintf(
+					"Neither organization nor user with name %s exists.",
+					owner.UserName.String(),
+				),
+			)
+
+			return
+
+			// User exists -> user repository
+			// ownerType = "user"
+		} else {
+			// Org exists -> org repository
+			ownerType = "org"
+		}
+	}
 
 	var (
 		rep *forgejo.Repository
 		res *forgejo.Response
 	)
 
-	switch owner.UserName.ValueString() != "" {
-	case true:
+	switch ownerType {
+	case "org":
 		// Use Forgejo client to create new org repository
 		rep, res, err = r.client.CreateOrgRepo(
 			owner.UserName.ValueString(),
 			opts,
 		)
-	case false:
-		// Use Forgejo client to create new user repository
+	case "personal":
+		// Use Forgejo client to create new personal repository
 		rep, res, err = r.client.CreateRepo(opts)
 	}
 	if err != nil {
