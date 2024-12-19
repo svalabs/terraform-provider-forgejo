@@ -40,6 +40,17 @@ type organizationResourceModel struct {
 	Visibility  types.String `tfsdk:"visibility"`
 }
 
+func (m *organizationResourceModel) from(o *forgejo.Organization) {
+	m.ID = types.Int64Value(o.ID)
+	m.Name = types.StringValue(o.UserName)
+	m.FullName = types.StringValue(o.FullName)
+	m.AvatarURL = types.StringValue(o.AvatarURL)
+	m.Description = types.StringValue(o.Description)
+	m.Website = types.StringValue(o.Website)
+	m.Location = types.StringValue(o.Location)
+	m.Visibility = types.StringValue(o.Visibility)
+}
+
 // Metadata returns the resource type name.
 func (r *organizationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_organization"
@@ -189,14 +200,7 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(org.ID)
-	data.Name = types.StringValue(org.UserName)
-	data.FullName = types.StringValue(org.FullName)
-	data.AvatarURL = types.StringValue(org.AvatarURL)
-	data.Description = types.StringValue(org.Description)
-	data.Website = types.StringValue(org.Website)
-	data.Location = types.StringValue(org.Location)
-	data.Visibility = types.StringValue(org.Visibility)
+	data.from(org)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -207,7 +211,7 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 func (r *organizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer un(trace(ctx, "Read organization resource"))
 
-	var data organizationDataSourceModel
+	var data organizationResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -240,14 +244,7 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(org.ID)
-	data.Name = types.StringValue(org.UserName)
-	data.FullName = types.StringValue(org.FullName)
-	data.AvatarURL = types.StringValue(org.AvatarURL)
-	data.Description = types.StringValue(org.Description)
-	data.Website = types.StringValue(org.Website)
-	data.Location = types.StringValue(org.Location)
-	data.Visibility = types.StringValue(org.Visibility)
+	data.from(org)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -335,14 +332,7 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(org.ID)
-	data.Name = types.StringValue(org.UserName)
-	data.FullName = types.StringValue(org.FullName)
-	data.AvatarURL = types.StringValue(org.AvatarURL)
-	data.Description = types.StringValue(org.Description)
-	data.Website = types.StringValue(org.Website)
-	data.Location = types.StringValue(org.Location)
-	data.Visibility = types.StringValue(org.Visibility)
+	data.from(org)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
