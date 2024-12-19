@@ -999,10 +999,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer un(trace(ctx, "Read repository resource"))
 
-	var (
-		data  repositoryResourceModel
-		owner repositoryResourceUser
-	)
+	var data repositoryResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -1011,23 +1008,12 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// Read repository owner into model
-	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tflog.Info(ctx, "Get repository by name", map[string]any{
-		"owner": owner.UserName.ValueString(),
-		"name":  data.Name.ValueString(),
+	tflog.Info(ctx, "Get repository by id", map[string]any{
+		"id": data.ID.ValueInt64(),
 	})
 
-	// Use Forgejo client to get repository by owner and name
-	rep, res, err := r.client.GetRepo(
-		owner.UserName.ValueString(),
-		data.Name.ValueString(),
-	)
+	// Use Forgejo client to get repository by id
+	rep, res, err := r.client.GetRepoByID(data.ID.ValueInt64())
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
 			"status": res.Status,
@@ -1037,9 +1023,8 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				owner.UserName.String(),
-				data.Name.String(),
+				"Repository with id %d not found: %s",
+				data.ID.ValueInt64(),
 				err,
 			)
 		default:
