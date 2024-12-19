@@ -295,11 +295,12 @@ func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, it *for
 	diags := m.InternalTracker.As(ctx, &intTracker, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
-		it = &forgejo.InternalTracker{
-			EnableTimeTracker:                intTracker.EnableTimeTracker.ValueBool(),
-			AllowOnlyContributorsToTrackTime: intTracker.AllowOnlyContributorsToTrackTime.ValueBool(),
-			EnableIssueDependencies:          intTracker.EnableIssueDependencies.ValueBool(),
+		if it == nil {
+			it = new(forgejo.InternalTracker)
 		}
+		it.EnableTimeTracker = intTracker.EnableTimeTracker.ValueBool()
+		it.AllowOnlyContributorsToTrackTime = intTracker.AllowOnlyContributorsToTrackTime.ValueBool()
+		it.EnableIssueDependencies = intTracker.EnableIssueDependencies.ValueBool()
 	}
 
 	return diags
@@ -354,11 +355,12 @@ func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, et *for
 	diags := m.ExternalTracker.As(ctx, &extTracker, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
-		et = &forgejo.ExternalTracker{
-			ExternalTrackerURL:    extTracker.ExternalTrackerURL.ValueString(),
-			ExternalTrackerFormat: extTracker.ExternalTrackerFormat.ValueString(),
-			ExternalTrackerStyle:  extTracker.ExternalTrackerStyle.ValueString(),
+		if et == nil {
+			et = new(forgejo.ExternalTracker)
 		}
+		et.ExternalTrackerURL = extTracker.ExternalTrackerURL.ValueString()
+		et.ExternalTrackerFormat = extTracker.ExternalTrackerFormat.ValueString()
+		et.ExternalTrackerStyle = extTracker.ExternalTrackerStyle.ValueString()
 	}
 
 	return diags
@@ -407,9 +409,10 @@ func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, ew *forgej
 	diags := m.ExternalWiki.As(ctx, &extWiki, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
-		ew = &forgejo.ExternalWiki{
-			ExternalWikiURL: extWiki.ExternalWikiURL.ValueString(),
+		if ew == nil {
+			ew = new(forgejo.ExternalWiki)
 		}
+		ew.ExternalWikiURL = extWiki.ExternalWikiURL.ValueString()
 	}
 
 	return diags
