@@ -21,7 +21,7 @@ data "forgejo_repository" "test" {
   owner = {
 	  login = "achim"
 	}
-  name = "test1"
+  name = "user_test_repo_1"
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
@@ -57,7 +57,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
 						tfjsonpath.New("clone_url"),
-						knownvalue.StringExact("http://localhost:3000/achim/test1.git"),
+						knownvalue.StringExact("http://localhost:3000/achim/user_test_repo_1.git"),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
@@ -107,7 +107,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
 						tfjsonpath.New("full_name"),
-						knownvalue.StringExact("achim/test1"),
+						knownvalue.StringExact("achim/user_test_repo_1"),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
@@ -147,7 +147,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
 						tfjsonpath.New("html_url"),
-						knownvalue.StringExact("http://localhost:3000/achim/test1"),
+						knownvalue.StringExact("http://localhost:3000/achim/user_test_repo_1"),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
@@ -187,7 +187,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("test1"),
+						knownvalue.StringExact("user_test_repo_1"),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
@@ -237,7 +237,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",
 						tfjsonpath.New("ssh_url"),
-						knownvalue.StringExact("git@localhost:achim/test1.git"),
+						knownvalue.StringExact("git@localhost:achim/user_test_repo_1.git"),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_repository.test",

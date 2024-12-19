@@ -19,7 +19,7 @@ func TestAccOrganizationDataSource(t *testing.T) {
 			{
 				Config: providerConfig + `
 data "forgejo_organization" "test" {
-  name = "test1"
+  name = "test_org_1"
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
@@ -52,7 +52,7 @@ data "forgejo_organization" "test" {
 					statecheck.ExpectKnownValue(
 						"data.forgejo_organization.test",
 						tfjsonpath.New("name"),
-						knownvalue.StringExact("test1"),
+						knownvalue.StringExact("test_org_1"),
 					),
 					statecheck.ExpectKnownValue(
 						"data.forgejo_organization.test",
