@@ -12,13 +12,13 @@ provider "forgejo" {
 
 resource "forgejo_repository" "personal_defaults" {
   owner = {}
-  name  = "personal_tftest_defaults1"
+  name  = "personal_tftest_defaults"
 }
 resource "forgejo_repository" "personal_non_defaults" {
-  owner       = {}
-  name        = "personal_tftest_non_defaults"
-  description = "Terraform Test Repo owned by user with non-default attributes"
-  # website        = "http://localhost:3000"
+  owner          = {}
+  name           = "personal_tftest_non_defaults"
+  description    = "Terraform Test Repo owned by user with non-default attributes"
+  website        = "http://localhost:3000"
   private        = true
   template       = true
   default_branch = "custom"
@@ -26,6 +26,7 @@ resource "forgejo_repository" "personal_non_defaults" {
   auto_init      = false
   readme         = "Default"
   trust_model    = "collaborator"
+  archived       = true
 }
 
 resource "forgejo_repository" "org_defaults" {
@@ -38,9 +39,9 @@ resource "forgejo_repository" "org_non_defaults" {
   owner = {
     login = "test_org_1"
   }
-  name        = "org_tftest_non_defaults"
-  description = "Terraform Test Repo owned by org with non-default attributes"
-  # website        = "http://localhost:3000"
+  name           = "org_tftest_non_defaults"
+  description    = "Terraform Test Repo owned by org with non-default attributes"
+  website        = "http://localhost:3000"
   private        = true
   template       = true
   default_branch = "custom"
@@ -48,6 +49,7 @@ resource "forgejo_repository" "org_non_defaults" {
   auto_init      = false
   readme         = "Default"
   trust_model    = "collaborator"
+  archived       = true
 }
 
 resource "forgejo_repository" "user_defaults" {
@@ -60,9 +62,9 @@ resource "forgejo_repository" "user_non_defaults" {
   owner = {
     login = "test_user_1"
   }
-  name        = "user_tftest_non_defaults"
-  description = "Terraform Test Repo owned by user with non-default attributes"
-  # website        = "http://localhost:3000"
+  name           = "user_tftest_non_defaults"
+  description    = "Terraform Test Repo owned by user with non-default attributes"
+  website        = "http://localhost:3000"
   private        = true
   template       = true
   default_branch = "custom"
@@ -70,6 +72,7 @@ resource "forgejo_repository" "user_non_defaults" {
   auto_init      = false
   readme         = "Default"
   trust_model    = "collaborator"
+  archived       = true
 }
 
 output "personal_debug_defaults" {

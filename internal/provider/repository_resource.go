@@ -924,7 +924,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	})
 
 	// Generate API request body from plan
-	opts := forgejo.CreateRepoOption{
+	copts := forgejo.CreateRepoOption{
 		Name:          data.Name.ValueString(),
 		Description:   data.Description.ValueString(),
 		Private:       data.Private.ValueBool(),
@@ -939,7 +939,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Validate API request body
-	err := opts.Validate(r.client)
+	err := copts.Validate(r.client)
 	if err != nil {
 		resp.Diagnostics.AddError("Input validation error", err.Error())
 
@@ -986,16 +986,16 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		// Use Forgejo client to create new org repository
 		rep, res, err = r.client.CreateOrgRepo(
 			owner.UserName.ValueString(),
-			opts,
+			copts,
 		)
 	case "personal":
 		// Use Forgejo client to create new personal repository
-		rep, res, err = r.client.CreateRepo(opts)
+		rep, res, err = r.client.CreateRepo(copts)
 	case "user":
 		// Use Forgejo client to create new user repository
 		rep, res, err = r.client.AdminCreateRepo(
 			owner.UserName.ValueString(),
-			opts,
+			copts,
 		)
 	}
 	if err != nil {
@@ -1034,12 +1034,110 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// TODO: Call API again to modify remaining attributes (e.g. website)
+	// Map response body (owner) to model
+	diags = data.ownerFrom(ctx, rep)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Read repository owner into model
+	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Info(ctx, "Update repository", map[string]any{
+		"owner":                       owner.UserName.ValueString(),
+		"name":                        data.Name.ValueString(),
+		"description":                 data.Description.ValueString(),
+		"website":                     data.Website.ValueString(),
+		"private":                     data.Private.ValueBool(),
+		"template":                    data.Template.ValueBool(),
+		"has_issues":                  data.HasIssues.ValueBool(),
+		"internal_tracker":            data.InternalTracker.String(),
+		"external_tracker":            data.ExternalTracker.String(),
+		"has_wiki":                    data.HasWiki.ValueBool(),
+		"external_wiki":               data.ExternalWiki.String(),
+		"default_branch":              data.DefaultBranch.ValueString(),
+		"has_pull_requests":           data.HasPullRequests.ValueBool(),
+		"has_projects":                data.HasProjects.ValueBool(),
+		"has_releases":                data.HasReleases.ValueBool(),
+		"has_packages":                data.HasPackages.ValueBool(),
+		"has_actions":                 data.HasActions.ValueBool(),
+		"ignore_whitespace_conflicts": data.IgnoreWhitespaceConflicts.ValueBool(),
+		"allow_merge_commits":         data.AllowMerge.ValueBool(),
+		"allow_rebase":                data.AllowRebase.ValueBool(),
+		"allow_rebase_explicit":       data.AllowRebaseMerge.ValueBool(),
+		"allow_squash_merge":          data.AllowSquash.ValueBool(),
+		"archived":                    data.Archived.ValueBool(),
+		"mirror_interval":             data.MirrorInterval.ValueString(),
+		// "allow_manual_merge": data.AllowManualMerge.ValueBool(),
+		// "autodetect_manual_merge": data.AutodetectManualMerge.ValueBool(),
+		// "default_merge_style":
+	})
+
+	// Generate API request body from plan
+	eopts := forgejo.EditRepoOption{}
+	data.to(&eopts)
+	diags = data.internalTrackerTo(ctx, eopts.InternalTracker)
+	resp.Diagnostics.Append(diags...)
+	diags = data.externalTrackerTo(ctx, eopts.ExternalTracker)
+	resp.Diagnostics.Append(diags...)
+	diags = data.externalWikiTo(ctx, eopts.ExternalWiki)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Validate API request body
+	// err := eopts.Validate()
+	// if err != nil {
+	// 	resp.Diagnostics.AddError("Input validation error", err.Error())
+
+	// 	return
+	// }
+
+	// Use Forgejo client to update existing repository
+	rep, res, err = r.client.EditRepo(
+		owner.UserName.ValueString(),
+		data.Name.ValueString(),
+		eopts,
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		var msg string
+		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s forbidden: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s not found: %s",
+				owner.UserName.String(),
+				data.Name.String(),
+				err,
+			)
+		case 422:
+			msg = fmt.Sprintf("Input validation error: %s", err)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to update repository", msg)
+
+		return
+	}
 
 	// Map response body to model
 	data.from(rep)
-	diags = data.ownerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
 	diags = data.permissionsFrom(ctx, rep)
 	resp.Diagnostics.Append(diags...)
 	diags = data.internalTrackerFrom(ctx, rep)
