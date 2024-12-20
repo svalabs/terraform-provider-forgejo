@@ -310,7 +310,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Generate API request body from plan
 	vt := forgejo.VisibleType(data.Visibility.ValueString())
-	opts := forgejo.CreateUserOption{
+	copts := forgejo.CreateUserOption{
 		SourceID:           data.SourceID.ValueInt64(),
 		LoginName:          data.LoginName.ValueString(),
 		Username:           data.Name.ValueString(),
@@ -323,7 +323,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Validate API request body
-	err := opts.Validate()
+	err := copts.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError("Input validation error", err.Error())
 
@@ -331,7 +331,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Use Forgejo client to create new user
-	usr, res, err := r.client.AdminCreateUser(opts)
+	_, res, err := r.client.AdminCreateUser(copts)
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
 			"status": res.Status,
@@ -357,7 +357,97 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// TODO: Call API again to modify remaining attributes (e.g. website)
+	tflog.Info(ctx, "Update user", map[string]any{
+		"source_id":            data.SourceID.ValueInt64(),
+		"login_name":           data.LoginName.ValueString(),
+		"email":                data.Email.ValueString(),
+		"full_name":            data.FullName.ValueString(),
+		"password":             data.Password.ValueString(),
+		"description":          data.Description.ValueString(),
+		"must_change_password": data.MustChangePassword.ValueBool(),
+		"website":              data.Website.ValueString(),
+		"location":             data.Location.ValueString(),
+		"active":               data.IsActive.ValueBool(),
+		"admin":                data.IsAdmin.ValueBool(),
+		// "allow_git_hook":
+		// "allow_import_local":
+		// "max_repo_creation":
+		"prohibit_login": data.ProhibitLogin.ValueBool(),
+		// "allow_create_organization":
+		"restricted": data.Restricted.ValueBool(),
+		"visibility": data.Visibility.ValueString(),
+	})
+
+	// Generate API request body from plan
+	eopts := forgejo.EditUserOption{}
+	data.to(&eopts)
+
+	// Validate API request body
+	// err := eopts.Validate()
+	// if err != nil {
+	// 	resp.Diagnostics.AddError("Input validation error", err.Error())
+
+	// 	return
+	// }
+
+	// Use Forgejo client to update existing user
+	res, err = r.client.AdminEditUser(
+		data.Name.ValueString(),
+		eopts,
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		var msg string
+		switch res.StatusCode {
+		case 400:
+			msg = fmt.Sprintf("Generic error: %s", err)
+		case 403:
+			msg = fmt.Sprintf(
+				"User with name %s forbidden: %s",
+				data.Name.String(),
+				err,
+			)
+		case 404:
+			msg = fmt.Sprintf(
+				"User with name %s not found: %s",
+				data.Name.String(),
+				err,
+			)
+		case 422:
+			msg = fmt.Sprintf("Input validation error: %s", err)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to update user", msg)
+
+		return
+	}
+
+	// Use Forgejo client to fetch updated user
+	usr, res, err := r.client.GetUserInfo(data.Name.ValueString())
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"User with name %s not found: %s",
+				data.Name.String(),
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to get user by name", msg)
+
+		return
+	}
 
 	// Map response body to model
 	data.from(usr)
