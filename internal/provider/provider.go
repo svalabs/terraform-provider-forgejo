@@ -247,6 +247,7 @@ func (p *forgejoProvider) Resources(_ context.Context) []func() resource.Resourc
 	return []func() resource.Resource{
 		NewOrganizationResource,
 		NewRepositoryResource,
+		NewUserResource,
 	}
 }
 
