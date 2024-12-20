@@ -131,6 +131,9 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"login": schema.StringAttribute{
 				Description: "Name of the user.",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"login_name": schema.StringAttribute{
 				Description: "Login name of the user.",
