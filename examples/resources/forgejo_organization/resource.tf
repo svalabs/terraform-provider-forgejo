@@ -11,10 +11,10 @@ provider "forgejo" {
 }
 
 resource "forgejo_organization" "defaults" {
-  name = "tftest_defaults"
+  name = "tftest_org_defaults"
 }
 resource "forgejo_organization" "non_defaults" {
-  name        = "tftest_non_defaults"
+  name        = "tftest_org_non_defaults"
   full_name   = "Terraform Test Org with non-default attributes"
   description = "Purely for testing..."
   website     = "https://forgejo.org/"

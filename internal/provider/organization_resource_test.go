@@ -23,106 +23,53 @@ resource "forgejo_organization" "test" {
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("avatar_url"),
-						knownvalue.StringRegexp(
-							regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"),
-						),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("description"),
-						knownvalue.StringExact(""),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("full_name"),
-						knownvalue.NotNull(),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("id"),
-						knownvalue.NotNull(),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("location"),
-						knownvalue.NotNull(),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("name"),
-						knownvalue.StringExact("tftest"),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("visibility"),
-						knownvalue.StringRegexp(
-							regexp.MustCompile("^(public)|(limited)|(private)$"),
-						),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("website"),
-						knownvalue.NotNull(),
-					),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("full_name"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("location"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("visibility"), knownvalue.StringRegexp(regexp.MustCompile("^(public)|(limited)|(private)$"))),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
+			},
+			// Recreate and Read testing
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name = "tftest1"
+}
+`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("full_name"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("location"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest1")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("visibility"), knownvalue.StringRegexp(regexp.MustCompile("^(public)|(limited)|(private)$"))),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("website"), knownvalue.StringExact(""))},
 			},
 			// Update and Read testing
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
-	name        = "tftest"
+	name        = "tftest1"
 	description = "Purely for testing..."
+	location    = "Mêlée Island"
+	visibility  = "private"
+	website     = "http://localhost:3000"
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("avatar_url"),
-						knownvalue.StringRegexp(
-							regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"),
-						),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("description"),
-						knownvalue.StringExact("Purely for testing..."),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("full_name"),
-						knownvalue.NotNull(),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("id"),
-						knownvalue.NotNull(),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("location"),
-						knownvalue.NotNull(),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("name"),
-						knownvalue.StringExact("tftest"),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("visibility"),
-						knownvalue.StringRegexp(
-							regexp.MustCompile("^(public)|(limited)|(private)$"),
-						),
-					),
-					statecheck.ExpectKnownValue(
-						"forgejo_organization.test",
-						tfjsonpath.New("website"),
-						knownvalue.NotNull(),
-					),
-				},
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing...")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("full_name"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("location"), knownvalue.StringExact("Mêlée Island")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest1")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("visibility"), knownvalue.StringRegexp(regexp.MustCompile("^(public)|(limited)|(private)$"))),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("website"), knownvalue.StringExact("http://localhost:3000"))},
 			},
 			// Delete testing automatically occurs in TestCase
 		},

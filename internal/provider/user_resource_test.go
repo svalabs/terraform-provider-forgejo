@@ -51,11 +51,11 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
 			},
-			// Update and Read testing
+			// Recreate and Read testing
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
-	login    = "tftest"
+	login    = "tftest1"
 	email    = "tftest1@localhost.localdomain"
   password = "passw1rd"
 }
@@ -74,7 +74,7 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("language"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("last_login"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("location"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("login"), knownvalue.StringExact("tftest")),
+					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("login"), knownvalue.StringExact("tftest1")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("login_name"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("must_change_password"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("password"), knownvalue.NotNull()),
@@ -91,7 +91,7 @@ resource "forgejo_user" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
-	login                = "tftest"
+	login                = "tftest1"
 	email                = "tftest1@localhost.localdomain"
   password             = "passw1rd"
 	active               = false
@@ -120,7 +120,7 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("language"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("last_login"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("location"), knownvalue.StringExact("Mêlée Island")),
-					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("login"), knownvalue.StringExact("tftest")),
+					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("login"), knownvalue.StringExact("tftest1")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("login_name"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("must_change_password"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("password"), knownvalue.NotNull()),

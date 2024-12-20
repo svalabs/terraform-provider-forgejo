@@ -11,13 +11,13 @@ provider "forgejo" {
 }
 
 resource "forgejo_user" "defaults" {
-  login    = "tftest_defaults"
-  email    = "tftest_defaults@localhost.localdomain"
+  login    = "tftest_user_defaults"
+  email    = "tftest_user_defaults@localhost.localdomain"
   password = "passw0rd"
 }
 resource "forgejo_user" "non_defaults" {
-  login       = "tftest_non_defaults"
-  email       = "tftest_non_defaults@localhost.localdomain"
+  login       = "tftest_user_non_defaults"
+  email       = "tftest_user_non_defaults@localhost.localdomain"
   password    = "passw0rd"
   full_name   = "Terraform Test User with non-default attributes"
   description = "Purely for testing..."
