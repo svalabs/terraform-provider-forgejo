@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -37,34 +38,33 @@ type repositoryResource struct {
 // repositoryResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Repository
 type repositoryResourceModel struct {
-	ID            types.Int64  `tfsdk:"id"`
-	Owner         types.Object `tfsdk:"owner"`
-	Name          types.String `tfsdk:"name"`
-	FullName      types.String `tfsdk:"full_name"`
-	Description   types.String `tfsdk:"description"`
-	Empty         types.Bool   `tfsdk:"empty"`
-	Private       types.Bool   `tfsdk:"private"`
-	Fork          types.Bool   `tfsdk:"fork"`
-	Template      types.Bool   `tfsdk:"template"`
-	ParentID      types.Int64  `tfsdk:"parent_id"`
-	Mirror        types.Bool   `tfsdk:"mirror"`
-	Size          types.Int64  `tfsdk:"size"`
-	HTMLURL       types.String `tfsdk:"html_url"`
-	SSHURL        types.String `tfsdk:"ssh_url"`
-	CloneURL      types.String `tfsdk:"clone_url"`
-	OriginalURL   types.String `tfsdk:"original_url"`
-	Website       types.String `tfsdk:"website"`
-	Stars         types.Int64  `tfsdk:"stars_count"`
-	Forks         types.Int64  `tfsdk:"forks_count"`
-	Watchers      types.Int64  `tfsdk:"watchers_count"`
-	OpenIssues    types.Int64  `tfsdk:"open_issues_count"`
-	OpenPulls     types.Int64  `tfsdk:"open_pr_counter"`
-	Releases      types.Int64  `tfsdk:"release_counter"`
-	DefaultBranch types.String `tfsdk:"default_branch"`
-	Archived      types.Bool   `tfsdk:"archived"`
-	Created       types.String `tfsdk:"created_at"`
-	// updated_at changes with every update, so we're not including it in the model
-	// Updated                   types.String `tfsdk:"updated_at"`
+	ID                        types.Int64  `tfsdk:"id"`
+	Owner                     types.Object `tfsdk:"owner"`
+	Name                      types.String `tfsdk:"name"`
+	FullName                  types.String `tfsdk:"full_name"`
+	Description               types.String `tfsdk:"description"`
+	Empty                     types.Bool   `tfsdk:"empty"`
+	Private                   types.Bool   `tfsdk:"private"`
+	Fork                      types.Bool   `tfsdk:"fork"`
+	Template                  types.Bool   `tfsdk:"template"`
+	ParentID                  types.Int64  `tfsdk:"parent_id"`
+	Mirror                    types.Bool   `tfsdk:"mirror"`
+	Size                      types.Int64  `tfsdk:"size"`
+	HTMLURL                   types.String `tfsdk:"html_url"`
+	SSHURL                    types.String `tfsdk:"ssh_url"`
+	CloneURL                  types.String `tfsdk:"clone_url"`
+	OriginalURL               types.String `tfsdk:"original_url"`
+	Website                   types.String `tfsdk:"website"`
+	Stars                     types.Int64  `tfsdk:"stars_count"`
+	Forks                     types.Int64  `tfsdk:"forks_count"`
+	Watchers                  types.Int64  `tfsdk:"watchers_count"`
+	OpenIssues                types.Int64  `tfsdk:"open_issues_count"`
+	OpenPulls                 types.Int64  `tfsdk:"open_pr_counter"`
+	Releases                  types.Int64  `tfsdk:"release_counter"`
+	DefaultBranch             types.String `tfsdk:"default_branch"`
+	Archived                  types.Bool   `tfsdk:"archived"`
+	Created                   types.String `tfsdk:"created_at"`
+	Updated                   types.String `tfsdk:"updated_at"`
 	Permissions               types.Object `tfsdk:"permissions"`
 	HasIssues                 types.Bool   `tfsdk:"has_issues"`
 	InternalTracker           types.Object `tfsdk:"internal_tracker"`
@@ -124,7 +124,7 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.DefaultBranch = types.StringValue(r.DefaultBranch)
 	m.Archived = types.BoolValue(r.Archived)
 	m.Created = types.StringValue(r.Created.String())
-	// m.Updated = types.StringValue(r.Updated.String())
+	m.Updated = types.StringValue(r.Updated.String())
 	m.HasIssues = types.BoolValue(r.HasIssues)
 	m.HasWiki = types.BoolValue(r.HasWiki)
 	m.HasPullRequests = types.BoolValue(r.HasPullRequests)
@@ -485,21 +485,14 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					"login_name": schema.StringAttribute{
 						Description: "Login name of the user.",
 						Computed:    true,
-						Default:     stringdefault.StaticString(""),
 					},
 					"full_name": schema.StringAttribute{
 						Description: "Full name of the user.",
 						Computed:    true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
 					},
 					"email": schema.StringAttribute{
 						Description: "Email address of the user.",
 						Computed:    true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
 					},
 				},
 				Description: "Owner of the repository.",
@@ -532,7 +525,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"fork": schema.BoolAttribute{
 				Description: "Is the repository a fork?",
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"template": schema.BoolAttribute{
 				Description: "Is the repository a template?",
@@ -542,12 +537,17 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"parent_id": schema.Int64Attribute{
 				Description: "Numeric identifier of the parent repository.",
-				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"mirror": schema.BoolAttribute{
 				Description: "Is the repository a mirror?",
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"size": schema.Int64Attribute{
 				Description: "Size of the repository in KiB.",
@@ -568,7 +568,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"original_url": schema.StringAttribute{
 				Description: "Original URL of the repository.",
 				Computed:    true,
-				Default:     stringdefault.StaticString(""),
 			},
 			"website": schema.StringAttribute{
 				Description: "Website of the repository.",
@@ -608,6 +607,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"archived": schema.BoolAttribute{
 				Description: "Is the repository archived?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
@@ -618,10 +618,10 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// "updated_at": schema.StringAttribute{
-			// 	Description: "Time at which the repository was updated.",
-			// 	Computed:    true,
-			// },
+			"updated_at": schema.StringAttribute{
+				Description: "Time at which the repository was updated.",
+				Computed:    true,
+			},
 			"permissions": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"admin": schema.BoolAttribute{
@@ -651,6 +651,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"has_issues": schema.BoolAttribute{
 				Description: "Is the repository issue tracker enabled?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
@@ -686,14 +687,17 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					"external_tracker_url": schema.StringAttribute{
 						Description: "URL of external issue tracker.",
 						Computed:    true,
+						Default:     stringdefault.StaticString(""),
 					},
 					"external_tracker_format": schema.StringAttribute{
 						Description: "External issue tracker URL format.",
 						Computed:    true,
+						Default:     stringdefault.StaticString(""),
 					},
 					"external_tracker_style": schema.StringAttribute{
 						Description: "External issue tracker number format.",
 						Computed:    true,
+						Default:     stringdefault.StaticString(""),
 					},
 				},
 				Description: "Settings for external issue tracker.",
@@ -706,6 +710,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"has_wiki": schema.BoolAttribute{
 				Description: "Is the repository wiki enabled?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
@@ -714,6 +719,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					"external_wiki_url": schema.StringAttribute{
 						Description: "URL of external wiki.",
 						Computed:    true,
+						Default:     stringdefault.StaticString(""),
 					},
 				},
 				Description: "Settings for external wiki.",
@@ -726,66 +732,75 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"has_pull_requests": schema.BoolAttribute{
 				Description: "Are repository pull requests enabled?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"has_projects": schema.BoolAttribute{
 				Description: "Are repository projects enabled?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"has_releases": schema.BoolAttribute{
 				Description: "Are repository releases enabled?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"has_packages": schema.BoolAttribute{
 				Description: "Is the repository package registry enabled?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"has_actions": schema.BoolAttribute{
 				Description: "Are integrated CI/CD pipelines enabled?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"ignore_whitespace_conflicts": schema.BoolAttribute{
 				Description: "Are whitespace conflicts ignored?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"allow_merge_commits": schema.BoolAttribute{
 				Description: "Allowed to create merge commit?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"allow_rebase": schema.BoolAttribute{
 				Description: "Allowed to rebase then fast-forward?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"allow_rebase_explicit": schema.BoolAttribute{
 				Description: "Allowed to rebase then create merge commit?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"allow_squash_merge": schema.BoolAttribute{
 				Description: "Allowed to create squash commit?",
+				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the repository.",
 				Computed:    true,
-				Default:     stringdefault.StaticString(""),
 			},
 			"internal": schema.BoolAttribute{
 				Description: "Is the repository internal?",
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"mirror_interval": schema.StringAttribute{
 				Description: "Mirror interval of the repository.",
+				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
@@ -796,7 +811,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"default_merge_style": schema.StringAttribute{
 				Description: "Default merge style of the repository.",
 				Computed:    true,
-				Default:     stringdefault.StaticString("merge"),
 			},
 			"issue_labels": schema.StringAttribute{
 				Description: "Issue Label set to use",
