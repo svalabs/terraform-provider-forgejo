@@ -94,7 +94,6 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 			},
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the organization.",
-				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
