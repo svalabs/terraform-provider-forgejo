@@ -1082,10 +1082,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	eopts := forgejo.EditRepoOption{}
 	data.to(&eopts)
 	diags = data.internalTrackerTo(ctx, eopts.InternalTracker)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalTrackerTo(ctx, eopts.ExternalTracker)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalWikiTo(ctx, eopts.ExternalWiki)
+	diags.Append(data.externalTrackerTo(ctx, eopts.ExternalTracker)...)
+	diags.Append(data.externalWikiTo(ctx, eopts.ExternalWiki)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1139,12 +1137,9 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	// Map response body to model
 	data.from(rep)
 	diags = data.permissionsFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.internalTrackerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalTrackerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalWikiFrom(ctx, rep)
+	diags.Append(data.internalTrackerFrom(ctx, rep)...)
+	diags.Append(data.externalTrackerFrom(ctx, rep)...)
+	diags.Append(data.externalWikiFrom(ctx, rep)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1198,14 +1193,10 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	// Map response body to model
 	data.from(rep)
 	diags = data.ownerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.permissionsFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.internalTrackerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalTrackerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalWikiFrom(ctx, rep)
+	diags.Append(data.permissionsFrom(ctx, rep)...)
+	diags.Append(data.internalTrackerFrom(ctx, rep)...)
+	diags.Append(data.externalTrackerFrom(ctx, rep)...)
+	diags.Append(data.externalWikiFrom(ctx, rep)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1243,11 +1234,10 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Read repository owner into model
 	if !data.Owner.IsUnknown() {
 		diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-		resp.Diagnostics.Append(diags...)
 	} else {
 		diags = state.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-		resp.Diagnostics.Append(diags...)
 	}
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -1286,10 +1276,8 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	opts := forgejo.EditRepoOption{}
 	data.to(&opts)
 	diags = data.internalTrackerTo(ctx, opts.InternalTracker)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalTrackerTo(ctx, opts.ExternalTracker)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalWikiTo(ctx, opts.ExternalWiki)
+	diags.Append(data.externalTrackerTo(ctx, opts.ExternalTracker)...)
+	diags.Append(data.externalWikiTo(ctx, opts.ExternalWiki)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1343,14 +1331,10 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Map response body to model
 	data.from(rep)
 	diags = data.ownerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.permissionsFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.internalTrackerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalTrackerFrom(ctx, rep)
-	resp.Diagnostics.Append(diags...)
-	diags = data.externalWikiFrom(ctx, rep)
+	diags.Append(data.permissionsFrom(ctx, rep)...)
+	diags.Append(data.internalTrackerFrom(ctx, rep)...)
+	diags.Append(data.externalTrackerFrom(ctx, rep)...)
+	diags.Append(data.externalWikiFrom(ctx, rep)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
