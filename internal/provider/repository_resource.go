@@ -143,6 +143,35 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.MirrorUpdated = types.StringValue(r.MirrorUpdated.String())
 	m.DefaultMergeStyle = types.StringValue(string(r.DefaultMergeStyle))
 }
+func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
+	if o == nil {
+		o = new(forgejo.EditRepoOption)
+	}
+
+	o.Name = m.Name.ValueStringPointer()
+	o.Description = m.Description.ValueStringPointer()
+	o.Website = m.Website.ValueStringPointer()
+	o.Private = m.Private.ValueBoolPointer()
+	o.Template = m.Template.ValueBoolPointer()
+	o.HasIssues = m.HasIssues.ValueBoolPointer()
+	o.HasWiki = m.HasWiki.ValueBoolPointer()
+	o.DefaultBranch = m.DefaultBranch.ValueStringPointer()
+	o.HasPullRequests = m.HasPullRequests.ValueBoolPointer()
+	o.HasProjects = m.HasProjects.ValueBoolPointer()
+	o.HasReleases = m.HasReleases.ValueBoolPointer()
+	o.HasPackages = m.HasPackages.ValueBoolPointer()
+	o.HasActions = m.HasActions.ValueBoolPointer()
+	o.IgnoreWhitespaceConflicts = m.IgnoreWhitespaceConflicts.ValueBoolPointer()
+	o.AllowMerge = m.AllowMerge.ValueBoolPointer()
+	o.AllowRebase = m.AllowRebase.ValueBoolPointer()
+	o.AllowRebaseMerge = m.AllowRebaseMerge.ValueBoolPointer()
+	o.AllowSquash = m.AllowSquash.ValueBoolPointer()
+	o.Archived = m.Archived.ValueBoolPointer()
+	o.MirrorInterval = m.MirrorInterval.ValueStringPointer()
+	// o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
+	// o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
+	// o.DefaultMergeStyle =
+}
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#User
 type repositoryResourceUser struct {
@@ -925,7 +954,6 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 				return
 			}
-
 			// User exists -> user repository
 			ownerType = "user"
 		} else {
@@ -1050,7 +1078,7 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
-		resp.Diagnostics.AddError("Unable to get repository by name", msg)
+		resp.Diagnostics.AddError("Unable to get repository by id", msg)
 
 		return
 	}
@@ -1143,33 +1171,8 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	})
 
 	// Generate API request body from plan
-	opts := forgejo.EditRepoOption{
-		Name:                      data.Name.ValueStringPointer(),
-		Description:               data.Description.ValueStringPointer(),
-		Website:                   data.Website.ValueStringPointer(),
-		Private:                   data.Private.ValueBoolPointer(),
-		Template:                  data.Template.ValueBoolPointer(),
-		HasIssues:                 data.HasIssues.ValueBoolPointer(),
-		HasWiki:                   data.HasWiki.ValueBoolPointer(),
-		DefaultBranch:             data.DefaultBranch.ValueStringPointer(),
-		HasPullRequests:           data.HasPullRequests.ValueBoolPointer(),
-		HasProjects:               data.HasProjects.ValueBoolPointer(),
-		HasReleases:               data.HasReleases.ValueBoolPointer(),
-		HasPackages:               data.HasPackages.ValueBoolPointer(),
-		HasActions:                data.HasActions.ValueBoolPointer(),
-		IgnoreWhitespaceConflicts: data.IgnoreWhitespaceConflicts.ValueBoolPointer(),
-		AllowMerge:                data.AllowMerge.ValueBoolPointer(),
-		AllowRebase:               data.AllowRebase.ValueBoolPointer(),
-		AllowRebaseMerge:          data.AllowRebaseMerge.ValueBoolPointer(),
-		AllowSquash:               data.AllowSquash.ValueBoolPointer(),
-		Archived:                  data.Archived.ValueBoolPointer(),
-		MirrorInterval:            data.MirrorInterval.ValueStringPointer(),
-		// AllowManualMerge: data.AllowManualMerge.ValueBoolPointer(),
-		// AutodetectManualMerge: data.AutodetectManualMerge.ValueBoolPointer(),
-		// DefaultMergeStyle:
-	}
-
-	// Read objects into request body
+	opts := forgejo.EditRepoOption{}
+	data.to(&opts)
 	diags = data.internalTrackerTo(ctx, opts.InternalTracker)
 	resp.Diagnostics.Append(diags...)
 	diags = data.externalTrackerTo(ctx, opts.ExternalTracker)

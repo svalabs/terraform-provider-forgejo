@@ -52,6 +52,17 @@ func (m *organizationResourceModel) from(o *forgejo.Organization) {
 	m.Location = types.StringValue(o.Location)
 	m.Visibility = types.StringValue(o.Visibility)
 }
+func (m *organizationResourceModel) to(o *forgejo.EditOrgOption) {
+	if o == nil {
+		o = new(forgejo.EditOrgOption)
+	}
+
+	o.FullName = m.FullName.ValueString()
+	o.Description = m.Description.ValueString()
+	o.Website = m.Website.ValueString()
+	o.Location = m.Location.ValueString()
+	o.Visibility = forgejo.VisibleType(m.Visibility.ValueString())
+}
 
 // Metadata returns the resource type name.
 func (r *organizationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -197,7 +208,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 		var msg string
 		switch res.StatusCode {
 		case 403:
-			msg = fmt.Sprintf("Organization with name %s forbidden: %s", data.Name.String(), err)
+			msg = fmt.Sprintf(
+				"Organization with name %s forbidden: %s",
+				data.Name.String(),
+				err,
+			)
 		case 422:
 			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:
@@ -243,7 +258,11 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 		var msg string
 		switch res.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
+			msg = fmt.Sprintf(
+				"Organization with name %s not found: %s",
+				data.Name.String(),
+				err,
+			)
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
@@ -283,13 +302,8 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	})
 
 	// Generate API request body from plan
-	opts := forgejo.EditOrgOption{
-		FullName:    data.FullName.ValueString(),
-		Description: data.Description.ValueString(),
-		Website:     data.Website.ValueString(),
-		Location:    data.Location.ValueString(),
-		Visibility:  forgejo.VisibleType(data.Visibility.ValueString()),
-	}
+	opts := forgejo.EditOrgOption{}
+	data.to(&opts)
 
 	// Validate API request body
 	err := opts.Validate()
@@ -312,7 +326,11 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		var msg string
 		switch res.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
+			msg = fmt.Sprintf(
+				"Organization with name %s not found: %s",
+				data.Name.String(),
+				err,
+			)
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
@@ -331,7 +349,11 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		var msg string
 		switch res.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
+			msg = fmt.Sprintf(
+				"Organization with name %s not found: %s",
+				data.Name.String(),
+				err,
+			)
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
@@ -375,7 +397,11 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 		var msg string
 		switch res.StatusCode {
 		case 404:
-			msg = fmt.Sprintf("Organization with name %s not found: %s", data.Name.String(), err)
+			msg = fmt.Sprintf(
+				"Organization with name %s not found: %s",
+				data.Name.String(),
+				err,
+			)
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
