@@ -263,7 +263,7 @@ func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, it *f
 }
 
 // internalTrackerTo is a helper function to save Terraform data model into an API struct.
-func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, it *forgejo.InternalTracker) diag.Diagnostics {
+func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, o *forgejo.EditRepoOption) diag.Diagnostics {
 	if m.InternalTracker.IsNull() || m.InternalTracker.IsUnknown() {
 		return nil
 	}
@@ -272,12 +272,12 @@ func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, it *for
 	diags := m.InternalTracker.As(ctx, &intTracker, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
-		if it == nil {
-			it = new(forgejo.InternalTracker)
+		if o.InternalTracker == nil {
+			o.InternalTracker = new(forgejo.InternalTracker)
 		}
-		it.EnableTimeTracker = intTracker.EnableTimeTracker.ValueBool()
-		it.AllowOnlyContributorsToTrackTime = intTracker.AllowOnlyContributorsToTrackTime.ValueBool()
-		it.EnableIssueDependencies = intTracker.EnableIssueDependencies.ValueBool()
+		o.InternalTracker.EnableTimeTracker = intTracker.EnableTimeTracker.ValueBool()
+		o.InternalTracker.AllowOnlyContributorsToTrackTime = intTracker.AllowOnlyContributorsToTrackTime.ValueBool()
+		o.InternalTracker.EnableIssueDependencies = intTracker.EnableIssueDependencies.ValueBool()
 	}
 
 	return diags
@@ -327,7 +327,7 @@ func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, et *f
 }
 
 // externalTrackerTo is a helper function to save Terraform data model into an API struct.
-func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, et *forgejo.ExternalTracker) diag.Diagnostics {
+func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, o *forgejo.EditRepoOption) diag.Diagnostics {
 	if m.ExternalTracker.IsNull() || m.ExternalTracker.IsUnknown() {
 		return nil
 	}
@@ -336,12 +336,12 @@ func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, et *for
 	diags := m.ExternalTracker.As(ctx, &extTracker, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
-		if et == nil {
-			et = new(forgejo.ExternalTracker)
+		if o.ExternalTracker == nil {
+			o.ExternalTracker = new(forgejo.ExternalTracker)
 		}
-		et.ExternalTrackerURL = extTracker.ExternalTrackerURL.ValueString()
-		et.ExternalTrackerFormat = extTracker.ExternalTrackerFormat.ValueString()
-		et.ExternalTrackerStyle = extTracker.ExternalTrackerStyle.ValueString()
+		o.ExternalTracker.ExternalTrackerURL = extTracker.ExternalTrackerURL.ValueString()
+		o.ExternalTracker.ExternalTrackerFormat = extTracker.ExternalTrackerFormat.ValueString()
+		o.ExternalTracker.ExternalTrackerStyle = extTracker.ExternalTrackerStyle.ValueString()
 	}
 
 	return diags
@@ -385,7 +385,7 @@ func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, ew *forg
 }
 
 // externalWikiTo is a helper function to save Terraform data model into an API struct.
-func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, ew *forgejo.ExternalWiki) diag.Diagnostics {
+func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, o *forgejo.EditRepoOption) diag.Diagnostics {
 	if m.ExternalWiki.IsNull() || m.ExternalWiki.IsUnknown() {
 		return nil
 	}
@@ -394,10 +394,10 @@ func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, ew *forgej
 	diags := m.ExternalWiki.As(ctx, &extWiki, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
-		if ew == nil {
-			ew = new(forgejo.ExternalWiki)
+		if o.ExternalWiki == nil {
+			o.ExternalWiki = new(forgejo.ExternalWiki)
 		}
-		ew.ExternalWikiURL = extWiki.ExternalWikiURL.ValueString()
+		o.ExternalWiki.ExternalWikiURL = extWiki.ExternalWikiURL.ValueString()
 	}
 
 	return diags
@@ -971,9 +971,9 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	// Generate API request body from plan
 	eopts := forgejo.EditRepoOption{}
 	data.to(&eopts)
-	diags = data.internalTrackerTo(ctx, eopts.InternalTracker)
-	diags.Append(data.externalTrackerTo(ctx, eopts.ExternalTracker)...)
-	diags.Append(data.externalWikiTo(ctx, eopts.ExternalWiki)...)
+	diags = data.internalTrackerTo(ctx, &eopts)
+	diags.Append(data.externalTrackerTo(ctx, &eopts)...)
+	diags.Append(data.externalWikiTo(ctx, &eopts)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1158,9 +1158,9 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Generate API request body from plan
 	opts := forgejo.EditRepoOption{}
 	data.to(&opts)
-	diags = data.internalTrackerTo(ctx, opts.InternalTracker)
-	diags.Append(data.externalTrackerTo(ctx, opts.ExternalTracker)...)
-	diags.Append(data.externalWikiTo(ctx, opts.ExternalWiki)...)
+	diags = data.internalTrackerTo(ctx, &opts)
+	diags.Append(data.externalTrackerTo(ctx, &opts)...)
+	diags.Append(data.externalWikiTo(ctx, &opts)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

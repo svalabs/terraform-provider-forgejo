@@ -18,7 +18,6 @@ func TestAccRepositoryResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
-  owner = {}
   name = "tftest"
 }
 `,
@@ -83,10 +82,8 @@ resource "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
-  owner = {
-    login = "test_org_1"
-	}
-  name = "tftest"
+  owner = "test_org_1"
+  name  = "tftest"
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -150,10 +147,8 @@ resource "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
-  owner = {
-    login = "test_user_1"
-	}
-  name = "tftest"
+  owner = "test_user_1"
+  name  = "tftest"
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -217,9 +212,81 @@ resource "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
-	owner = {
-	  login = "test_user_1"
-  }
+  owner = "test_user_1"
+  name  = "tftest"
+
+	internal_tracker = {
+	  enable_time_tracker                   = false
+		allow_only_contributors_to_track_time = false
+		enable_issue_dependencies             = false
+	}
+}
+`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_rebase"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_rebase_explicit"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_squash_merge"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("archived"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("auto_init"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact("http://localhost:3000/test_user_1/tftest.git")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("default_branch"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("default_merge_style"), knownvalue.StringExact("merge")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("empty"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("forks_count"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact("test_user_1/tftest")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("gitignores"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("has_actions"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("has_issues"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("has_packages"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("has_projects"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("has_pull_requests"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("has_releases"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("has_wiki"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact("http://localhost:3000/test_user_1/tftest")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal_tracker").AtMapKey("enable_time_tracker"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal_tracker").AtMapKey("allow_only_contributors_to_track_time"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal_tracker").AtMapKey("enable_issue_dependencies"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("issue_labels"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("license"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("mirror"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("mirror_interval"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("mirror_updated"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("original_url"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("readme"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("release_counter"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("size"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("git@localhost:test_user_1/tftest.git")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("stars_count"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("template"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("trust_model"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("watchers_count"), knownvalue.Int64Exact(1)),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
+				},
+			},
+			// Update and Read testing
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	owner                       = "test_user_1"
   name                        = "tftest1"
 	allow_merge_commits         = false
 	allow_rebase                = false

@@ -25,6 +25,12 @@ resource "forgejo_repository" "personal_non_defaults" {
   readme         = "Default"
   trust_model    = "collaborator"
   archived       = true
+
+  internal_tracker = {
+    enable_time_tracker                   = false
+    allow_only_contributors_to_track_time = false
+    enable_issue_dependencies             = false
+  }
 }
 
 resource "forgejo_repository" "org_defaults" {
@@ -44,6 +50,12 @@ resource "forgejo_repository" "org_non_defaults" {
   readme         = "Default"
   trust_model    = "collaborator"
   archived       = true
+
+  internal_tracker = {
+    enable_time_tracker                   = false
+    allow_only_contributors_to_track_time = false
+    enable_issue_dependencies             = false
+  }
 }
 
 resource "forgejo_repository" "user_defaults" {
@@ -63,6 +75,12 @@ resource "forgejo_repository" "user_non_defaults" {
   readme         = "Default"
   trust_model    = "collaborator"
   archived       = true
+
+  internal_tracker = {
+    enable_time_tracker                   = false
+    allow_only_contributors_to_track_time = false
+    enable_issue_dependencies             = false
+  }
 }
 
 output "personal_debug_defaults" {
