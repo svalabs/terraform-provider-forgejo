@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -39,7 +38,7 @@ type repositoryResource struct {
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Repository
 type repositoryResourceModel struct {
 	ID                        types.Int64  `tfsdk:"id"`
-	Owner                     types.Object `tfsdk:"owner"`
+	Owner                     types.String `tfsdk:"owner"`
 	Name                      types.String `tfsdk:"name"`
 	FullName                  types.String `tfsdk:"full_name"`
 	Description               types.String `tfsdk:"description"`
@@ -97,6 +96,7 @@ type repositoryResourceModel struct {
 // from is a helper function to load an API struct into Terraform data model.
 func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.ID = types.Int64Value(r.ID)
+	m.Owner = types.StringValue(r.Owner.UserName)
 	m.Name = types.StringValue(r.Name)
 	m.FullName = types.StringValue(r.FullName)
 	m.Description = types.StringValue(r.Description)
@@ -174,55 +174,6 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	// o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
 	// o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
 	// o.DefaultMergeStyle =
-}
-
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#User
-type repositoryResourceUser struct {
-	ID        types.Int64  `tfsdk:"id"`
-	UserName  types.String `tfsdk:"login"`
-	LoginName types.String `tfsdk:"login_name"`
-	FullName  types.String `tfsdk:"full_name"`
-	Email     types.String `tfsdk:"email"`
-}
-
-func (m repositoryResourceUser) attributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"id":         types.Int64Type,
-		"login":      types.StringType,
-		"login_name": types.StringType,
-		"full_name":  types.StringType,
-		"email":      types.StringType,
-	}
-}
-
-// ownerFrom is a helper function to load an API struct into Terraform data model.
-func (m *repositoryResourceModel) ownerFrom(ctx context.Context, u *forgejo.User) diag.Diagnostics {
-	if u == nil {
-		m.Owner = types.ObjectNull(
-			repositoryResourceUser{}.attributeTypes(),
-		)
-		return nil
-	}
-
-	ownerElement := repositoryResourceUser{
-		ID:        types.Int64Value(u.ID),
-		UserName:  types.StringValue(u.UserName),
-		LoginName: types.StringValue(u.LoginName),
-		FullName:  types.StringValue(u.FullName),
-		Email:     types.StringValue(u.Email),
-	}
-
-	ownerValue, diags := types.ObjectValueFrom(
-		ctx,
-		ownerElement.attributeTypes(),
-		ownerElement,
-	)
-
-	if !diags.HasError() {
-		m.Owner = ownerValue
-	}
-
-	return diags
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Permission
@@ -470,40 +421,12 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"owner": schema.SingleNestedAttribute{
-				Attributes: map[string]schema.Attribute{
-					"id": schema.Int64Attribute{
-						Description: "Numeric identifier of the user.",
-						Computed:    true,
-						PlanModifiers: []planmodifier.Int64{
-							int64planmodifier.UseStateForUnknown(),
-						},
-					},
-					"login": schema.StringAttribute{
-						Description: "Name of the user.",
-						Optional:    true,
-						Computed:    true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
-						},
-					},
-					"login_name": schema.StringAttribute{
-						Description: "Login name of the user.",
-						Computed:    true,
-					},
-					"full_name": schema.StringAttribute{
-						Description: "Full name of the user.",
-						Computed:    true,
-					},
-					"email": schema.StringAttribute{
-						Description: "Email address of the user.",
-						Computed:    true,
-					},
-				},
+			"owner": schema.StringAttribute{
 				Description: "Owner of the repository.",
-				Required:    true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			"name": schema.StringAttribute{
@@ -880,10 +803,7 @@ func (r *repositoryResource) Configure(_ context.Context, req resource.Configure
 func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	defer un(trace(ctx, "Create repository resource"))
 
-	var (
-		data  repositoryResourceModel
-		owner repositoryResourceUser
-	)
+	var data repositoryResourceModel
 
 	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
@@ -892,17 +812,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// Read repository owner into model
-	if !data.Owner.IsUnknown() {
-		diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Create repository", map[string]any{
-		"owner":          owner.UserName.ValueString(),
+		"owner":          data.Owner.ValueString(),
 		"name":           data.Name.ValueString(),
 		"description":    data.Description.ValueString(),
 		"private":        data.Private.ValueBool(),
@@ -941,21 +852,21 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 	// Determine type of repository
 	var ownerType string
-	if owner.UserName.ValueString() == "" {
+	if data.Owner.ValueString() == "" {
 		// No owner -> personal repository
 		ownerType = "personal"
 	} else {
 		// Use Forgejo client to check if owner is org
-		_, res, _ := r.client.GetOrg(owner.UserName.ValueString())
+		_, res, _ := r.client.GetOrg(data.Owner.ValueString())
 		if res.StatusCode == 404 {
 			// Use Forgejo client to check if owner is user
-			_, res, _ = r.client.GetUserInfo(owner.UserName.ValueString())
+			_, res, _ = r.client.GetUserInfo(data.Owner.ValueString())
 			if res.StatusCode == 404 {
 				resp.Diagnostics.AddError(
 					"Owner not found",
 					fmt.Sprintf(
 						"Neither organization nor user with name %s exists.",
-						owner.UserName.String(),
+						data.Owner.String(),
 					),
 				)
 
@@ -978,7 +889,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	case "org":
 		// Use Forgejo client to create new org repository
 		rep, res, err = r.client.CreateOrgRepo(
-			owner.UserName.ValueString(),
+			data.Owner.ValueString(),
 			copts,
 		)
 	case "personal":
@@ -987,7 +898,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	case "user":
 		// Use Forgejo client to create new user repository
 		rep, res, err = r.client.AdminCreateRepo(
-			owner.UserName.ValueString(),
+			data.Owner.ValueString(),
 			copts,
 		)
 	}
@@ -1001,14 +912,14 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		case 403:
 			msg = fmt.Sprintf(
 				"Repository with owner %s and name %s forbidden: %s",
-				owner.UserName.String(),
+				data.Owner.String(),
 				data.Name.String(),
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
 				"Repository owner with name %s not found: %s",
-				owner.UserName.String(),
+				data.Owner.String(),
 				err,
 			)
 		case 409:
@@ -1027,22 +938,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// Map response body (owner) to model
-	diags = data.ownerFrom(ctx, rep.Owner)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Read repository owner into model
-	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	tflog.Info(ctx, "Update repository", map[string]any{
-		"owner":                       owner.UserName.ValueString(),
+		"owner":                       rep.Owner.UserName,
 		"name":                        data.Name.ValueString(),
 		"description":                 data.Description.ValueString(),
 		"website":                     data.Website.ValueString(),
@@ -1092,7 +989,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 	// Use Forgejo client to update existing repository
 	rep, res, err = r.client.EditRepo(
-		owner.UserName.ValueString(),
+		rep.Owner.UserName,
 		data.Name.ValueString(),
 		eopts,
 	)
@@ -1105,15 +1002,15 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		switch res.StatusCode {
 		case 403:
 			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s forbidden: %s",
-				owner.UserName.String(),
+				"Repository with owner '%s' and name %s forbidden: %s",
+				rep.Owner.UserName,
 				data.Name.String(),
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				owner.UserName.String(),
+				"Repository with owner '%s' and name %s not found: %s",
+				rep.Owner.UserName,
 				data.Name.String(),
 				err,
 			)
@@ -1185,8 +1082,7 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Map response body to model
 	data.from(rep)
-	diags = data.ownerFrom(ctx, rep.Owner)
-	diags.Append(data.permissionsFrom(ctx, rep.Permissions)...)
+	diags = data.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
 	diags.Append(data.externalWikiFrom(ctx, rep.ExternalWiki)...)
@@ -1207,7 +1103,6 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	var (
 		data  repositoryResourceModel
 		state repositoryResourceModel
-		owner repositoryResourceUser
 	)
 
 	// Read Terraform plan data into model
@@ -1225,18 +1120,13 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Read repository owner into model
-	if !data.Owner.IsUnknown() {
-		diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	} else {
-		diags = state.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	}
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	owner := data.Owner.ValueString()
+	if owner == "" {
+		owner = state.Owner.ValueString()
 	}
 
 	tflog.Info(ctx, "Update repository", map[string]any{
-		"owner":                       owner.UserName.ValueString(),
+		"owner":                       owner,
 		"name":                        data.Name.ValueString(),
 		"description":                 data.Description.ValueString(),
 		"website":                     data.Website.ValueString(),
@@ -1286,7 +1176,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Use Forgejo client to update existing repository
 	rep, res, err := r.client.EditRepo(
-		owner.UserName.ValueString(),
+		owner,
 		state.Name.ValueString(),
 		opts,
 	)
@@ -1299,15 +1189,15 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		switch res.StatusCode {
 		case 403:
 			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s forbidden: %s",
-				owner.UserName.String(),
+				"Repository with owner '%s' and name %s forbidden: %s",
+				owner,
 				state.Name.String(),
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				owner.UserName.String(),
+				"Repository with owner '%s' and name %s not found: %s",
+				owner,
 				state.Name.String(),
 				err,
 			)
@@ -1323,8 +1213,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Map response body to model
 	data.from(rep)
-	diags = data.ownerFrom(ctx, rep.Owner)
-	diags.Append(data.permissionsFrom(ctx, rep.Permissions)...)
+	diags = data.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
 	diags.Append(data.externalWikiFrom(ctx, rep.ExternalWiki)...)
@@ -1342,10 +1231,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	defer un(trace(ctx, "Delete repository resource"))
 
-	var (
-		data  repositoryResourceModel
-		owner repositoryResourceUser
-	)
+	var data repositoryResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -1354,21 +1240,14 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	// Read repository owner into model
-	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	tflog.Info(ctx, "Delete repository", map[string]any{
-		"owner": owner.UserName.ValueString(),
+		"owner": data.Owner.ValueString(),
 		"name":  data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to delete existing repository
 	res, err := r.client.DeleteRepo(
-		owner.UserName.ValueString(),
+		data.Owner.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -1381,14 +1260,14 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 		case 403:
 			msg = fmt.Sprintf(
 				"Repository with owner %s and name %s forbidden: %s",
-				owner.UserName.String(),
+				data.Owner.String(),
 				data.Name.String(),
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
 				"Repository with owner %s and name %s not found: %s",
-				owner.UserName.String(),
+				data.Owner.String(),
 				data.Name.String(),
 				err,
 			)
