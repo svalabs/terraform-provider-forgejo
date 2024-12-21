@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -95,6 +94,7 @@ type repositoryResourceModel struct {
 	TrustModel                types.String `tfsdk:"trust_model"`
 }
 
+// from is a helper function to load an API struct into Terraform data model.
 func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.ID = types.Int64Value(r.ID)
 	m.Name = types.StringValue(r.Name)
@@ -144,6 +144,8 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.MirrorUpdated = types.StringValue(r.MirrorUpdated.String())
 	m.DefaultMergeStyle = types.StringValue(string(r.DefaultMergeStyle))
 }
+
+// to is a helper function to save Terraform data model into an API struct.
 func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	if o == nil {
 		o = new(forgejo.EditRepoOption)
@@ -192,8 +194,10 @@ func (m repositoryResourceUser) attributeTypes() map[string]attr.Type {
 		"email":      types.StringType,
 	}
 }
-func (m *repositoryResourceModel) ownerFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
-	if r.Owner == nil {
+
+// ownerFrom is a helper function to load an API struct into Terraform data model.
+func (m *repositoryResourceModel) ownerFrom(ctx context.Context, u *forgejo.User) diag.Diagnostics {
+	if u == nil {
 		m.Owner = types.ObjectNull(
 			repositoryResourceUser{}.attributeTypes(),
 		)
@@ -201,11 +205,11 @@ func (m *repositoryResourceModel) ownerFrom(ctx context.Context, r *forgejo.Repo
 	}
 
 	ownerElement := repositoryResourceUser{
-		ID:        types.Int64Value(r.Owner.ID),
-		UserName:  types.StringValue(r.Owner.UserName),
-		LoginName: types.StringValue(r.Owner.LoginName),
-		FullName:  types.StringValue(r.Owner.FullName),
-		Email:     types.StringValue(r.Owner.Email),
+		ID:        types.Int64Value(u.ID),
+		UserName:  types.StringValue(u.UserName),
+		LoginName: types.StringValue(u.LoginName),
+		FullName:  types.StringValue(u.FullName),
+		Email:     types.StringValue(u.Email),
 	}
 
 	ownerValue, diags := types.ObjectValueFrom(
@@ -235,15 +239,10 @@ func (m repositoryResourcePermissions) attributeTypes() map[string]attr.Type {
 		"pull":  types.BoolType,
 	}
 }
-func (m repositoryResourcePermissions) defaultObject() map[string]attr.Value {
-	return map[string]attr.Value{
-		"admin": types.BoolValue(true),
-		"push":  types.BoolValue(true),
-		"pull":  types.BoolValue(true),
-	}
-}
-func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
-	if r.Permissions == nil {
+
+// permissionsFrom is a helper function to load an API struct into Terraform data model.
+func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, p *forgejo.Permission) diag.Diagnostics {
+	if p == nil {
 		m.Permissions = types.ObjectNull(
 			repositoryResourcePermissions{}.attributeTypes(),
 		)
@@ -251,9 +250,9 @@ func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, r *forgej
 	}
 
 	permsElement := repositoryResourcePermissions{
-		Admin: types.BoolValue(r.Permissions.Admin),
-		Push:  types.BoolValue(r.Permissions.Push),
-		Pull:  types.BoolValue(r.Permissions.Pull),
+		Admin: types.BoolValue(p.Admin),
+		Push:  types.BoolValue(p.Push),
+		Pull:  types.BoolValue(p.Pull),
 	}
 
 	permsValue, diags := types.ObjectValueFrom(
@@ -283,15 +282,10 @@ func (m repositoryResourceInternalTracker) attributeTypes() map[string]attr.Type
 		"enable_issue_dependencies":             types.BoolType,
 	}
 }
-func (m repositoryResourceInternalTracker) defaultObject() map[string]attr.Value {
-	return map[string]attr.Value{
-		"enable_time_tracker":                   types.BoolValue(true),
-		"allow_only_contributors_to_track_time": types.BoolValue(true),
-		"enable_issue_dependencies":             types.BoolValue(true),
-	}
-}
-func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
-	if r.InternalTracker == nil {
+
+// internalTrackerFrom is a helper function to load an API struct into Terraform data model.
+func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, it *forgejo.InternalTracker) diag.Diagnostics {
+	if it == nil {
 		m.InternalTracker = types.ObjectNull(
 			repositoryResourceInternalTracker{}.attributeTypes(),
 		)
@@ -299,9 +293,9 @@ func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, r *fo
 	}
 
 	intTrackerElement := repositoryResourceInternalTracker{
-		EnableTimeTracker:                types.BoolValue(r.InternalTracker.EnableTimeTracker),
-		AllowOnlyContributorsToTrackTime: types.BoolValue(r.InternalTracker.AllowOnlyContributorsToTrackTime),
-		EnableIssueDependencies:          types.BoolValue(r.InternalTracker.EnableIssueDependencies),
+		EnableTimeTracker:                types.BoolValue(it.EnableTimeTracker),
+		AllowOnlyContributorsToTrackTime: types.BoolValue(it.AllowOnlyContributorsToTrackTime),
+		EnableIssueDependencies:          types.BoolValue(it.EnableIssueDependencies),
 	}
 
 	intTrackerValue, diags := types.ObjectValueFrom(
@@ -316,8 +310,10 @@ func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, r *fo
 
 	return diags
 }
+
+// internalTrackerTo is a helper function to save Terraform data model into an API struct.
 func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, it *forgejo.InternalTracker) diag.Diagnostics {
-	if m.InternalTracker.IsNull() {
+	if m.InternalTracker.IsNull() || m.InternalTracker.IsUnknown() {
 		return nil
 	}
 
@@ -350,8 +346,10 @@ func (m repositoryResourceExternalTracker) attributeTypes() map[string]attr.Type
 		"external_tracker_style":  types.StringType,
 	}
 }
-func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
-	if r.ExternalTracker == nil {
+
+// externalTrackerFrom is a helper function to load an API struct into Terraform data model.
+func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, et *forgejo.ExternalTracker) diag.Diagnostics {
+	if et == nil {
 		m.ExternalTracker = types.ObjectNull(
 			repositoryResourceExternalTracker{}.attributeTypes(),
 		)
@@ -359,9 +357,9 @@ func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, r *fo
 	}
 
 	extTrackerElement := repositoryResourceExternalTracker{
-		ExternalTrackerURL:    types.StringValue(r.ExternalTracker.ExternalTrackerURL),
-		ExternalTrackerFormat: types.StringValue(r.ExternalTracker.ExternalTrackerFormat),
-		ExternalTrackerStyle:  types.StringValue(r.ExternalTracker.ExternalTrackerStyle),
+		ExternalTrackerURL:    types.StringValue(et.ExternalTrackerURL),
+		ExternalTrackerFormat: types.StringValue(et.ExternalTrackerFormat),
+		ExternalTrackerStyle:  types.StringValue(et.ExternalTrackerStyle),
 	}
 
 	extTrackerValue, diags := types.ObjectValueFrom(
@@ -376,8 +374,10 @@ func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, r *fo
 
 	return diags
 }
+
+// externalTrackerTo is a helper function to save Terraform data model into an API struct.
 func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, et *forgejo.ExternalTracker) diag.Diagnostics {
-	if m.ExternalTracker.IsNull() {
+	if m.ExternalTracker.IsNull() || m.ExternalTracker.IsUnknown() {
 		return nil
 	}
 
@@ -406,8 +406,10 @@ func (m repositoryResourceExternalWiki) attributeTypes() map[string]attr.Type {
 		"external_wiki_url": types.StringType,
 	}
 }
-func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, r *forgejo.Repository) diag.Diagnostics {
-	if r.ExternalWiki == nil {
+
+// externalWikiFrom is a helper function to load an API struct into Terraform data model.
+func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, ew *forgejo.ExternalWiki) diag.Diagnostics {
+	if ew == nil {
 		m.ExternalWiki = types.ObjectNull(
 			repositoryResourceExternalWiki{}.attributeTypes(),
 		)
@@ -415,7 +417,7 @@ func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, r *forge
 	}
 
 	wikiElement := repositoryResourceExternalWiki{
-		ExternalWikiURL: types.StringValue(r.ExternalWiki.ExternalWikiURL),
+		ExternalWikiURL: types.StringValue(ew.ExternalWikiURL),
 	}
 
 	wikiValue, diags := types.ObjectValueFrom(
@@ -430,8 +432,10 @@ func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, r *forge
 
 	return diags
 }
+
+// externalWikiTo is a helper function to save Terraform data model into an API struct.
 func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, ew *forgejo.ExternalWiki) diag.Diagnostics {
-	if m.ExternalWiki.IsNull() {
+	if m.ExternalWiki.IsNull() || m.ExternalWiki.IsUnknown() {
 		return nil
 	}
 
@@ -631,27 +635,18 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					"admin": schema.BoolAttribute{
 						Description: "Allowed to administer?",
 						Computed:    true,
-						Default:     booldefault.StaticBool(true),
 					},
 					"push": schema.BoolAttribute{
 						Description: "Allowed to push?",
 						Computed:    true,
-						Default:     booldefault.StaticBool(true),
 					},
 					"pull": schema.BoolAttribute{
 						Description: "Allowed to pull?",
 						Computed:    true,
-						Default:     booldefault.StaticBool(true),
 					},
 				},
 				Description: "Permissions of the repository.",
 				Computed:    true,
-				Default: objectdefault.StaticValue(
-					types.ObjectValueMust(
-						repositoryResourcePermissions{}.attributeTypes(),
-						repositoryResourcePermissions{}.defaultObject(),
-					),
-				),
 			},
 			"has_issues": schema.BoolAttribute{
 				Description: "Is the repository issue tracker enabled?",
@@ -663,54 +658,51 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Attributes: map[string]schema.Attribute{
 					"enable_time_tracker": schema.BoolAttribute{
 						Description: "Enable time tracking.",
+						Optional:    true,
 						Computed:    true,
 						Default:     booldefault.StaticBool(true),
 					},
 					"allow_only_contributors_to_track_time": schema.BoolAttribute{
 						Description: "Let only contributors track time.",
+						Optional:    true,
 						Computed:    true,
 						Default:     booldefault.StaticBool(true),
 					},
 					"enable_issue_dependencies": schema.BoolAttribute{
 						Description: "Enable dependencies for issues and pull requests.",
+						Optional:    true,
 						Computed:    true,
 						Default:     booldefault.StaticBool(true),
 					},
 				},
 				Description: "Settings for built-in issue tracker.",
+				Optional:    true,
 				Computed:    true,
-				Default: objectdefault.StaticValue(
-					types.ObjectValueMust(
-						repositoryResourceInternalTracker{}.attributeTypes(),
-						repositoryResourceInternalTracker{}.defaultObject(),
-					),
-				),
 			},
 			"external_tracker": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"external_tracker_url": schema.StringAttribute{
 						Description: "URL of external issue tracker.",
+						Optional:    true,
 						Computed:    true,
 						Default:     stringdefault.StaticString(""),
 					},
 					"external_tracker_format": schema.StringAttribute{
 						Description: "External issue tracker URL format.",
+						Optional:    true,
 						Computed:    true,
 						Default:     stringdefault.StaticString(""),
 					},
 					"external_tracker_style": schema.StringAttribute{
 						Description: "External issue tracker number format.",
+						Optional:    true,
 						Computed:    true,
 						Default:     stringdefault.StaticString(""),
 					},
 				},
 				Description: "Settings for external issue tracker.",
+				Optional:    true,
 				Computed:    true,
-				Default: objectdefault.StaticValue(
-					types.ObjectNull(
-						repositoryResourceExternalTracker{}.attributeTypes(),
-					),
-				),
 			},
 			"has_wiki": schema.BoolAttribute{
 				Description: "Is the repository wiki enabled?",
@@ -722,17 +714,14 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Attributes: map[string]schema.Attribute{
 					"external_wiki_url": schema.StringAttribute{
 						Description: "URL of external wiki.",
+						Optional:    true,
 						Computed:    true,
 						Default:     stringdefault.StaticString(""),
 					},
 				},
 				Description: "Settings for external wiki.",
+				Optional:    true,
 				Computed:    true,
-				Default: objectdefault.StaticValue(
-					types.ObjectNull(
-						repositoryResourceExternalWiki{}.attributeTypes(),
-					),
-				),
 			},
 			"has_pull_requests": schema.BoolAttribute{
 				Description: "Are repository pull requests enabled?",
@@ -1039,7 +1028,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Map response body (owner) to model
-	diags = data.ownerFrom(ctx, rep)
+	diags = data.ownerFrom(ctx, rep.Owner)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1140,10 +1129,10 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 	// Map response body to model
 	data.from(rep)
-	diags = data.permissionsFrom(ctx, rep)
-	diags.Append(data.internalTrackerFrom(ctx, rep)...)
-	diags.Append(data.externalTrackerFrom(ctx, rep)...)
-	diags.Append(data.externalWikiFrom(ctx, rep)...)
+	diags = data.permissionsFrom(ctx, rep.Permissions)
+	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
+	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
+	diags.Append(data.externalWikiFrom(ctx, rep.ExternalWiki)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1196,11 +1185,11 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	// Map response body to model
 	data.from(rep)
-	diags = data.ownerFrom(ctx, rep)
-	diags.Append(data.permissionsFrom(ctx, rep)...)
-	diags.Append(data.internalTrackerFrom(ctx, rep)...)
-	diags.Append(data.externalTrackerFrom(ctx, rep)...)
-	diags.Append(data.externalWikiFrom(ctx, rep)...)
+	diags = data.ownerFrom(ctx, rep.Owner)
+	diags.Append(data.permissionsFrom(ctx, rep.Permissions)...)
+	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
+	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
+	diags.Append(data.externalWikiFrom(ctx, rep.ExternalWiki)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1334,11 +1323,11 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Map response body to model
 	data.from(rep)
-	diags = data.ownerFrom(ctx, rep)
-	diags.Append(data.permissionsFrom(ctx, rep)...)
-	diags.Append(data.internalTrackerFrom(ctx, rep)...)
-	diags.Append(data.externalTrackerFrom(ctx, rep)...)
-	diags.Append(data.externalWikiFrom(ctx, rep)...)
+	diags = data.ownerFrom(ctx, rep.Owner)
+	diags.Append(data.permissionsFrom(ctx, rep.Permissions)...)
+	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
+	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
+	diags.Append(data.externalWikiFrom(ctx, rep.ExternalWiki)...)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
