@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
@@ -13,6 +13,10 @@ provider "forgejo" {
 resource "forgejo_organization" "defaults" {
   name = "tftest_org_defaults"
 }
+output "debug_defaults" {
+  value = forgejo_organization.defaults
+}
+
 resource "forgejo_organization" "non_defaults" {
   name        = "tftest_org_non_defaults"
   full_name   = "Terraform Test Org with non-default attributes"
@@ -20,10 +24,6 @@ resource "forgejo_organization" "non_defaults" {
   website     = "https://forgejo.org/"
   location    = "Mêlée Island"
   visibility  = "private"
-}
-
-output "debug_defaults" {
-  value = forgejo_organization.defaults
 }
 output "debug_non_defaults" {
   value = forgejo_organization.non_defaults
