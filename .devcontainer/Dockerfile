@@ -15,7 +15,7 @@ RUN cat <<EOF > /root/.terraformrc
 provider_installation {
 
   dev_overrides {
-      "registry.terraform.io/svalabs/forgejo" = "/root/go/bin"
+    "registry.terraform.io/svalabs/forgejo" = "/root/go/bin"
   }
 
   # For all other providers, install them directly from their origin provider
