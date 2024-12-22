@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
@@ -10,9 +10,16 @@ provider "forgejo" {
   host = "http://localhost:3000"
 }
 
+#
+# Personal repository
+#
 resource "forgejo_repository" "personal_defaults" {
   name = "personal_tftest_defaults"
 }
+output "personal_debug_defaults" {
+  value = forgejo_repository.personal_defaults
+}
+
 resource "forgejo_repository" "personal_non_defaults" {
   name           = "personal_tftest_non_defaults"
   description    = "Terraform Test Repo owned by user with non-default attributes"
@@ -32,13 +39,27 @@ resource "forgejo_repository" "personal_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
+output "personal_debug_non_defaults" {
+  value = forgejo_repository.personal_non_defaults
+}
+
+#
+# Organization repository
+#
+resource "forgejo_organization" "owner" {
+  name = "tftest_org"
+}
 
 resource "forgejo_repository" "org_defaults" {
-  owner = "test_org_1"
+  owner = forgejo_organization.owner.name
   name  = "org_tftest_defaults"
 }
+output "org_debug_defaults" {
+  value = forgejo_repository.org_defaults
+}
+
 resource "forgejo_repository" "org_non_defaults" {
-  owner          = "test_org_1"
+  owner          = forgejo_organization.owner.name
   name           = "org_tftest_non_defaults"
   description    = "Terraform Test Repo owned by org with non-default attributes"
   website        = "http://localhost:3000"
@@ -57,13 +78,29 @@ resource "forgejo_repository" "org_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
+output "org_debug_non_defaults" {
+  value = forgejo_repository.org_non_defaults
+}
+
+#
+# User repository
+#
+resource "forgejo_user" "owner" {
+  login    = "tftest_user"
+  email    = "tftest_user@localhost.localdomain"
+  password = "passw0rd"
+}
 
 resource "forgejo_repository" "user_defaults" {
-  owner = "test_user_1"
+  owner = forgejo_user.owner.login
   name  = "user_tftest_defaults"
 }
+output "user_debug_defaults" {
+  value = forgejo_repository.user_defaults
+}
+
 resource "forgejo_repository" "user_non_defaults" {
-  owner          = "test_user_1"
+  owner          = forgejo_user.owner.login
   name           = "user_tftest_non_defaults"
   description    = "Terraform Test Repo owned by user with non-default attributes"
   website        = "http://localhost:3000"
@@ -81,24 +118,6 @@ resource "forgejo_repository" "user_non_defaults" {
     allow_only_contributors_to_track_time = false
     enable_issue_dependencies             = false
   }
-}
-
-output "personal_debug_defaults" {
-  value = forgejo_repository.personal_defaults
-}
-output "personal_debug_non_defaults" {
-  value = forgejo_repository.personal_non_defaults
-}
-
-output "org_debug_defaults" {
-  value = forgejo_repository.org_defaults
-}
-output "org_debug_non_defaults" {
-  value = forgejo_repository.org_non_defaults
-}
-
-output "user_debug_defaults" {
-  value = forgejo_repository.user_defaults
 }
 output "user_debug_non_defaults" {
   value = forgejo_repository.user_non_defaults
