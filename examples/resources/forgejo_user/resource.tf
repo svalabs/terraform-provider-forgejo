@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
@@ -15,6 +15,11 @@ resource "forgejo_user" "defaults" {
   email    = "tftest_user_defaults@localhost.localdomain"
   password = "passw0rd"
 }
+output "debug_defaults" {
+  value     = forgejo_user.defaults
+  sensitive = true
+}
+
 resource "forgejo_user" "non_defaults" {
   login       = "tftest_user_non_defaults"
   email       = "tftest_user_non_defaults@localhost.localdomain"
@@ -25,10 +30,7 @@ resource "forgejo_user" "non_defaults" {
   location    = "Mêlée Island"
   visibility  = "private"
 }
-
-output "debug_defaults" {
-  value = forgejo_user.defaults
-}
 output "debug_non_defaults" {
-  value = forgejo_user.non_defaults
+  value     = forgejo_user.non_defaults
+  sensitive = true
 }

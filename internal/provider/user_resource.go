@@ -246,6 +246,7 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"password": schema.StringAttribute{
 				Description: "Password of the user.",
 				Required:    true,
+				Sensitive:   true,
 			},
 			"must_change_password": schema.BoolAttribute{
 				Description: "Require user to change password?",
