@@ -60,7 +60,7 @@ func (p *forgejoProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 				Sensitive:   true,
 			},
 			"api_token": schema.StringAttribute{
-				Description: "Token for Forgejo API. May also be provided via FORGEJO_PASSWORD environment variable.",
+				Description: "Token for Forgejo API. May also be provided via FORGEJO_API_TOKEN environment variable.",
 				Optional:    true,
 				Sensitive:   true,
 			},
