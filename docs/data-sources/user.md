@@ -16,7 +16,7 @@ Forgejo user data source
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
@@ -28,7 +28,6 @@ provider "forgejo" {
 data "forgejo_user" "this" {
   login = "achim"
 }
-
 output "debug" {
   value = data.forgejo_user.this
 }

@@ -16,7 +16,7 @@ Forgejo repository resource
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
@@ -25,58 +25,117 @@ provider "forgejo" {
   host = "http://localhost:3000"
 }
 
+#
+# Personal repository
+#
 resource "forgejo_repository" "personal_defaults" {
-  owner = {}
-  name  = "personal_tftest_defaults1"
+  name = "personal_tftest_defaults"
 }
-resource "forgejo_repository" "personal_non_defaults" {
-  owner       = {}
-  name        = "personal_tftest_non_defaults"
-  description = "Terraform Test Repo owned by user with non-default attributes"
-  # website        = "http://localhost:3000"
-  private        = true
-  template       = true
-  default_branch = "custom"
-  issue_labels   = "Default"
-  auto_init      = false
-  readme         = "Default"
-  trust_model    = "collaborator"
-}
-
-resource "forgejo_repository" "org_defaults" {
-  owner = {
-    login = "test_org_1"
-  }
-  name = "org_tftest_defaults"
-}
-resource "forgejo_repository" "org_non_defaults" {
-  owner = {
-    login = "test_org_1"
-  }
-  name        = "org_tftest_non_defaults"
-  description = "Terraform Test Repo owned by org with non-default attributes"
-  # website        = "http://localhost:3000"
-  private        = true
-  template       = true
-  default_branch = "custom"
-  issue_labels   = "Default"
-  auto_init      = false
-  readme         = "Default"
-  trust_model    = "collaborator"
-}
-
 output "personal_debug_defaults" {
   value = forgejo_repository.personal_defaults
+}
+
+resource "forgejo_repository" "personal_non_defaults" {
+  name           = "personal_tftest_non_defaults"
+  description    = "Terraform Test Repo owned by user with non-default attributes"
+  website        = "http://localhost:3000"
+  private        = true
+  template       = true
+  default_branch = "custom"
+  issue_labels   = "Default"
+  auto_init      = false
+  readme         = "Default"
+  trust_model    = "collaborator"
+  archived       = true
+
+  internal_tracker = {
+    enable_time_tracker                   = false
+    allow_only_contributors_to_track_time = false
+    enable_issue_dependencies             = false
+  }
 }
 output "personal_debug_non_defaults" {
   value = forgejo_repository.personal_non_defaults
 }
 
+#
+# Organization repository
+#
+resource "forgejo_organization" "owner" {
+  name = "tftest_org"
+}
+
+resource "forgejo_repository" "org_defaults" {
+  owner = forgejo_organization.owner.name
+  name  = "org_tftest_defaults"
+}
 output "org_debug_defaults" {
   value = forgejo_repository.org_defaults
 }
+
+resource "forgejo_repository" "org_non_defaults" {
+  owner          = forgejo_organization.owner.name
+  name           = "org_tftest_non_defaults"
+  description    = "Terraform Test Repo owned by org with non-default attributes"
+  website        = "http://localhost:3000"
+  private        = true
+  template       = true
+  default_branch = "custom"
+  issue_labels   = "Default"
+  auto_init      = false
+  readme         = "Default"
+  trust_model    = "collaborator"
+  archived       = true
+
+  internal_tracker = {
+    enable_time_tracker                   = false
+    allow_only_contributors_to_track_time = false
+    enable_issue_dependencies             = false
+  }
+}
 output "org_debug_non_defaults" {
   value = forgejo_repository.org_non_defaults
+}
+
+#
+# User repository
+#
+resource "forgejo_user" "owner" {
+  login    = "tftest_user"
+  email    = "tftest_user@localhost.localdomain"
+  password = "passw0rd"
+}
+
+resource "forgejo_repository" "user_defaults" {
+  owner = forgejo_user.owner.login
+  name  = "user_tftest_defaults"
+}
+output "user_debug_defaults" {
+  value = forgejo_repository.user_defaults
+}
+
+resource "forgejo_repository" "user_non_defaults" {
+  owner          = forgejo_user.owner.login
+  name           = "user_tftest_non_defaults"
+  description    = "Terraform Test Repo owned by user with non-default attributes"
+  website        = "http://localhost:3000"
+  private        = true
+  template       = true
+  default_branch = "custom"
+  issue_labels   = "Default"
+  auto_init      = false
+  readme         = "Default"
+  trust_model    = "collaborator"
+  archived       = true
+
+  internal_tracker = {
+    enable_time_tracker                   = false
+    allow_only_contributors_to_track_time = false
+    enable_issue_dependencies             = false
+  }
+}
+output "user_debug_non_defaults" {
+  value = forgejo_repository.user_non_defaults
 }
 ```
 
@@ -86,17 +145,33 @@ output "org_debug_non_defaults" {
 ### Required
 
 - `name` (String) Name of the repository.
-- `owner` (Attributes) Owner of the repository. (see [below for nested schema](#nestedatt--owner))
 
 ### Optional
 
+- `allow_merge_commits` (Boolean) Allowed to create merge commit?
+- `allow_rebase` (Boolean) Allowed to rebase then fast-forward?
+- `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit?
+- `allow_squash_merge` (Boolean) Allowed to create squash commit?
+- `archived` (Boolean) Is the repository archived?
 - `auto_init` (Boolean) Whether the repository should be auto-intialized?
 - `default_branch` (String) Default branch of the repository.
 - `description` (String) Description of the repository.
+- `external_tracker` (Attributes) Settings for external issue tracker. (see [below for nested schema](#nestedatt--external_tracker))
+- `external_wiki` (Attributes) Settings for external wiki. (see [below for nested schema](#nestedatt--external_wiki))
 - `gitignores` (String) Gitignores to use
+- `has_actions` (Boolean) Are integrated CI/CD pipelines enabled?
+- `has_issues` (Boolean) Is the repository issue tracker enabled?
+- `has_packages` (Boolean) Is the repository package registry enabled?
+- `has_projects` (Boolean) Are repository projects enabled?
+- `has_pull_requests` (Boolean) Are repository pull requests enabled?
+- `has_releases` (Boolean) Are repository releases enabled?
+- `has_wiki` (Boolean) Is the repository wiki enabled?
+- `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored?
+- `internal_tracker` (Attributes) Settings for built-in issue tracker. (see [below for nested schema](#nestedatt--internal_tracker))
 - `issue_labels` (String) Issue Label set to use
 - `license` (String) License to use
-- `parent_id` (Number) Numeric identifier of the parent repository.
+- `mirror_interval` (String) Mirror interval of the repository.
+- `owner` (String) Owner of the repository.
 - `private` (Boolean) Is the repository private?
 - `readme` (String) Readme of the repository to create
 - `template` (Boolean) Is the repository a template?
@@ -105,65 +180,35 @@ output "org_debug_non_defaults" {
 
 ### Read-Only
 
-- `allow_merge_commits` (Boolean) Allowed to create merge commit?
-- `allow_rebase` (Boolean) Allowed to rebase then fast-forward?
-- `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit?
-- `allow_squash_merge` (Boolean) Allowed to create squash commit?
-- `archived` (Boolean) Is the repository archived?
 - `avatar_url` (String) Avatar URL of the repository.
 - `clone_url` (String) Clone URL of the repository.
 - `created_at` (String) Time at which the repository was created.
 - `default_merge_style` (String) Default merge style of the repository.
 - `empty` (Boolean) Is the repository empty?
-- `external_tracker` (Attributes) Settings for external issue tracker. (see [below for nested schema](#nestedatt--external_tracker))
-- `external_wiki` (Attributes) Settings for external wiki. (see [below for nested schema](#nestedatt--external_wiki))
 - `fork` (Boolean) Is the repository a fork?
 - `forks_count` (Number) Number of forks of the repository.
 - `full_name` (String) Full name of the repository.
-- `has_actions` (Boolean) Are integrated CI/CD pipelines enabled?
-- `has_issues` (Boolean) Is the repository issue tracker enabled?
-- `has_packages` (Boolean) Is the repository package registry enabled?
-- `has_projects` (Boolean) Are repository projects enabled?
-- `has_pull_requests` (Boolean) Are repository pull requests enabled?
-- `has_releases` (Boolean) Are repository releases enabled?
-- `has_wiki` (Boolean) Is the repository wiki enabled?
 - `html_url` (String) HTML URL of the repository.
 - `id` (Number) Numeric identifier of the repository.
-- `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored?
 - `internal` (Boolean) Is the repository internal?
-- `internal_tracker` (Attributes) Settings for built-in issue tracker. (see [below for nested schema](#nestedatt--internal_tracker))
 - `mirror` (Boolean) Is the repository a mirror?
-- `mirror_interval` (String) Mirror interval of the repository.
 - `mirror_updated` (String) Time at which the repository mirror was updated.
 - `open_issues_count` (Number) Number of open issues of the repository.
 - `open_pr_counter` (Number) Number of open pull requests of the repository.
 - `original_url` (String) Original URL of the repository.
+- `parent_id` (Number) Numeric identifier of the parent repository.
 - `permissions` (Attributes) Permissions of the repository. (see [below for nested schema](#nestedatt--permissions))
 - `release_counter` (Number) Number of releases of the repository.
 - `size` (Number) Size of the repository in KiB.
 - `ssh_url` (String) SSH URL of the repository.
 - `stars_count` (Number) Number of stars of the repository.
+- `updated_at` (String) Time at which the repository was updated.
 - `watchers_count` (Number) Number of watchers of the repository.
-
-<a id="nestedatt--owner"></a>
-### Nested Schema for `owner`
-
-Optional:
-
-- `login` (String) Name of the user.
-
-Read-Only:
-
-- `email` (String) Email address of the user.
-- `full_name` (String) Full name of the user.
-- `id` (Number) Numeric identifier of the user.
-- `login_name` (String) Login name of the user.
-
 
 <a id="nestedatt--external_tracker"></a>
 ### Nested Schema for `external_tracker`
 
-Read-Only:
+Optional:
 
 - `external_tracker_format` (String) External issue tracker URL format.
 - `external_tracker_style` (String) External issue tracker number format.
@@ -173,7 +218,7 @@ Read-Only:
 <a id="nestedatt--external_wiki"></a>
 ### Nested Schema for `external_wiki`
 
-Read-Only:
+Optional:
 
 - `external_wiki_url` (String) URL of external wiki.
 
@@ -181,7 +226,7 @@ Read-Only:
 <a id="nestedatt--internal_tracker"></a>
 ### Nested Schema for `internal_tracker`
 
-Read-Only:
+Optional:
 
 - `allow_only_contributors_to_track_time` (Boolean) Let only contributors track time.
 - `enable_issue_dependencies` (Boolean) Enable dependencies for issues and pull requests.

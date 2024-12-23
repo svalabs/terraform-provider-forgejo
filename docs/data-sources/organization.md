@@ -16,7 +16,7 @@ Forgejo organization data source
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
@@ -28,7 +28,6 @@ provider "forgejo" {
 data "forgejo_organization" "this" {
   name = "test1"
 }
-
 output "debug" {
   value = data.forgejo_organization.this
 }

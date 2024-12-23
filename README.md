@@ -1,15 +1,16 @@
-# Terraform Forgejo Provider
+# Terraform Provider for Forgejo
 
-This repository contains a Terraform provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
+This repository contains a [Terraform](https://www.terraform.io/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
 
 ## Contents
 
-It is in a **very early** stage and currently contains the following...
+The Forgejo Terraform Provider allows managing resources within Forgejo. It is in an **early** stage and currently provides the following...
 
 Resources:
 
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
+- `forgejo_user` ([documentation](docs/resources/user.md))
 
 Data Sources:
 
@@ -17,111 +18,101 @@ Data Sources:
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
 - `forgejo_user` ([documentation](docs/data-sources/user.md))
 
-### Directory Layout
-
-```shell
-terraform-provider-forgejo/
-├── docker/    # Example Forgejo installation for local development
-├── docs/      # Generated documentation
-├── examples/  # Provider usage examples
-├── internal/  # Provider source code and tests
-└── tools/     # Scripts for generating documentation
-```
-
-## Requirements
-
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
-- [Go](https://golang.org/doc/install) >= 1.23
-
-## Building the Provider
-
-1. Clone the repository
-2. Enter the repository directory
-3. Build the provider using the Go `install` command:
-
-```shell
-go install
-```
-
-## Adding Dependencies
-
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
-
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
-
-```shell
-go get github.com/author/dependency
-go mod tidy
-```
-
-Then commit the changes to `go.mod` and `go.sum`.
-
 ## Using the Provider
+
+Import the provider into your Terraform configuration:
 
 ```terraform
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
+```
 
+There are two methods for authenticating to the Forgejo API: using an API token, or with username and password.
+
+It is recommended to supply an API token to authenticate with a given Forgejo host:
+
+```terraform
 provider "forgejo" {
   host      = "http://localhost:3000"
   api_token = "1234567890abcdefghijklmnopqrstuvwxyz1234"
+  # alternatively, use the FORGEJO_API_TOKEN environment variable
 }
+```
 
-data "forgejo_organization" "example" {
-  name = "existing_org"
+Alternatively, supply username and password to authenticate:
+
+```terraform
+provider "forgejo" {
+  host     = "http://localhost:3000"
+  username = "admin"
+  password = "passw0rd"
+  # alternatively, use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
 }
+```
 
-resource "forgejo_organization" "example" {
-  name        = "new_org"
-  full_name   = "Terraform Test Org"
+A personal repository can be created like so:
+
+```terraform
+resource "forgejo_repository" "example" {
+  name        = "new_personal_repo"
   description = "Purely for testing..."
-  website     = "https://forgejo.org/"
-  location    = "Mêlée Island"
-  visibility  = "private"
 }
+```
 
-data "forgejo_repository" "example" {
-  owner = {}
-  name  = "existing_repo"
+A user repository can be created like so (requires administrative privileges):
+
+```terraform
+resource "forgejo_user" "example" {
+  name = "new_user"
 }
 
 resource "forgejo_repository" "example" {
-  owner          = {}
-  name           = "new_repo"
+  owner       = forgejo_user.example.name
+  name        = "new_user_repo"
+  description = "Purely for testing..."
+}
+```
+
+A organization repository can be created like so:
+
+```terraform
+resource "forgejo_organization" "example" {
+  name = "new_org"
+}
+
+resource "forgejo_repository" "example" {
+  owner       = forgejo_organization.example.name
+  name        = "new_org_repo"
+  description = "Purely for testing..."
+}
+```
+
+These examples create repositories with most attributes set to their default values. Many settings can be customized:
+
+```terraform
+resource "forgejo_repository" "example" {
+  owner          = forgejo_organization.example.name
+  name           = "new_org_repo"
   description    = "Purely for testing..."
   private        = true
   default_branch = "dev"
   auto_init      = true
-}
+  trust_model    = "collaborator"
 
-data "forgejo_user" "example" {
-  login = "existing_user"
+  internal_tracker = {
+    enable_time_tracker                   = false
+    allow_only_contributors_to_track_time = false
+    enable_issue_dependencies             = false
+  }
 }
 ```
 
 Refer to the `examples/` directory for more usage examples.
-
-## Developing the Provider
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
-
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-To generate or update documentation, run `make generate`.
-
-In order to run the full suite of Acceptance tests, run `make testacc`.
-
-_Note:_ Acceptance tests create real resources, and often cost money to run.
-
-```shell
-make testacc
-```
 
 ## Copyright and License
 

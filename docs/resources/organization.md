@@ -16,7 +16,7 @@ Forgejo organization resource
 terraform {
   required_providers {
     forgejo = {
-      source = "registry.terraform.io/svalabs/forgejo"
+      source = "svalabs/forgejo"
     }
   }
 }
@@ -26,19 +26,19 @@ provider "forgejo" {
 }
 
 resource "forgejo_organization" "defaults" {
-  name = "tftest_defaults"
+  name = "tftest_org_defaults"
 }
+output "debug_defaults" {
+  value = forgejo_organization.defaults
+}
+
 resource "forgejo_organization" "non_defaults" {
-  name        = "tftest_non_defaults"
+  name        = "tftest_org_non_defaults"
   full_name   = "Terraform Test Org with non-default attributes"
   description = "Purely for testing..."
   website     = "https://forgejo.org/"
   location    = "Mêlée Island"
   visibility  = "private"
-}
-
-output "debug_defaults" {
-  value = forgejo_organization.defaults
 }
 output "debug_non_defaults" {
   value = forgejo_organization.non_defaults
@@ -54,7 +54,6 @@ output "debug_non_defaults" {
 
 ### Optional
 
-- `avatar_url` (String) Avatar URL of the organization.
 - `description` (String) Description of the organization.
 - `full_name` (String) Full name of the organization.
 - `location` (String) Location of the organization.
@@ -63,4 +62,5 @@ output "debug_non_defaults" {
 
 ### Read-Only
 
+- `avatar_url` (String) Avatar URL of the organization.
 - `id` (Number) Numeric identifier of the organization.
