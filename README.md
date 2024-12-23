@@ -27,6 +27,7 @@ terraform {
   required_providers {
     forgejo = {
       source = "svalabs/forgejo"
+      version = "~> 0.1.0"
     }
   }
 }
@@ -40,7 +41,7 @@ It is recommended to supply an API token to authenticate with a given Forgejo ho
 provider "forgejo" {
   host      = "http://localhost:3000"
   api_token = "1234567890abcdefghijklmnopqrstuvwxyz1234"
-  # alternatively, use the FORGEJO_API_TOKEN environment variable
+  # or use the FORGEJO_API_TOKEN environment variable
 }
 ```
 
@@ -51,11 +52,11 @@ provider "forgejo" {
   host     = "http://localhost:3000"
   username = "admin"
   password = "passw0rd"
-  # alternatively, use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
+  # or use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
 }
 ```
 
-A personal repository can be created like so:
+A **personal repository** can be created like so:
 
 ```terraform
 resource "forgejo_repository" "example" {
@@ -64,7 +65,7 @@ resource "forgejo_repository" "example" {
 }
 ```
 
-A user repository can be created like so (requires administrative privileges):
+A **user repository** can be created like so (requires administrative privileges):
 
 ```terraform
 resource "forgejo_user" "example" {
@@ -78,7 +79,7 @@ resource "forgejo_repository" "example" {
 }
 ```
 
-A organization repository can be created like so:
+An **organization repository** can be created like so:
 
 ```terraform
 resource "forgejo_organization" "example" {
@@ -92,7 +93,7 @@ resource "forgejo_repository" "example" {
 }
 ```
 
-These examples create repositories with most attributes set to their default values. Many settings can be customized:
+These examples create repositories with most attributes set to their default values. However, many settings can be customized:
 
 ```terraform
 resource "forgejo_repository" "example" {
