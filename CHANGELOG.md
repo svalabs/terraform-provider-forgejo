@@ -1,3 +1,9 @@
+## 0.1.1 (December 24, 2024) 🎄
+
+ENHANCEMENTS:
+
+- Improve documentation and examples
+
 ## 0.1.0 (December 23, 2024)
 
 MINIMUM VIABLE PRODUCT (MVP)
