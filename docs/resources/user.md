@@ -25,9 +25,10 @@ provider "forgejo" {
   host = "http://localhost:3000"
 }
 
+# User with default settings
 resource "forgejo_user" "defaults" {
-  login    = "tftest_user_defaults"
-  email    = "tftest_user_defaults@localhost.localdomain"
+  login    = "test_user_defaults"
+  email    = "test_user_defaults@localhost.localdomain"
   password = "passw0rd"
 }
 output "debug_defaults" {
@@ -35,9 +36,10 @@ output "debug_defaults" {
   sensitive = true
 }
 
+# User with custom settings
 resource "forgejo_user" "non_defaults" {
-  login       = "tftest_user_non_defaults"
-  email       = "tftest_user_non_defaults@localhost.localdomain"
+  login       = "test_user_non_defaults"
+  email       = "test_user_non_defaults@localhost.localdomain"
   password    = "passw0rd"
   full_name   = "Terraform Test User with non-default attributes"
   description = "Purely for testing..."

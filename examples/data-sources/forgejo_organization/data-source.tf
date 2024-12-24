@@ -10,8 +10,9 @@ provider "forgejo" {
   host = "http://localhost:3000"
 }
 
+# Existing organization
 data "forgejo_organization" "this" {
-  name = "test1"
+  name = "test_org"
 }
 output "debug" {
   value = data.forgejo_organization.this

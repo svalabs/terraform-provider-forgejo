@@ -10,8 +10,9 @@ provider "forgejo" {
   host = "http://localhost:3000"
 }
 
+# Existing user
 data "forgejo_user" "this" {
-  login = "achim"
+  login = "test_user"
 }
 output "debug" {
   value = data.forgejo_user.this

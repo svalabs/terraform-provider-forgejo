@@ -10,15 +10,17 @@ provider "forgejo" {
   host = "http://localhost:3000"
 }
 
+# Organization with default settings
 resource "forgejo_organization" "defaults" {
-  name = "tftest_org_defaults"
+  name = "test_org_defaults"
 }
 output "debug_defaults" {
   value = forgejo_organization.defaults
 }
 
+# Organization with custom settings
 resource "forgejo_organization" "non_defaults" {
-  name        = "tftest_org_non_defaults"
+  name        = "test_org_non_defaults"
   full_name   = "Terraform Test Org with non-default attributes"
   description = "Purely for testing..."
   website     = "https://forgejo.org/"

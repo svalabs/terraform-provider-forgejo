@@ -41,7 +41,7 @@ It is recommended to supply an API token to authenticate with a given Forgejo ho
 provider "forgejo" {
   host      = "http://localhost:3000"
   api_token = "1234567890abcdefghijklmnopqrstuvwxyz1234"
-  # or use the FORGEJO_API_TOKEN environment variable
+  # ...or use the FORGEJO_API_TOKEN environment variable
 }
 ```
 
@@ -52,7 +52,7 @@ provider "forgejo" {
   host     = "http://localhost:3000"
   username = "admin"
   password = "passw0rd"
-  # or use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
+  # ...or use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
 }
 ```
 
@@ -68,12 +68,12 @@ resource "forgejo_repository" "example" {
 A **user repository** can be created like so (requires administrative privileges):
 
 ```terraform
-resource "forgejo_user" "example" {
-  name = "new_user"
+resource "forgejo_user" "owner" {
+  login = "new_user"
 }
 
 resource "forgejo_repository" "example" {
-  owner       = forgejo_user.example.name
+  owner       = forgejo_user.owner.login
   name        = "new_user_repo"
   description = "Purely for testing..."
 }
@@ -82,12 +82,12 @@ resource "forgejo_repository" "example" {
 An **organization repository** can be created like so:
 
 ```terraform
-resource "forgejo_organization" "example" {
+resource "forgejo_organization" "owner" {
   name = "new_org"
 }
 
 resource "forgejo_repository" "example" {
-  owner       = forgejo_organization.example.name
+  owner       = forgejo_organization.owner.name
   name        = "new_org_repo"
   description = "Purely for testing..."
 }
@@ -97,7 +97,7 @@ These examples create repositories with most attributes set to their default val
 
 ```terraform
 resource "forgejo_repository" "example" {
-  owner          = forgejo_organization.example.name
+  owner          = forgejo_organization.owner.name
   name           = "new_org_repo"
   description    = "Purely for testing..."
   private        = true
@@ -114,6 +114,10 @@ resource "forgejo_repository" "example" {
 ```
 
 Refer to the `examples/` directory for more usage examples.
+
+## Developing & Contributing to the Provider
+
+The [CONTRIBUTING.md](CONTRIBUTING.md) file is a basic outline on how to build and develop the provider.
 
 ## Copyright and License
 
