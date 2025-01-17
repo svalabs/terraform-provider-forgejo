@@ -35,7 +35,7 @@ terraform {
 
 There are two methods for authenticating to the Forgejo API: using an API token, or with username and password.
 
-It is recommended to supply an API token to authenticate with a given Forgejo host:
+It is recommended to supply an **API token** to authenticate with a given Forgejo host:
 
 ```terraform
 provider "forgejo" {
@@ -45,7 +45,19 @@ provider "forgejo" {
 }
 ```
 
-Alternatively, supply username and password to authenticate:
+API tokens can be generated through the Forgejo web interface, by navigating to Settings → Applications → Access tokens → Generate new token.
+
+The following API token permissions are required:
+
+- `write:organization`
+- `write:repository`
+- `write:user`
+
+Optionally, for administrative privileges (required to create user repositories):
+
+- `write:admin`
+
+Alternatively, supply **username** and **password** to authenticate:
 
 ```terraform
 provider "forgejo" {
@@ -114,6 +126,26 @@ resource "forgejo_repository" "example" {
 ```
 
 Refer to the `examples/` directory for more usage examples.
+
+## Troubleshooting
+
+### Error: token does not have at least one of required scope(s)
+
+In case of the following error message:
+
+```shell
+Error: Unable to get repository by id
+
+    Unknown error: token does not have at least one of required scope(s):
+    [read:repository]
+```
+
+Re-generate the API token used for authentication, and make sure to select the following permissions:
+
+- `write:organization`
+- `write:repository`
+- `write:user`
+- Optional, for creating user repositories: `write:admin`
 
 ## Developing & Contributing to the Provider
 
