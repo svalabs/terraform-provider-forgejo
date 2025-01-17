@@ -1,3 +1,20 @@
+## 0.1.2 (January 17, 2025)
+
+ENHANCEMENTS:
+
+- Improve documentation and add troubleshooting section
+
+DEPENDENCIES:
+
+- bump golang.org/x/crypto from 0.21.0 to 0.31.0 in /tools
+- bump github.com/golang-jwt/jwt/v4 in /tools
+- bump golang.org/x/crypto from 0.29.0 to 0.31.0
+- bump goreleaser/goreleaser-action from 6.0.0 to 6.1.0
+- bump golangci/golangci-lint-action from 6.1.0 to 6.1.1
+- bump crazy-max/ghaction-import-gpg from 6.1.0 to 6.2.0
+- bump actions/setup-go from 5.0.2 to 5.2.0
+- bump actions/checkout from 4.1.7 to 4.2.2
+
 ## 0.1.1 (December 24, 2024) 🎄
 
 ENHANCEMENTS:
