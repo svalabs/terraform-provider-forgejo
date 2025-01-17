@@ -53,7 +53,7 @@ The following API token permissions are required:
 - `write:repository`
 - `write:user`
 
-Optionally, for administrative privileges (required to create user repositories):
+Optional, for administrative privileges (required to manage users and user repositories):
 
 - `write:admin`
 
@@ -67,6 +67,15 @@ provider "forgejo" {
   # ...or use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
 }
 ```
+
+> **Important**: The Forgejo API client does not (currently) allow ignoring certificate errors.
+> When connecting through `https://`, the Forgejo host must supply certificates trusted by the Terraform host.
+> Hence, self-signed certificates must be imported locally.
+> This can be achieved by running the following command:
+>
+> ```shell
+> echo quit | openssl s_client -showcerts -servername <<<forgejo_host>>> -connect <<<forgejo_host>>> > /etc/ssl/certs/cacert.pem
+> ```
 
 A **personal repository** can be created like so:
 
@@ -129,11 +138,32 @@ Refer to the `examples/` directory for more usage examples.
 
 ## Troubleshooting
 
+### Error: failed to verify certificate: certificate signed by unknown authority
+
+In case of the following error message:
+
+```
+Error: Unable to Create Forgejo API Client
+
+    An unexpected error occurred when creating the Forgejo API client. If the
+    error is not clear, please contact the provider developers.
+
+    Forgejo Client Error: Get "https://.../api/v1/version":
+    tls: failed to verify certificate: x509: certificate signed by unknown
+    authority
+```
+
+Extract the self-signed certificate from the Forgejo host and import it locally:
+
+```shell
+echo quit | openssl s_client -showcerts -servername <<<forgejo_host>>> -connect <<<forgejo_host>>> > /etc/ssl/certs/cacert.pem
+```
+
 ### Error: token does not have at least one of required scope(s)
 
 In case of the following error message:
 
-```shell
+```
 Error: Unable to get repository by id
 
     Unknown error: token does not have at least one of required scope(s):
@@ -145,7 +175,7 @@ Re-generate the API token used for authentication, and make sure to select the f
 - `write:organization`
 - `write:repository`
 - `write:user`
-- Optional, for creating user repositories: `write:admin`
+- Optional, for managing users and user repositories: `write:admin`
 
 ## Developing & Contributing to the Provider
 
