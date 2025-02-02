@@ -21,7 +21,7 @@ data "forgejo_repository" "user" {
 # Existing deploy key
 data "forgejo_deploy_key" "this" {
   repository_id = data.forgejo_repository.user.id
-  key_id        = 1
+  title         = "test_key"
 }
 output "debug" {
   value = data.forgejo_deploy_key.this

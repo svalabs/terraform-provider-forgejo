@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -53,7 +54,7 @@ func (d *deployKeyDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 			},
 			"key_id": schema.Int64Attribute{
 				Description: "Numeric identifier of the deploy key.",
-				Required:    true,
+				Computed:    true,
 			},
 			"key": schema.StringAttribute{
 				Description: "Armored SSH key.",
@@ -65,7 +66,7 @@ func (d *deployKeyDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 			},
 			"title": schema.StringAttribute{
 				Description: "Title of the deploy key.",
-				Computed:    true,
+				Required:    true,
 			},
 			"fingerprint": schema.StringAttribute{
 				Description: "Fingerprint of the deploy key.",
@@ -152,17 +153,68 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	// Map response body to model
 	repo.from(rep)
 
+	tflog.Info(ctx, "List deploy keys", map[string]any{
+		"user": repo.Owner.ValueString(),
+		"repo": repo.Name.ValueString(),
+	})
+
+	// Use Forgejo client to list deploy keys
+	keys, res, err := d.client.ListDeployKeys(
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
+		forgejo.ListDeployKeysOptions{},
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Deploy keys with user %s and repo %s not found: %s",
+				repo.Owner.String(),
+				repo.Name.String(),
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to list deploy keys", msg)
+
+		return
+	}
+
+	// Search for deploy key with given name
+	idx := slices.IndexFunc(keys, func(k *forgejo.DeployKey) bool {
+		return k.Title == data.Title.ValueString()
+	})
+	if idx == -1 {
+		resp.Diagnostics.AddError(
+			"Unable to get deploy key by title",
+			fmt.Sprintf(
+				"Deploy key with user %s repo %s and title %s not found.",
+				repo.Owner.String(),
+				repo.Name.String(),
+				data.Title.String(),
+			),
+		)
+
+		return
+	}
+
 	tflog.Info(ctx, "Get deploy key by id", map[string]any{
 		"user":   repo.Owner.ValueString(),
 		"repo":   repo.Name.ValueString(),
-		"key_id": data.KeyID.ValueInt64(),
+		"key_id": keys[idx].ID,
 	})
 
 	// Use Forgejo client to get deploy key
 	key, res, err := d.client.GetDeployKey(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
-		data.KeyID.ValueInt64(),
+		keys[idx].ID,
 	)
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
@@ -176,7 +228,7 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 				"Deploy key with user %s repo %s and id %d not found: %s",
 				repo.Owner.String(),
 				repo.Name.String(),
-				data.KeyID.ValueInt64(),
+				keys[idx].ID,
 				err,
 			)
 		default:
