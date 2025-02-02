@@ -16,6 +16,7 @@ provider_installation {
 
   dev_overrides {
     "registry.terraform.io/svalabs/forgejo" = "/root/go/bin"
+    "svalabs/forgejo" = "/root/go/bin"
   }
 
   # For all other providers, install them directly from their origin provider
