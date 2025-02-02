@@ -56,7 +56,7 @@ func (d *deployKeyDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 				Required:    true,
 			},
 			"key": schema.StringAttribute{
-				Description: "Armored SSH key",
+				Description: "Armored SSH key.",
 				Computed:    true,
 			},
 			"url": schema.StringAttribute{
@@ -179,7 +179,6 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 				data.KeyID.ValueInt64(),
 				err,
 			)
-		// TODO: check other error codes
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
@@ -189,7 +188,7 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Map response body to model
-	data.KeyID = types.Int64Value(key.KeyID)
+	data.KeyID = types.Int64Value(key.ID)
 	data.Key = types.StringValue(key.Key)
 	data.URL = types.StringValue(key.URL)
 	data.Title = types.StringValue(key.Title)
