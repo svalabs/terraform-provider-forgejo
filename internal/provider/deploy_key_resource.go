@@ -76,7 +76,7 @@ func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"key": schema.StringAttribute{
-				Description: "Armored SSH key.",
+				Description: "Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function).",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -334,6 +334,11 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *deployKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer un(trace(ctx, "Update deploy key resource"))
+
+	/*
+	 * Deploy keys can not be updated in-place. All writable attributes have
+	 * 'RequiresReplace' plan modifier set.
+	 */
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
