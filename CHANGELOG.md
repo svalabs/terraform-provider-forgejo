@@ -10,6 +10,7 @@ DEPENDENCIES:
 - bump golangci/golangci-lint-action from 6.1.1 to 6.3.0
 - bump github.com/hashicorp/terraform-plugin-go from 0.25.0 to 0.26.0
 - bump actions/setup-go from 5.2.0 to 5.3.0
+- bump golang.org/x/net from 0.23.0 to 0.33.0 in /tools
 
 ## 0.1.2 (January 17, 2025)
 
