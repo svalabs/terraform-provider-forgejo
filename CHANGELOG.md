@@ -1,3 +1,16 @@
+## 0.2.0 (February 8, 2025)
+
+FEATURES:
+
+- **New Resource**: `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
+- **New Data Source**: `forgejo_deploy_key` ([documentation](docs/data-sources/deploy_key.md))
+
+DEPENDENCIES:
+
+- bump golangci/golangci-lint-action from 6.1.1 to 6.3.0
+- bump github.com/hashicorp/terraform-plugin-go from 0.25.0 to 0.26.0
+- bump actions/setup-go from 5.2.0 to 5.3.0
+
 ## 0.1.2 (January 17, 2025)
 
 ENHANCEMENTS:
