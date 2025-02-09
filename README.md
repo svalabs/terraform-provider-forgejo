@@ -8,12 +8,14 @@ The Forgejo Terraform Provider allows managing resources within Forgejo. It is i
 
 Resources:
 
+- `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
 Data Sources:
 
+- `forgejo_deploy_key` ([documentation](docs/data-sources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
 - `forgejo_user` ([documentation](docs/data-sources/user.md))
@@ -27,7 +29,7 @@ terraform {
   required_providers {
     forgejo = {
       source = "svalabs/forgejo"
-      version = "~> 0.1.0"
+      version = "~> 0.2.0"
     }
   }
 }
