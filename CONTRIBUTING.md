@@ -2,7 +2,8 @@
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
+- [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.0
+- [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.6
 - [Go](https://golang.org/doc/install) >= 1.23
 
 ## Building the Provider
@@ -31,7 +32,7 @@ terraform-provider-forgejo/
 This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
 Please see the Go documentation for the most up to date information about using Go modules.
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
+To add a new dependency `github.com/author/dependency` to your Terraform/OpenTofu provider:
 
 ```shell
 go get github.com/author/dependency

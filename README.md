@@ -1,10 +1,10 @@
 # Terraform Provider for Forgejo
 
-This repository contains a [Terraform](https://www.terraform.io/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
+This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu](https://opentofu.org/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
 
 ## Contents
 
-The Forgejo Terraform Provider allows managing resources within Forgejo. It is in an **early** stage and currently provides the following...
+The Forgejo Terraform/OpenTofu Provider allows managing resources within Forgejo. It is in an **early** stage and currently provides the following...
 
 Resources:
 
@@ -22,7 +22,7 @@ Data Sources:
 
 ## Using the Provider
 
-Import the provider into your Terraform configuration:
+Import the provider into your Terraform/OpenTofu configuration:
 
 ```terraform
 terraform {
@@ -71,7 +71,7 @@ provider "forgejo" {
 ```
 
 > **Important**: The Forgejo API client does not (currently) allow ignoring certificate errors.
-> When connecting through `https://`, the Forgejo host must supply certificates trusted by the Terraform host.
+> When connecting through `https://`, the Forgejo host must supply certificates trusted by the Terraform/OpenTofu host.
 > Hence, self-signed certificates must be imported locally.
 > This can be achieved by running the following command:
 >
