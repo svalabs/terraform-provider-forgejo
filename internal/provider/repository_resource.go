@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -35,7 +35,7 @@ type repositoryResource struct {
 }
 
 // repositoryResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Repository
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Repository
 type repositoryResourceModel struct {
 	ID                        types.Int64  `tfsdk:"id"`
 	Owner                     types.String `tfsdk:"owner"`
@@ -176,7 +176,7 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	// o.DefaultMergeStyle =
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#Permission
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Permission
 type repositoryResourcePermissions struct {
 	Admin types.Bool `tfsdk:"admin"`
 	Push  types.Bool `tfsdk:"push"`
@@ -219,7 +219,7 @@ func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, p *forgej
 	return diags
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#InternalTracker
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#InternalTracker
 type repositoryResourceInternalTracker struct {
 	EnableTimeTracker                types.Bool `tfsdk:"enable_time_tracker"`
 	AllowOnlyContributorsToTrackTime types.Bool `tfsdk:"allow_only_contributors_to_track_time"`
@@ -283,7 +283,7 @@ func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, o *forg
 	return diags
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#ExternalTracker
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#ExternalTracker
 type repositoryResourceExternalTracker struct {
 	ExternalTrackerURL    types.String `tfsdk:"external_tracker_url"`
 	ExternalTrackerFormat types.String `tfsdk:"external_tracker_format"`
@@ -347,7 +347,7 @@ func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, o *forg
 	return diags
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#ExternalWiki
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#ExternalWiki
 type repositoryResourceExternalWiki struct {
 	ExternalWikiURL types.String `tfsdk:"external_wiki_url"`
 }

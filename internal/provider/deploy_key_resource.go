@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -28,7 +28,7 @@ type deployKeyResource struct {
 }
 
 // deployKeyResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo#DeployKey
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#DeployKey
 type deployKeyResourceModel struct {
 	RepositoryID types.Int64  `tfsdk:"repository_id"`
 	KeyID        types.Int64  `tfsdk:"key_id"`
