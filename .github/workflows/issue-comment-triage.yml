@@ -17,5 +17,5 @@ jobs:
       COMMAND: ${{ github.event.issue.pull_request && 'pr' || 'issue' }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: 'Remove waiting-response on comment'
+      - name: "Remove waiting-response on comment"
         run: gh ${{ env.COMMAND }} edit ${{ github.event.issue.html_url }} --remove-label waiting-response
