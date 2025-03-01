@@ -1,3 +1,9 @@
+## 0.2.2 (March 1, 2025)
+
+DEPENDENCIES:
+
+- Update golangci-lint config from template repository
+
 ## 0.2.1 (March 1, 2025)
 
 ENHANCEMENTS:
