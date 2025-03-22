@@ -3,12 +3,12 @@
 page_title: "forgejo_user Resource - forgejo"
 subcategory: ""
 description: |-
-  Forgejo user resource
+  Forgejo user resource.
 ---
 
 # forgejo_user (Resource)
 
-Forgejo user resource
+Forgejo user resource.
 
 ## Example Usage
 

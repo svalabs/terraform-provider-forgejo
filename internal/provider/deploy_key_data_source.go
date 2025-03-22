@@ -45,7 +45,7 @@ func (d *deployKeyDataSource) Metadata(_ context.Context, req datasource.Metadat
 // Schema defines the schema for the data source.
 func (d *deployKeyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo deploy key data source",
+		Description: "Forgejo deploy key data source.",
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{

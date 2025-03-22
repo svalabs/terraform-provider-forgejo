@@ -161,7 +161,7 @@ func (d *repositoryDataSource) Metadata(_ context.Context, req datasource.Metada
 // Schema defines the schema for the data source.
 func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo repository data source",
+		Description: "Forgejo repository data source.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{

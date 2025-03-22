@@ -3,12 +3,12 @@
 page_title: "forgejo_organization Data Source - forgejo"
 subcategory: ""
 description: |-
-  Forgejo organization data source
+  Forgejo organization data source.
 ---
 
 # forgejo_organization (Data Source)
 
-Forgejo organization data source
+Forgejo organization data source.
 
 ## Example Usage
 

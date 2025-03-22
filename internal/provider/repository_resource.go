@@ -411,7 +411,7 @@ func (r *repositoryResource) Metadata(_ context.Context, req resource.MetadataRe
 // Schema defines the schema for the resource.
 func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo repository resource",
+		Description: "Forgejo repository resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
@@ -729,7 +729,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 			},
 			"issue_labels": schema.StringAttribute{
-				Description: "Issue Label set to use",
+				Description: "Issue Label set to use.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
@@ -741,25 +741,25 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Default:     booldefault.StaticBool(true),
 			},
 			"gitignores": schema.StringAttribute{
-				Description: "Gitignores to use",
+				Description: "Gitignores to use.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"license": schema.StringAttribute{
-				Description: "License to use",
+				Description: "License to use.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"readme": schema.StringAttribute{
-				Description: "Readme of the repository to create",
+				Description: "Readme of the repository to create.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"trust_model": schema.StringAttribute{
-				Description: "TrustModel of the repository",
+				Description: "TrustModel of the repository.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),

@@ -43,7 +43,10 @@ func (p *forgejoProvider) Metadata(_ context.Context, _ provider.MetadataRequest
 // Schema defines the provider-level schema for configuration data.
 func (p *forgejoProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Terraform provider for Forgejo — self-hosted lightweight software forge",
+		MarkdownDescription: `Terraform provider for Forgejo — self-hosted lightweight software forge.
+
+Refer to the project's [README](https://github.com/svalabs/terraform-provider-forgejo#readme)
+for detailed usage examples and troubleshooting information.`,
 
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{

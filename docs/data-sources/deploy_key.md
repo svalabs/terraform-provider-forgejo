@@ -3,12 +3,12 @@
 page_title: "forgejo_deploy_key Data Source - forgejo"
 subcategory: ""
 description: |-
-  Forgejo deploy key data source
+  Forgejo deploy key data source.
 ---
 
 # forgejo_deploy_key (Data Source)
 
-Forgejo deploy key data source
+Forgejo deploy key data source.
 
 ## Example Usage
 

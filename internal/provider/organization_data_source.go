@@ -44,7 +44,7 @@ func (d *organizationDataSource) Metadata(_ context.Context, req datasource.Meta
 // Schema defines the schema for the data source.
 func (d *organizationDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo organization data source",
+		Description: "Forgejo organization data source.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{

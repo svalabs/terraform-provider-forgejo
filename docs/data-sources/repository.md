@@ -3,12 +3,12 @@
 page_title: "forgejo_repository Data Source - forgejo"
 subcategory: ""
 description: |-
-  Forgejo repository data source
+  Forgejo repository data source.
 ---
 
 # forgejo_repository (Data Source)
 
-Forgejo repository data source
+Forgejo repository data source.
 
 ## Example Usage
 

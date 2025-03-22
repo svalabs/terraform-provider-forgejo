@@ -72,7 +72,7 @@ func (r *organizationResource) Metadata(_ context.Context, req resource.Metadata
 // Schema defines the schema for the resource.
 func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo organization resource",
+		Description: "Forgejo organization resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{

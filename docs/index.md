@@ -3,12 +3,17 @@
 page_title: "forgejo Provider"
 subcategory: ""
 description: |-
-  Terraform provider for Forgejo — self-hosted lightweight software forge
+  Terraform provider for Forgejo — self-hosted lightweight software forge.
+  Refer to the project's README https://github.com/svalabs/terraform-provider-forgejo#readme
+  for detailed usage examples and troubleshooting information.
 ---
 
 # forgejo Provider
 
-Terraform provider for Forgejo — self-hosted lightweight software forge
+Terraform provider for Forgejo — self-hosted lightweight software forge.
+
+Refer to the project's [README](https://github.com/svalabs/terraform-provider-forgejo#readme)
+for detailed usage examples and troubleshooting information.
 
 ## Example Usage
 

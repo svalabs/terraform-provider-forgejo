@@ -3,12 +3,12 @@
 page_title: "forgejo_repository Resource - forgejo"
 subcategory: ""
 description: |-
-  Forgejo repository resource
+  Forgejo repository resource.
 ---
 
 # forgejo_repository (Resource)
 
-Forgejo repository resource
+Forgejo repository resource.
 
 ## Example Usage
 
@@ -158,7 +158,7 @@ output "user_debug_non_defaults" {
 - `description` (String) Description of the repository.
 - `external_tracker` (Attributes) Settings for external issue tracker. (see [below for nested schema](#nestedatt--external_tracker))
 - `external_wiki` (Attributes) Settings for external wiki. (see [below for nested schema](#nestedatt--external_wiki))
-- `gitignores` (String) Gitignores to use
+- `gitignores` (String) Gitignores to use.
 - `has_actions` (Boolean) Are integrated CI/CD pipelines enabled?
 - `has_issues` (Boolean) Is the repository issue tracker enabled?
 - `has_packages` (Boolean) Is the repository package registry enabled?
@@ -168,14 +168,14 @@ output "user_debug_non_defaults" {
 - `has_wiki` (Boolean) Is the repository wiki enabled?
 - `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored?
 - `internal_tracker` (Attributes) Settings for built-in issue tracker. (see [below for nested schema](#nestedatt--internal_tracker))
-- `issue_labels` (String) Issue Label set to use
-- `license` (String) License to use
+- `issue_labels` (String) Issue Label set to use.
+- `license` (String) License to use.
 - `mirror_interval` (String) Mirror interval of the repository.
 - `owner` (String) Owner of the repository.
 - `private` (Boolean) Is the repository private?
-- `readme` (String) Readme of the repository to create
+- `readme` (String) Readme of the repository to create.
 - `template` (Boolean) Is the repository a template?
-- `trust_model` (String) TrustModel of the repository
+- `trust_model` (String) TrustModel of the repository.
 - `website` (String) Website of the repository.
 
 ### Read-Only

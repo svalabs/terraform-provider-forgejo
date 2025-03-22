@@ -3,12 +3,12 @@
 page_title: "forgejo_user Data Source - forgejo"
 subcategory: ""
 description: |-
-  Forgejo user data source
+  Forgejo user data source.
 ---
 
 # forgejo_user (Data Source)
 
-Forgejo user data source
+Forgejo user data source.
 
 ## Example Usage
 

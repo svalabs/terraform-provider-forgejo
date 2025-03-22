@@ -3,12 +3,12 @@
 page_title: "forgejo_deploy_key Resource - forgejo"
 subcategory: ""
 description: |-
-  Forgejo deploy key resource
+  Forgejo deploy key resource.
 ---
 
 # forgejo_deploy_key (Resource)
 
-Forgejo deploy key resource
+Forgejo deploy key resource.
 
 ## Example Usage
 
