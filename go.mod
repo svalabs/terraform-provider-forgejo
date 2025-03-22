@@ -1,6 +1,9 @@
 module terraform-provider-forgejo
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.7
+
 require (
 	codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2 v2.0.0
 	github.com/hashicorp/terraform-plugin-framework v1.14.1
