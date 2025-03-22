@@ -1,3 +1,16 @@
+## 0.2.3 (March 22, 2025)
+
+ENHANCEMENTS:
+
+- Improve documentation
+
+DEPENDENCIES:
+
+- Bump golang.org/x/net from 0.33.0 to 0.36.0 in /tools
+- Bump golang.org/x/net from 0.34.0 to 0.36.0
+- Bump golangci/golangci-lint-action from 6.5.0 to 6.5.1
+- Bump github.com/golang-jwt/jwt/v4 in /tools
+
 ## 0.2.2 (March 1, 2025)
 
 DEPENDENCIES:
