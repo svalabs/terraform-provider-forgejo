@@ -1,5 +1,8 @@
 # Terraform Provider for Forgejo
 
+![Tests](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/test.yml/badge.svg)
+![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
+
 This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu](https://opentofu.org/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
 
 ## Contents
