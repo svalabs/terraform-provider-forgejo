@@ -6,6 +6,8 @@ terraform {
   }
 }
 
+variable "test_password" { sensitive = true }
+
 provider "forgejo" {
   host = "http://localhost:3000"
 }
@@ -85,7 +87,7 @@ output "org_debug_non_defaults" {
 resource "forgejo_user" "owner" {
   login    = "test_user"
   email    = "test_user@localhost.localdomain"
-  password = "passw0rd"
+  password = var.test_password
 }
 
 # User repository with default settings

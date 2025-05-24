@@ -26,11 +26,14 @@ terraform {
   }
 }
 
+variable "forgejo_api_token" { sensitive = true }
+variable "forgejo_password" { sensitive = true }
+
 # Authenticate with API token
 provider "forgejo" {
   alias     = "apiToken"
   host      = "http://localhost:3000"
-  api_token = "1234567890abcdefghijklmnopqrstuvwxyz1234"
+  api_token = var.forgejo_api_token
   # ...or use the FORGEJO_API_TOKEN environment variable
 }
 resource "forgejo_repository" "example_personal" {
@@ -44,7 +47,7 @@ provider "forgejo" {
   alias    = "username"
   host     = "http://localhost:3000"
   username = "admin"
-  password = "passw0rd"
+  password = var.forgejo_password
   # ...or use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
 }
 resource "forgejo_organization" "example" {

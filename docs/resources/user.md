@@ -21,6 +21,8 @@ terraform {
   }
 }
 
+variable "test_password" { sensitive = true }
+
 provider "forgejo" {
   host = "http://localhost:3000"
 }
@@ -29,7 +31,7 @@ provider "forgejo" {
 resource "forgejo_user" "defaults" {
   login    = "test_user_defaults"
   email    = "test_user_defaults@localhost.localdomain"
-  password = "passw0rd"
+  password = var.test_password
 }
 output "debug_defaults" {
   value     = forgejo_user.defaults
@@ -40,7 +42,7 @@ output "debug_defaults" {
 resource "forgejo_user" "non_defaults" {
   login       = "test_user_non_defaults"
   email       = "test_user_non_defaults@localhost.localdomain"
-  password    = "passw0rd"
+  password    = var.test_password
   full_name   = "Terraform Test User with non-default attributes"
   description = "Purely for testing..."
   website     = "https://forgejo.org/"
