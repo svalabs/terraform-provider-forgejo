@@ -1,3 +1,25 @@
+## 0.2.4 (May 24, 2025)
+
+DOCUMENTATION:
+
+- Add workflow status badges
+- Update examples to use variables instead of hardcoded secrets
+
+DEPENDENCIES:
+
+- Update local test environment to forgejo:10.0
+- Migrate golangci-lint configuration from v1 to v2
+- Bump actions/setup-go from 5.3.0 to 5.5.0
+- Bump codeberg.org/mvdkleijn/forgejo-sdk/forgejo from v2.0.0 to v2.1.0
+- Bump crazy-max/ghaction-import-gpg from 6.2.0 to 6.3.0
+- Bump github.com/hashicorp/terraform-plugin-framework
+- Bump github.com/hashicorp/terraform-plugin-framework-validators
+- Bump github.com/hashicorp/terraform-plugin-testing
+- Bump golang.org/x/net from 0.36.0 to 0.38.0
+- Bump golang.org/x/net from 0.36.0 to 0.38.0 in /tools
+- Bump golangci/golangci-lint-action from 6.5.1 to 8.0.0
+- Bump goreleaser/goreleaser-action from 6.2.1 to 6.3.0
+
 ## 0.2.3 (March 22, 2025)
 
 ENHANCEMENTS:
