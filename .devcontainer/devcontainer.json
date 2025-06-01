@@ -9,14 +9,16 @@
     "vscode": {
       "extensions": [
         "esbenp.prettier-vscode",
-        "hashicorp.terraform",
-        "golang.go"
+        "golang.go",
+        "hashicorp.terraform"
       ]
     }
   },
 
   "securityOpt": ["label=disable"],
-  "mounts": [],
+  "mounts": [
+    "type=bind,source=${localEnv:HOME}/.gitconfig-vscode,target=/home/vscode/.gitconfig,ro=true"
+  ],
 
   "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/src,ro=false",
   "workspaceFolder": "/src",
