@@ -2,7 +2,7 @@ FROM registry.access.redhat.com/ubi9/ubi:latest
 
 ARG goversion=1.23.9
 
-RUN useradd -ms /bin/bash vscode
+RUN useradd --create-home vscode
 
 ARG PS1A="'\n\[\e[0;1;94m\]\W \[\e[0;1;93m\]@\[\e[0;1;93m\]$(git branch --show-current 2>/dev/null)\n\[\e[0;32m\]➜ \[\e[0m\]'"
 RUN cat <<EOF >> ~vscode/.bashrc
@@ -30,15 +30,13 @@ EOF
 
 RUN dnf -y update && \
   dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-  /usr/bin/crb enable && \
   dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo && \
   dnf -y install \
     git \
-    gnupg2 \
     make \
     terraform && \
   dnf clean all && \
   curl --location https://go.dev/dl/go${goversion}.linux-amd64.tar.gz | tar -C /usr/local -xzf - && \
   curl --location https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin
 
-  USER vscode
+USER vscode
