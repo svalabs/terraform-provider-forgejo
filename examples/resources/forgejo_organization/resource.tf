@@ -14,9 +14,6 @@ provider "forgejo" {
 resource "forgejo_organization" "defaults" {
   name = "test_org_defaults"
 }
-output "debug_defaults" {
-  value = forgejo_organization.defaults
-}
 
 # Organization with custom settings
 resource "forgejo_organization" "non_defaults" {
@@ -26,7 +23,4 @@ resource "forgejo_organization" "non_defaults" {
   website     = "https://forgejo.org/"
   location    = "Mêlée Island"
   visibility  = "private"
-}
-output "debug_non_defaults" {
-  value = forgejo_organization.non_defaults
 }

@@ -30,6 +30,3 @@ resource "forgejo_deploy_key" "this" {
   title         = "test_key"
   read_only     = false
 }
-output "debug" {
-  value = forgejo_deploy_key.this
-}

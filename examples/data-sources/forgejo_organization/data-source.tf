@@ -14,6 +14,3 @@ provider "forgejo" {
 data "forgejo_organization" "this" {
   name = "test_org"
 }
-output "debug" {
-  value = data.forgejo_organization.this
-}

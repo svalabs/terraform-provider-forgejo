@@ -18,10 +18,6 @@ resource "forgejo_user" "defaults" {
   email    = "test_user_defaults@localhost.localdomain"
   password = var.test_password
 }
-output "debug_defaults" {
-  value     = forgejo_user.defaults
-  sensitive = true
-}
 
 # User with custom settings
 resource "forgejo_user" "non_defaults" {
@@ -33,8 +29,4 @@ resource "forgejo_user" "non_defaults" {
   website     = "https://forgejo.org/"
   location    = "Mêlée Island"
   visibility  = "private"
-}
-output "debug_non_defaults" {
-  value     = forgejo_user.non_defaults
-  sensitive = true
 }

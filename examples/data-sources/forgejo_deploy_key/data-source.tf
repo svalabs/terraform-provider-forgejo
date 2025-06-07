@@ -23,6 +23,3 @@ data "forgejo_deploy_key" "this" {
   repository_id = data.forgejo_repository.user.id
   title         = "test_key"
 }
-output "debug" {
-  value = data.forgejo_deploy_key.this
-}

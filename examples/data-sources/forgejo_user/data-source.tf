@@ -14,6 +14,3 @@ provider "forgejo" {
 data "forgejo_user" "this" {
   login = "test_user"
 }
-output "debug" {
-  value = data.forgejo_user.this
-}
