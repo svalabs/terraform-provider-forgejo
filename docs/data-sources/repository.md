@@ -32,9 +32,6 @@ data "forgejo_repository" "user" {
   }
   name = "user_test_repo"
 }
-output "user_debug" {
-  value = data.forgejo_repository.user
-}
 
 # Existing organization repository
 data "forgejo_repository" "org" {
@@ -42,9 +39,6 @@ data "forgejo_repository" "org" {
     login = "test_org"
   }
   name = "org_test_repo"
-}
-output "org_debug" {
-  value = data.forgejo_repository.org
 }
 ```
 

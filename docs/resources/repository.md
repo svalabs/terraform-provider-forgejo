@@ -32,9 +32,6 @@ provider "forgejo" {
 resource "forgejo_repository" "personal_defaults" {
   name = "personal_test_repo_defaults"
 }
-output "personal_debug_defaults" {
-  value = forgejo_repository.personal_defaults
-}
 
 # Personal repository with custom settings
 resource "forgejo_repository" "personal_non_defaults" {
@@ -56,9 +53,6 @@ resource "forgejo_repository" "personal_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
-output "personal_debug_non_defaults" {
-  value = forgejo_repository.personal_non_defaults
-}
 
 resource "forgejo_organization" "owner" {
   name = "test_org"
@@ -69,9 +63,6 @@ resource "forgejo_organization" "owner" {
 resource "forgejo_repository" "org_defaults" {
   owner = forgejo_organization.owner.name
   name  = "org_test_repo_defaults"
-}
-output "org_debug_defaults" {
-  value = forgejo_repository.org_defaults
 }
 
 # Organization repository with custom settings
@@ -95,9 +86,6 @@ resource "forgejo_repository" "org_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
-output "org_debug_non_defaults" {
-  value = forgejo_repository.org_non_defaults
-}
 
 resource "forgejo_user" "owner" {
   login    = "test_user"
@@ -110,9 +98,6 @@ resource "forgejo_user" "owner" {
 resource "forgejo_repository" "user_defaults" {
   owner = forgejo_user.owner.login
   name  = "user_test_repo_defaults"
-}
-output "user_debug_defaults" {
-  value = forgejo_repository.user_defaults
 }
 
 # User repository with custom settings
@@ -136,8 +121,20 @@ resource "forgejo_repository" "user_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
-output "user_debug_non_defaults" {
-  value = forgejo_repository.user_non_defaults
+
+# Clone repository
+resource "forgejo_repository" "clone" {
+  name       = "clone_test_repo"
+  clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
+  mirror     = false
+}
+
+# Pull mirror repository
+resource "forgejo_repository" "mirror" {
+  name            = "mirror_test_repo"
+  clone_addr      = "https://github.com/svalabs/terraform-provider-forgejo"
+  mirror          = true
+  mirror_interval = "12h0m0s"
 }
 ```
 
@@ -156,6 +153,7 @@ output "user_debug_non_defaults" {
 - `allow_squash_merge` (Boolean) Allowed to create squash commit?
 - `archived` (Boolean) Is the repository archived?
 - `auto_init` (Boolean) Whether the repository should be auto-intialized?
+- `clone_addr` (String) Migrate / Clone from URL.
 - `default_branch` (String) Default branch of the repository.
 - `description` (String) Description of the repository.
 - `external_tracker` (Attributes) Settings for external issue tracker. (see [below for nested schema](#nestedatt--external_tracker))
@@ -172,6 +170,7 @@ output "user_debug_non_defaults" {
 - `internal_tracker` (Attributes) Settings for built-in issue tracker. (see [below for nested schema](#nestedatt--internal_tracker))
 - `issue_labels` (String) Issue Label set to use.
 - `license` (String) License to use.
+- `mirror` (Boolean) Is the repository a mirror?
 - `mirror_interval` (String) Mirror interval of the repository.
 - `owner` (String) Owner of the repository.
 - `private` (Boolean) Is the repository private?
@@ -193,11 +192,9 @@ output "user_debug_non_defaults" {
 - `html_url` (String) HTML URL of the repository.
 - `id` (Number) Numeric identifier of the repository.
 - `internal` (Boolean) Is the repository internal?
-- `mirror` (Boolean) Is the repository a mirror?
 - `mirror_updated` (String) Time at which the repository mirror was updated.
 - `open_issues_count` (Number) Number of open issues of the repository.
 - `open_pr_counter` (Number) Number of open pull requests of the repository.
-- `original_url` (String) Original URL of the repository.
 - `parent_id` (Number) Numeric identifier of the parent repository.
 - `permissions` (Attributes) Permissions of the repository. (see [below for nested schema](#nestedatt--permissions))
 - `release_counter` (Number) Number of releases of the repository.

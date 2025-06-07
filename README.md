@@ -119,6 +119,27 @@ resource "forgejo_repository" "example" {
 }
 ```
 
+A **clone repository** can be created like so:
+
+```terraform
+resource "forgejo_repository" "clone" {
+  name       = "clone_test_repo"
+  clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
+  mirror     = false
+}
+```
+
+A **pull mirror repository** can be created like so:
+
+```terraform
+resource "forgejo_repository" "mirror" {
+  name            = "mirror_test_repo"
+  clone_addr      = "https://github.com/svalabs/terraform-provider-forgejo"
+  mirror          = true
+  mirror_interval = "12h0m0s"
+}
+```
+
 These examples create repositories with most attributes set to their default values. However, many settings can be customized:
 
 ```terraform
