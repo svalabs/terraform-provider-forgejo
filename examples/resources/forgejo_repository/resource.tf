@@ -17,9 +17,6 @@ provider "forgejo" {
 resource "forgejo_repository" "personal_defaults" {
   name = "personal_test_repo_defaults"
 }
-output "personal_debug_defaults" {
-  value = forgejo_repository.personal_defaults
-}
 
 # Personal repository with custom settings
 resource "forgejo_repository" "personal_non_defaults" {
@@ -41,9 +38,6 @@ resource "forgejo_repository" "personal_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
-output "personal_debug_non_defaults" {
-  value = forgejo_repository.personal_non_defaults
-}
 
 resource "forgejo_organization" "owner" {
   name = "test_org"
@@ -54,9 +48,6 @@ resource "forgejo_organization" "owner" {
 resource "forgejo_repository" "org_defaults" {
   owner = forgejo_organization.owner.name
   name  = "org_test_repo_defaults"
-}
-output "org_debug_defaults" {
-  value = forgejo_repository.org_defaults
 }
 
 # Organization repository with custom settings
@@ -80,9 +71,6 @@ resource "forgejo_repository" "org_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
-output "org_debug_non_defaults" {
-  value = forgejo_repository.org_non_defaults
-}
 
 resource "forgejo_user" "owner" {
   login    = "test_user"
@@ -95,9 +83,6 @@ resource "forgejo_user" "owner" {
 resource "forgejo_repository" "user_defaults" {
   owner = forgejo_user.owner.login
   name  = "user_test_repo_defaults"
-}
-output "user_debug_defaults" {
-  value = forgejo_repository.user_defaults
 }
 
 # User repository with custom settings
@@ -121,6 +106,18 @@ resource "forgejo_repository" "user_non_defaults" {
     enable_issue_dependencies             = false
   }
 }
-output "user_debug_non_defaults" {
-  value = forgejo_repository.user_non_defaults
+
+# Clone repository
+resource "forgejo_repository" "clone" {
+  name       = "clone_test_repo"
+  clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
+  mirror     = false
+}
+
+# Pull mirror repository
+resource "forgejo_repository" "mirror" {
+  name            = "mirror_test_repo"
+  clone_addr      = "https://github.com/svalabs/terraform-provider-forgejo"
+  mirror          = true
+  mirror_interval = "12h0m0s"
 }

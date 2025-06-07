@@ -3,10 +3,13 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -52,7 +55,6 @@ type repositoryResourceModel struct {
 	HTMLURL                   types.String `tfsdk:"html_url"`
 	SSHURL                    types.String `tfsdk:"ssh_url"`
 	CloneURL                  types.String `tfsdk:"clone_url"`
-	OriginalURL               types.String `tfsdk:"original_url"`
 	Website                   types.String `tfsdk:"website"`
 	Stars                     types.Int64  `tfsdk:"stars_count"`
 	Forks                     types.Int64  `tfsdk:"forks_count"`
@@ -91,6 +93,7 @@ type repositoryResourceModel struct {
 	License                   types.String `tfsdk:"license"`
 	Readme                    types.String `tfsdk:"readme"`
 	TrustModel                types.String `tfsdk:"trust_model"`
+	CloneAddr                 types.String `tfsdk:"clone_addr"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -104,17 +107,19 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.Private = types.BoolValue(r.Private)
 	m.Fork = types.BoolValue(r.Fork)
 	m.Template = types.BoolValue(r.Template)
+
 	if r.Parent != nil {
 		m.ParentID = types.Int64Value(r.Parent.ID)
 	} else {
 		m.ParentID = types.Int64Null()
 	}
+
 	m.Mirror = types.BoolValue(r.Mirror)
 	m.Size = types.Int64Value(int64(r.Size))
 	m.HTMLURL = types.StringValue(r.HTMLURL)
 	m.SSHURL = types.StringValue(r.SSHURL)
 	m.CloneURL = types.StringValue(r.CloneURL)
-	m.OriginalURL = types.StringValue(r.OriginalURL)
+	m.CloneAddr = types.StringValue(r.OriginalURL)
 	m.Website = types.StringValue(r.Website)
 	m.Stars = types.Int64Value(int64(r.Stars))
 	m.Forks = types.Int64Value(int64(r.Forks))
@@ -123,7 +128,12 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.OpenPulls = types.Int64Value(int64(r.OpenPulls))
 	m.Releases = types.Int64Value(int64(r.Releases))
 	m.DefaultBranch = types.StringValue(r.DefaultBranch)
-	m.Archived = types.BoolValue(r.Archived)
+
+	if !m.Mirror.ValueBool() {
+		// cannot archive/un-archive repository mirrors
+		m.Archived = types.BoolValue(r.Archived)
+	}
+
 	m.Created = types.StringValue(r.Created.String())
 	m.Updated = types.StringValue(r.Updated.String())
 	m.HasIssues = types.BoolValue(r.HasIssues)
@@ -169,8 +179,16 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	o.AllowRebase = m.AllowRebase.ValueBoolPointer()
 	o.AllowRebaseMerge = m.AllowRebaseMerge.ValueBoolPointer()
 	o.AllowSquash = m.AllowSquash.ValueBoolPointer()
-	o.Archived = m.Archived.ValueBoolPointer()
-	o.MirrorInterval = m.MirrorInterval.ValueStringPointer()
+
+	if !m.Mirror.ValueBool() {
+		// cannot archive/un-archive repository mirrors
+		o.Archived = m.Archived.ValueBoolPointer()
+	}
+
+	if m.MirrorInterval.ValueString() != "" {
+		o.MirrorInterval = m.MirrorInterval.ValueStringPointer()
+	}
+
 	// o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
 	// o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
 	// o.DefaultMergeStyle =
@@ -475,9 +493,16 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"mirror": schema.BoolAttribute{
 				Description: "Is the repository a mirror?",
+				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+					}...),
 				},
 			},
 			"size": schema.Int64Attribute{
@@ -494,10 +519,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"clone_url": schema.StringAttribute{
 				Description: "Clone URL of the repository.",
-				Computed:    true,
-			},
-			"original_url": schema.StringAttribute{
-				Description: "Original URL of the repository.",
 				Computed:    true,
 			},
 			"website": schema.StringAttribute{
@@ -718,7 +739,17 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Mirror interval of the repository.",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.All(
+						stringvalidator.AlsoRequires(path.Expressions{
+							path.MatchRoot("mirror"),
+						}...),
+						stringvalidator.RegexMatches(
+							regexp.MustCompile("^(0|[1-9][0-9]*)h[1-5]?[0-9]m[1-5]?[0-9]s$"),
+							"must follow '23h59m59s' format",
+						),
+					),
+				},
 			},
 			"mirror_updated": schema.StringAttribute{
 				Description: "Time at which the repository mirror was updated.",
@@ -772,6 +803,15 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					),
 				},
 			},
+			"clone_addr": schema.StringAttribute{
+				Description: "Migrate / Clone from URL.",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 		},
 	}
 }
@@ -812,96 +852,149 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	tflog.Info(ctx, "Create repository", map[string]any{
-		"owner":          data.Owner.ValueString(),
-		"name":           data.Name.ValueString(),
-		"description":    data.Description.ValueString(),
-		"private":        data.Private.ValueBool(),
-		"issue_labels":   data.IssueLabels.ValueString(),
-		"auto_init":      data.AutoInit.ValueBool(),
-		"template":       data.Template.ValueBool(),
-		"gitignores":     data.Gitignores.ValueString(),
-		"license":        data.License.ValueString(),
-		"readme":         data.Readme.ValueString(),
-		"default_branch": data.DefaultBranch.ValueString(),
-		"trust_model":    forgejo.TrustModel(data.TrustModel.ValueString()),
-	})
-
-	// Generate API request body from plan
-	copts := forgejo.CreateRepoOption{
-		Name:          data.Name.ValueString(),
-		Description:   data.Description.ValueString(),
-		Private:       data.Private.ValueBool(),
-		IssueLabels:   data.IssueLabels.ValueString(),
-		AutoInit:      data.AutoInit.ValueBool(),
-		Template:      data.Template.ValueBool(),
-		Gitignores:    data.Gitignores.ValueString(),
-		License:       data.License.ValueString(),
-		Readme:        data.Readme.ValueString(),
-		DefaultBranch: data.DefaultBranch.ValueString(),
-		TrustModel:    forgejo.TrustModel(data.TrustModel.ValueString()),
-	}
-
-	// Validate API request body
-	err := copts.Validate(r.client)
-	if err != nil {
-		resp.Diagnostics.AddError("Input validation error", err.Error())
-
-		return
-	}
-
-	// Determine type of repository
-	var ownerType string
-	if data.Owner.ValueString() == "" {
-		// No owner -> personal repository
-		ownerType = "personal"
-	} else {
-		// Use Forgejo client to check if owner is org
-		_, res, _ := r.client.GetOrg(data.Owner.ValueString())
-		if res.StatusCode == 404 {
-			// Use Forgejo client to check if owner is user
-			_, res, _ = r.client.GetUserInfo(data.Owner.ValueString())
-			if res.StatusCode == 404 {
-				resp.Diagnostics.AddError(
-					"Owner not found",
-					fmt.Sprintf(
-						"Neither organization nor user with name %s exists.",
-						data.Owner.String(),
-					),
-				)
-
-				return
-			}
-			// User exists -> user repository
-			ownerType = "user"
-		} else {
-			// Org exists -> org repository
-			ownerType = "org"
-		}
-	}
-
 	var (
 		rep *forgejo.Repository
 		res *forgejo.Response
+		err error
 	)
 
-	switch ownerType {
-	case "org":
-		// Use Forgejo client to create new org repository
-		rep, res, err = r.client.CreateOrgRepo(
-			data.Owner.ValueString(),
-			copts,
-		)
-	case "personal":
-		// Use Forgejo client to create new personal repository
-		rep, res, err = r.client.CreateRepo(copts)
-	case "user":
-		// Use Forgejo client to create new user repository
-		rep, res, err = r.client.AdminCreateRepo(
-			data.Owner.ValueString(),
-			copts,
-		)
+	// Determine if repository is to be migrated
+	if data.CloneAddr.ValueString() != "" {
+		tflog.Info(ctx, "Migrate repository", map[string]any{
+			"name":              data.Name.ValueString(),
+			"owner":             data.Owner.ValueString(),
+			"clone_addr":        data.CloneAddr.ValueString(),
+			"mirror":            data.Mirror.ValueBool(),
+			"private":           data.Private.ValueBool(),
+			"description":       data.Description.ValueString(),
+			"has_wiki":          data.HasWiki.ValueBool(),
+			"has_issues":        data.HasIssues.ValueBool(),
+			"has_pull_requests": data.HasPullRequests.ValueBool(),
+			"has_releases":      data.HasReleases.ValueBool(),
+			"mirror_interval":   data.MirrorInterval.ValueString(),
+		})
+
+		// Generate API request body from plan
+		copts := forgejo.MigrateRepoOption{
+			RepoName:  data.Name.ValueString(),
+			RepoOwner: data.Owner.ValueString(),
+			CloneAddr: data.CloneAddr.ValueString(),
+			// Service:      forgejo.GitServiceType(""),
+			// AuthUsername: "",
+			// AuthPassword: "",
+			// AuthToken:    "",
+			Mirror:      data.Mirror.ValueBool(),
+			Private:     data.Private.ValueBool(),
+			Description: data.Description.ValueString(),
+			Wiki:        data.HasWiki.ValueBool(),
+			// Milestones:     false,
+			// Labels:         false,
+			Issues:         data.HasIssues.ValueBool(),
+			PullRequests:   data.HasPullRequests.ValueBool(),
+			Releases:       data.HasReleases.ValueBool(),
+			MirrorInterval: data.MirrorInterval.ValueString(),
+			// LFS:            false,
+			// LFSEndpoint:    "",
+		}
+
+		// Validate API request body
+		err = copts.Validate(r.client)
+		if err != nil {
+			resp.Diagnostics.AddError("Input validation error", err.Error())
+
+			return
+		}
+
+		// Use Forgejo client to create new repository migration
+		rep, res, err = r.client.MigrateRepo(copts)
+	} else {
+		tflog.Info(ctx, "Create repository", map[string]any{
+			"owner":          data.Owner.ValueString(),
+			"name":           data.Name.ValueString(),
+			"description":    data.Description.ValueString(),
+			"private":        data.Private.ValueBool(),
+			"issue_labels":   data.IssueLabels.ValueString(),
+			"auto_init":      data.AutoInit.ValueBool(),
+			"template":       data.Template.ValueBool(),
+			"gitignores":     data.Gitignores.ValueString(),
+			"license":        data.License.ValueString(),
+			"readme":         data.Readme.ValueString(),
+			"default_branch": data.DefaultBranch.ValueString(),
+			"trust_model":    forgejo.TrustModel(data.TrustModel.ValueString()),
+		})
+
+		// Generate API request body from plan
+		copts := forgejo.CreateRepoOption{
+			Name:          data.Name.ValueString(),
+			Description:   data.Description.ValueString(),
+			Private:       data.Private.ValueBool(),
+			IssueLabels:   data.IssueLabels.ValueString(),
+			AutoInit:      data.AutoInit.ValueBool(),
+			Template:      data.Template.ValueBool(),
+			Gitignores:    data.Gitignores.ValueString(),
+			License:       data.License.ValueString(),
+			Readme:        data.Readme.ValueString(),
+			DefaultBranch: data.DefaultBranch.ValueString(),
+			TrustModel:    forgejo.TrustModel(data.TrustModel.ValueString()),
+		}
+
+		// Validate API request body
+		err = copts.Validate(r.client)
+		if err != nil {
+			resp.Diagnostics.AddError("Input validation error", err.Error())
+
+			return
+		}
+
+		// Determine type of repository
+		var ownerType string
+		if data.Owner.ValueString() == "" {
+			// No owner -> personal repository
+			ownerType = "personal"
+		} else {
+			// Use Forgejo client to check if owner is org
+			_, res, _ := r.client.GetOrg(data.Owner.ValueString())
+			if res.StatusCode == 404 {
+				// Use Forgejo client to check if owner is user
+				_, res, _ = r.client.GetUserInfo(data.Owner.ValueString())
+				if res.StatusCode == 404 {
+					resp.Diagnostics.AddError(
+						"Owner not found",
+						fmt.Sprintf(
+							"Neither organization nor user with name %s exists.",
+							data.Owner.String(),
+						),
+					)
+
+					return
+				}
+				// User exists -> user repository
+				ownerType = "user"
+			} else {
+				// Org exists -> org repository
+				ownerType = "org"
+			}
+		}
+
+		switch ownerType {
+		case "org":
+			// Use Forgejo client to create new org repository
+			rep, res, err = r.client.CreateOrgRepo(
+				data.Owner.ValueString(),
+				copts,
+			)
+		case "personal":
+			// Use Forgejo client to create new personal repository
+			rep, res, err = r.client.CreateRepo(copts)
+		case "user":
+			// Use Forgejo client to create new user repository
+			rep, res, err = r.client.AdminCreateRepo(
+				data.Owner.ValueString(),
+				copts,
+			)
+		}
 	}
+
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
 			"status": res.Status,
@@ -928,6 +1021,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 				data.Name.String(),
 				err,
 			)
+		case 413:
+			msg = fmt.Sprintf("Quota exceeded: %s", err)
 		case 422:
 			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:
