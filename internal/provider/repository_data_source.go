@@ -43,7 +43,7 @@ type repositoryDataSourceModel struct {
 	HTMLURL                   types.String `tfsdk:"html_url"`
 	SSHURL                    types.String `tfsdk:"ssh_url"`
 	CloneURL                  types.String `tfsdk:"clone_url"`
-	OriginalURL               types.String `tfsdk:"original_url"`
+	CloneAddr                 types.String `tfsdk:"clone_addr"`
 	Website                   types.String `tfsdk:"website"`
 	Stars                     types.Int64  `tfsdk:"stars_count"`
 	Forks                     types.Int64  `tfsdk:"forks_count"`
@@ -246,8 +246,8 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Description: "Clone URL of the repository.",
 				Computed:    true,
 			},
-			"original_url": schema.StringAttribute{
-				Description: "Original URL of the repository.",
+			"clone_addr": schema.StringAttribute{
+				Description: "Migrate / Clone from URL.",
 				Computed:    true,
 			},
 			"website": schema.StringAttribute{
@@ -524,7 +524,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.HTMLURL = types.StringValue(rep.HTMLURL)
 	data.SSHURL = types.StringValue(rep.SSHURL)
 	data.CloneURL = types.StringValue(rep.CloneURL)
-	data.OriginalURL = types.StringValue(rep.OriginalURL)
+	data.CloneAddr = types.StringValue(rep.OriginalURL)
 	data.Website = types.StringValue(rep.Website)
 	data.Stars = types.Int64Value(int64(rep.Stars))
 	data.Forks = types.Int64Value(int64(rep.Forks))

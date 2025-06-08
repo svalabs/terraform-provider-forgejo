@@ -58,6 +58,7 @@ data "forgejo_repository" "org" {
 - `allow_squash_merge` (Boolean) Allowed to create squash commit?
 - `archived` (Boolean) Is the repository archived?
 - `avatar_url` (String) Avatar URL of the repository.
+- `clone_addr` (String) Migrate / Clone from URL.
 - `clone_url` (String) Clone URL of the repository.
 - `created_at` (String) Time at which the repository was created.
 - `default_branch` (String) Default branch of the repository.
@@ -86,7 +87,6 @@ data "forgejo_repository" "org" {
 - `mirror_updated` (String) Time at which the repository mirror was updated.
 - `open_issues_count` (Number) Number of open issues of the repository.
 - `open_pr_counter` (Number) Number of open pull requests of the repository.
-- `original_url` (String) Original URL of the repository.
 - `parent_id` (Number) Numeric identifier of the parent repository.
 - `permissions` (Attributes) Permissions of the repository. (see [below for nested schema](#nestedatt--permissions))
 - `private` (Boolean) Is the repository private?
