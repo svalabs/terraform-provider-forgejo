@@ -9,7 +9,7 @@ services:
       - forgejo_db
     ports:
       - "3000:3000"
-      - "10022:22"
+      - "2222:22"
 
   forgejo_db:
     image: mariadb:10

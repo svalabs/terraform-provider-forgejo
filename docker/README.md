@@ -35,7 +35,7 @@ In the initial configuration wizard, configure the database:
 - Username: `forgejo`
 - Password: `password`
 - Database name: `forgejo`
-- SSH server port: 10022
+- SSH server port: 2222
 
 Create an administrator account:
 
