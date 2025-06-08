@@ -31,8 +31,8 @@ Import the provider into your Terraform/OpenTofu configuration:
 terraform {
   required_providers {
     forgejo = {
-      source = "svalabs/forgejo"
-      version = "~> 0.2.0"
+      source  = "svalabs/forgejo"
+      version = "~> 0.3.0"
     }
   }
 }
@@ -45,7 +45,7 @@ It is recommended to supply an **API token** to authenticate with a given Forgej
 ```terraform
 provider "forgejo" {
   host      = "http://localhost:3000"
-  api_token = "1234567890abcdefghijklmnopqrstuvwxyz1234"
+  api_token = "<<<your_api_key>>>"
   # ...or use the FORGEJO_API_TOKEN environment variable
 }
 ```
@@ -67,8 +67,8 @@ Alternatively, supply **username** and **password** to authenticate:
 ```terraform
 provider "forgejo" {
   host     = "http://localhost:3000"
-  username = "admin"
-  password = "passw0rd"
+  username = "<<<your_username>>>"
+  password = "<<<your_password>>>"
   # ...or use the FORGEJO_USERNAME / FORGEJO_PASSWORD environment variables
 }
 ```

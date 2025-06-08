@@ -1,3 +1,25 @@
+## 0.3.0 (June 8, 2025)
+
+FEATURES:
+
+- `forgejo_repository`: add support for repository migration (clone & pull mirror repos) ([documentation](docs/resources/repository.md))
+
+ENHANCEMENTS:
+
+- Automatically run acceptance tests in CI
+
+DOCUMENTATION:
+
+- Add open in dev container badge
+
+DEPENDENCIES:
+
+- Use Go version 1.23.9 consistently
+- Update test environment to mariadb:lts
+- Remove unneeded dependencies
+- Bump github.com/hashicorp/terraform-plugin-go from 0.27.0 to 0.28.0
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.13.0 to 1.13.1
+
 ## 0.2.4 (May 24, 2025)
 
 DOCUMENTATION:
