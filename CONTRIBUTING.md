@@ -1,5 +1,7 @@
 # Developing the Terraform Provider for Forgejo
 
+[![Open in Dev Container](https://img.shields.io/static/v1?label=Dev%20Container&message=Open&color=blue)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/svalabs/terraform-provider-forgejo)
+
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.0
