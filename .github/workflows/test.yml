@@ -58,8 +58,9 @@ jobs:
         with:
           terraform_wrapper: false
 
-      - run: make generate
-      - name: git diff
+      - name: Generate documentation
+        run: make generate
+      - name: Check for differences
         run: |
           git diff --compact-summary --exit-code || \
             (echo; echo "Unexpected difference in directories after code generation. Run 'make generate' command and commit."; exit 1)
@@ -96,7 +97,7 @@ jobs:
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@v1
 
-      - name: Start Forgejo
+      - name: Start Forgejo server
         working-directory: ./docker
         run: |
           docker compose pull --quiet
@@ -104,7 +105,7 @@ jobs:
           docker run --rm -v docker_forgejo:/data alpine mkdir -p /data/gitea/conf
           docker compose cp app.ini forgejo:/data/gitea/conf/app.ini
           docker compose start
-      - name: Sleep for 30 seconds
+      - name: Wait for 30 seconds
         run: sleep 30s
       - name: Create admin user
         working-directory: ./docker
