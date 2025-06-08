@@ -39,8 +39,8 @@ resource "forgejo_deploy_key" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
-					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key"), knownvalue.StringRegexp(regexp.MustCompile("^ssh-ed25519 .{68}$"))),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key"), knownvalue.StringRegexp(regexp.MustCompile("^ssh-ed25519 .{68}$"))),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("read_only"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
@@ -66,8 +66,8 @@ resource "forgejo_deploy_key" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
-					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key"), knownvalue.StringRegexp(regexp.MustCompile("^ssh-ed25519 .{68}$"))),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key"), knownvalue.StringRegexp(regexp.MustCompile("^ssh-ed25519 .{68}$"))),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("read_only"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest1")),

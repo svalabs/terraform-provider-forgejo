@@ -42,8 +42,8 @@ data "forgejo_deploy_key" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
-					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("key"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("key"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("read_only"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
