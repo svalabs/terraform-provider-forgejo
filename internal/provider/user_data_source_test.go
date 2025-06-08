@@ -18,8 +18,13 @@ func TestAccUserDataSource(t *testing.T) {
 			// Read testing
 			{
 				Config: providerConfig + `
+resource "forgejo_user" "test" {
+	login    = "tftest"
+	email    = "tftest@localhost.localdomain"
+  password = "passw0rd"
+}
 data "forgejo_user" "test" {
-  login = "test_user_1"
+  login = forgejo_user.test.login
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("active"), knownvalue.NotNull()),
@@ -35,7 +40,7 @@ data "forgejo_user" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("language"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("last_login"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("location"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("login"), knownvalue.StringExact("test_user_1")),
+					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("login"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("login_name"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("prohibit_login"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("restricted"), knownvalue.NotNull()),

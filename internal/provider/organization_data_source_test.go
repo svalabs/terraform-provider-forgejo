@@ -18,8 +18,11 @@ func TestAccOrganizationDataSource(t *testing.T) {
 			// Read testing
 			{
 				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name = "tftest"
+}
 data "forgejo_organization" "test" {
-  name = "test_org_1"
+  name = forgejo_organization.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
@@ -27,7 +30,7 @@ data "forgejo_organization" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("full_name"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("location"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("name"), knownvalue.StringExact("test_org_1")),
+					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("visibility"), knownvalue.StringRegexp(regexp.MustCompile("^(public)|(limited)|(private)$"))),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("website"), knownvalue.NotNull()),
 				},

@@ -32,7 +32,7 @@ resource "forgejo_repository" "test" {
 resource "forgejo_deploy_key" "test" {
   repository_id = forgejo_repository.test.id
   key           = trimspace(tls_private_key.test.public_key_openssh)
-  title         = "tftest1"
+  title         = "tftest"
   read_only     = false
 }
 `,
@@ -43,8 +43,8 @@ resource "forgejo_deploy_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("read_only"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest1")),
-					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/repos/achim/test_repo/keys/[0-9]+$"))),
+					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
+					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/repos/tfadmin/test_repo/keys/[0-9]+$"))),
 				},
 			},
 			// Recreate and Read testing
@@ -59,7 +59,7 @@ resource "forgejo_repository" "test" {
 resource "forgejo_deploy_key" "test" {
   repository_id = forgejo_repository.test.id
   key           = trimspace(tls_private_key.test.public_key_openssh)
-  title         = "tftest2"
+  title         = "tftest1"
   read_only     = false
 }
 `,
@@ -70,8 +70,8 @@ resource "forgejo_deploy_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("read_only"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest2")),
-					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/repos/achim/test_repo/keys/[0-9]+$"))),
+					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest1")),
+					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/repos/tfadmin/test_repo/keys/[0-9]+$"))),
 				},
 			},
 			// Delete testing automatically occurs in TestCase
