@@ -1,3 +1,17 @@
+## 0.3.1 (June 29, 2025)
+
+FEATURES:
+
+- `forgejo_repository`: add token authentication for repository migrations (clone & pull mirror repos) ([documentation](docs/resources/repository.md))
+
+DEPENDENCIES:
+
+- Update to go 1.23.10
+- Bump codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2 from 2.1.0 to 2.2.0
+- Bump github.com/cloudflare/circl from 1.6.0 to 1.6.1
+- Bump github.com/cloudflare/circl from 1.3.7 to 1.6.1 in /tools
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.13.1 to 1.13.2
+
 ## 0.3.0 (June 8, 2025)
 
 FEATURES:
