@@ -22,6 +22,7 @@ terraform {
 }
 
 variable "test_password" { sensitive = true }
+variable "test_token" { sensitive = true }
 
 provider "forgejo" {
   host = "http://localhost:3000"
@@ -126,6 +127,7 @@ resource "forgejo_repository" "user_non_defaults" {
 resource "forgejo_repository" "clone" {
   name       = "clone_test_repo"
   clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
+  auth_token = var.test_token # optional
   mirror     = false
 }
 
@@ -133,8 +135,9 @@ resource "forgejo_repository" "clone" {
 resource "forgejo_repository" "mirror" {
   name            = "mirror_test_repo"
   clone_addr      = "https://github.com/svalabs/terraform-provider-forgejo"
+  auth_token      = var.test_token # optional
   mirror          = true
-  mirror_interval = "12h0m0s"
+  mirror_interval = "12h0m0s" # optional
 }
 ```
 
@@ -152,8 +155,9 @@ resource "forgejo_repository" "mirror" {
 - `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit?
 - `allow_squash_merge` (Boolean) Allowed to create squash commit?
 - `archived` (Boolean) Is the repository archived?
+- `auth_token` (String, Sensitive) API token for authenticating with migrate / clone URL.
 - `auto_init` (Boolean) Whether the repository should be auto-intialized?
-- `clone_addr` (String) Migrate / Clone from URL.
+- `clone_addr` (String) Migrate / clone from URL.
 - `default_branch` (String) Default branch of the repository.
 - `description` (String) Description of the repository.
 - `external_tracker` (Attributes) Settings for external issue tracker. (see [below for nested schema](#nestedatt--external_tracker))

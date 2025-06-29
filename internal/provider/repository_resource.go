@@ -94,6 +94,7 @@ type repositoryResourceModel struct {
 	Readme                    types.String `tfsdk:"readme"`
 	TrustModel                types.String `tfsdk:"trust_model"`
 	CloneAddr                 types.String `tfsdk:"clone_addr"`
+	AuthToken                 types.String `tfsdk:"auth_token"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -804,12 +805,22 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"clone_addr": schema.StringAttribute{
-				Description: "Migrate / Clone from URL.",
+				Description: "Migrate / clone from URL.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"auth_token": schema.StringAttribute{
+				Description: "API token for authenticating with migrate / clone URL.",
+				Optional:    true,
+				Sensitive:   true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+					}...),
 				},
 			},
 		},
@@ -864,6 +875,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			"name":              data.Name.ValueString(),
 			"owner":             data.Owner.ValueString(),
 			"clone_addr":        data.CloneAddr.ValueString(),
+			"auth_token":        data.AuthToken.ValueString(),
 			"mirror":            data.Mirror.ValueBool(),
 			"private":           data.Private.ValueBool(),
 			"description":       data.Description.ValueString(),
@@ -882,7 +894,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			// Service:      forgejo.GitServiceType(""),
 			// AuthUsername: "",
 			// AuthPassword: "",
-			// AuthToken:    "",
+			AuthToken:   data.AuthToken.ValueString(),
 			Mirror:      data.Mirror.ValueBool(),
 			Private:     data.Private.ValueBool(),
 			Description: data.Description.ValueString(),

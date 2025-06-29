@@ -7,6 +7,7 @@ terraform {
 }
 
 variable "test_password" { sensitive = true }
+variable "test_token" { sensitive = true }
 
 provider "forgejo" {
   host = "http://localhost:3000"
@@ -111,6 +112,7 @@ resource "forgejo_repository" "user_non_defaults" {
 resource "forgejo_repository" "clone" {
   name       = "clone_test_repo"
   clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
+  auth_token = var.test_token # optional
   mirror     = false
 }
 
@@ -118,6 +120,7 @@ resource "forgejo_repository" "clone" {
 resource "forgejo_repository" "mirror" {
   name            = "mirror_test_repo"
   clone_addr      = "https://github.com/svalabs/terraform-provider-forgejo"
+  auth_token      = var.test_token # optional
   mirror          = true
-  mirror_interval = "12h0m0s"
+  mirror_interval = "12h0m0s" # optional
 }
