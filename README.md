@@ -7,10 +7,11 @@ This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu]
 
 ## Contents
 
-The Forgejo Terraform/OpenTofu Provider allows managing resources within Forgejo. It is in an **early** stage and currently provides the following...
+The Forgejo Terraform/OpenTofu Provider allows managing resources within Forgejo. It currently provides the following...
 
 Resources:
 
+- `forgejo_collaborator` ([documentation](docs/resources/collaborator.md))
 - `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
@@ -18,6 +19,7 @@ Resources:
 
 Data Sources:
 
+- `forgejo_collaborator` ([documentation](docs/data-sources/collaborator.md))
 - `forgejo_deploy_key` ([documentation](docs/data-sources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))

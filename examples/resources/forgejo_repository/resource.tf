@@ -40,6 +40,7 @@ resource "forgejo_repository" "personal_non_defaults" {
   }
 }
 
+# Organization
 resource "forgejo_organization" "owner" {
   name = "test_org"
 }
@@ -73,6 +74,7 @@ resource "forgejo_repository" "org_non_defaults" {
   }
 }
 
+# User
 resource "forgejo_user" "owner" {
   login    = "test_user"
   email    = "test_user@localhost.localdomain"

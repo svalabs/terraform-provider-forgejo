@@ -393,7 +393,7 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 		"key_id": data.KeyID.ValueInt64(),
 	})
 
-	// Use Forgejo client to delete existing user
+	// Use Forgejo client to delete existing deploy key
 	res, err = r.client.DeleteDeployKey(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
