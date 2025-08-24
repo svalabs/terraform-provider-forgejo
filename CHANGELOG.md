@@ -1,3 +1,18 @@
+## 0.4.0 (August 24, 2025)
+
+FEATURES:
+
+- **New Resource**: `forgejo_collaborator` ([documentation](docs/resources/collaborator.md))
+- **New Data Source**: `forgejo_collaborator` ([documentation](docs/data-sources/collaborator.md))
+
+DEPENDENCIES:
+
+- Update to Go version 1.24.6
+- Bump actions/checkout from 4.2.2 to 5.0.0
+- Bump github.com/hashicorp/terraform-plugin-framework 1.15.0 to 1.15.1
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.13.2 to 1.13.3
+- Bump goreleaser/goreleaser-action from 6.3.0 to 6.4.0
+
 ## 0.3.1 (June 29, 2025)
 
 FEATURES:
