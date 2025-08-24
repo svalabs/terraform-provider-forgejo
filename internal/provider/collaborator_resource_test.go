@@ -51,6 +51,29 @@ resource "forgejo_user" "test" {
 resource "forgejo_collaborator" "test" {
 	repository_id = forgejo_repository.test.id
 	user          = forgejo_user.test.login
+	permission    = "write"
+}
+`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("user"), knownvalue.StringExact("tftest")),
+					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("permission"), knownvalue.StringExact("write")),
+				},
+			},
+			// Update and Read testing
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name  = "test_repo"
+}
+resource "forgejo_user" "test" {
+	login    = "tftest"
+	email    = "tftest@localhost.localdomain"
+	password = "passw0rd"
+}
+resource "forgejo_collaborator" "test" {
+	repository_id = forgejo_repository.test.id
+	user          = forgejo_user.test.login
 	permission    = "admin"
 }
 `,

@@ -323,6 +323,7 @@ resource "forgejo_repository" "test" {
 	private                     = true
 	template                    = true
 	website                     = "http://localhost:3000"
+	trust_model                 = "collaborator"
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -340,8 +341,8 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("default_merge_style"), knownvalue.StringExact("merge")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing...")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("empty"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker"), knownvalue.Null()),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.Null()),
+					// statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_url"), knownvalue.StringExact("http://some.tracker")),
+					// statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki").AtMapKey("external_wiki_url"), knownvalue.StringExact("http://some.wiki")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("forks_count"), knownvalue.Int64Exact(0)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact("test_user/tftest1")),
@@ -376,7 +377,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/test_user/tftest1.git")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("stars_count"), knownvalue.Int64Exact(0)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("template"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("trust_model"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("trust_model"), knownvalue.StringExact("collaborator")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("watchers_count"), knownvalue.Int64Exact(1)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("http://localhost:3000")),
