@@ -239,6 +239,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 // DataSources defines the data sources implemented in the provider.
 func (p *forgejoProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewCollaboratorDataSource,
 		NewDeployKeyDataSource,
 		NewOrganizationDataSource,
 		NewRepositoryDataSource,
