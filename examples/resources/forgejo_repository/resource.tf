@@ -33,10 +33,10 @@ resource "forgejo_repository" "personal_non_defaults" {
   trust_model    = "collaborator"
   archived       = true
 
-  internal_tracker = {
-    enable_time_tracker                   = false
-    allow_only_contributors_to_track_time = false
-    enable_issue_dependencies             = false
+  external_tracker = {
+    external_tracker_url    = "https://github.com/svalabs/terraform-provider-forgejo/issues"
+    external_tracker_format = "https://github.com/svalabs/terraform-provider-forgejo/issues/{index}"
+    external_tracker_style  = "numeric"
   }
 }
 

@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -602,19 +603,19 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"internal_tracker": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"enable_time_tracker": schema.BoolAttribute{
-						Description: "Enable time tracking.",
+						Description: "Enable time tracking?",
 						Optional:    true,
 						Computed:    true,
 						Default:     booldefault.StaticBool(true),
 					},
 					"allow_only_contributors_to_track_time": schema.BoolAttribute{
-						Description: "Let only contributors track time.",
+						Description: "Let only contributors track time?",
 						Optional:    true,
 						Computed:    true,
 						Default:     booldefault.StaticBool(true),
 					},
 					"enable_issue_dependencies": schema.BoolAttribute{
-						Description: "Enable dependencies for issues and pull requests.",
+						Description: "Enable dependencies for issues and pull requests?",
 						Optional:    true,
 						Computed:    true,
 						Default:     booldefault.StaticBool(true),
@@ -623,31 +624,39 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Settings for built-in issue tracker.",
 				Optional:    true,
 				Computed:    true,
+				Validators: []validator.Object{
+					objectvalidator.ConflictsWith(path.Expressions{
+						path.MatchRoot("external_tracker"),
+					}...),
+				},
 			},
 			"external_tracker": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"external_tracker_url": schema.StringAttribute{
 						Description: "URL of external issue tracker.",
-						Optional:    true,
-						Computed:    true,
-						Default:     stringdefault.StaticString(""),
+						Required:    true,
 					},
 					"external_tracker_format": schema.StringAttribute{
-						Description: "External issue tracker URL format.",
-						Optional:    true,
-						Computed:    true,
-						Default:     stringdefault.StaticString(""),
+						Description: "External Issue Tracker URL Format. Use the placeholders {user}, {repo} and {index} for the username, repository name and issue index.",
+						Required:    true,
 					},
 					"external_tracker_style": schema.StringAttribute{
-						Description: "External issue tracker number format.",
+						Description: "External Issue Tracker Number Format, either `numeric` or `alphanumeric`.",
 						Optional:    true,
 						Computed:    true,
-						Default:     stringdefault.StaticString(""),
+						Default:     stringdefault.StaticString("numeric"),
+						Validators: []validator.String{
+							stringvalidator.OneOf([]string{"numeric", "alphanumeric"}...),
+						},
 					},
 				},
 				Description: "Settings for external issue tracker.",
 				Optional:    true,
-				Computed:    true,
+				Validators: []validator.Object{
+					objectvalidator.ConflictsWith(path.Expressions{
+						path.MatchRoot("internal_tracker"),
+					}...),
+				},
 			},
 			"has_wiki": schema.BoolAttribute{
 				Description: "Is the repository wiki enabled?",
@@ -659,14 +668,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Attributes: map[string]schema.Attribute{
 					"external_wiki_url": schema.StringAttribute{
 						Description: "URL of external wiki.",
-						Optional:    true,
-						Computed:    true,
-						Default:     stringdefault.StaticString(""),
+						Required:    true,
 					},
 				},
 				Description: "Settings for external wiki.",
 				Optional:    true,
-				Computed:    true,
 			},
 			"has_pull_requests": schema.BoolAttribute{
 				Description: "Are repository pull requests enabled?",
