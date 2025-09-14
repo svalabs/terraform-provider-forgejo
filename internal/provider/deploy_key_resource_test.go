@@ -24,16 +24,16 @@ func TestAccDeployKeyResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "tls_private_key" "test" {
-  algorithm = "ED25519"
+	algorithm = "ED25519"
 }
 resource "forgejo_repository" "test" {
-  name = "test_repo"
+	name = "test_repo"
 }
 resource "forgejo_deploy_key" "test" {
-  repository_id = forgejo_repository.test.id
-  key           = trimspace(tls_private_key.test.public_key_openssh)
-  title         = "tftest"
-  read_only     = false
+	repository_id = forgejo_repository.test.id
+	key           = trimspace(tls_private_key.test.public_key_openssh)
+	title         = "tftest"
+	read_only     = false
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -51,16 +51,16 @@ resource "forgejo_deploy_key" "test" {
 			{
 				Config: providerConfig + `
 resource "tls_private_key" "test" {
-  algorithm = "ED25519"
+	algorithm = "ED25519"
 }
 resource "forgejo_repository" "test" {
-  name = "test_repo"
+	name = "test_repo"
 }
 resource "forgejo_deploy_key" "test" {
-  repository_id = forgejo_repository.test.id
-  key           = trimspace(tls_private_key.test.public_key_openssh)
-  title         = "tftest"
-  read_only     = true
+	repository_id = forgejo_repository.test.id
+	key           = trimspace(tls_private_key.test.public_key_openssh)
+	title         = "tftest"
+	read_only     = true
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -78,16 +78,16 @@ resource "forgejo_deploy_key" "test" {
 			{
 				Config: providerConfig + `
 resource "tls_private_key" "test" {
-  algorithm = "ED25519"
+	algorithm = "ED25519"
 }
 resource "forgejo_repository" "test" {
-  name = "test_repo"
+	name = "test_repo"
 }
 resource "forgejo_deploy_key" "test" {
-  repository_id = forgejo_repository.test.id
-  key           = trimspace(tls_private_key.test.public_key_openssh)
-  title         = "tftest1"
-  read_only     = false
+	repository_id = forgejo_repository.test.id
+	key           = trimspace(tls_private_key.test.public_key_openssh)
+	title         = "tftest1"
+	read_only     = false
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{

@@ -22,7 +22,7 @@ resource "forgejo_organization" "test" {
 	name = "tftest"
 }
 data "forgejo_organization" "test" {
-  name = forgejo_organization.test.name
+	name = forgejo_organization.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),

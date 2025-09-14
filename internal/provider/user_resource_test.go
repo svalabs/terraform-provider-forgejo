@@ -21,7 +21,7 @@ func TestAccUserResource(t *testing.T) {
 resource "forgejo_user" "test" {
 	login    = "tftest"
 	email    = "tftest@localhost.localdomain"
-  password = "passw0rd"
+	password = "passw0rd"
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -57,7 +57,7 @@ resource "forgejo_user" "test" {
 resource "forgejo_user" "test" {
 	login    = "tftest1"
 	email    = "tftest1@localhost.localdomain"
-  password = "passw1rd"
+	password = "passw1rd"
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -91,10 +91,11 @@ resource "forgejo_user" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
-	login                = "tftest1"
-	email                = "tftest1@localhost.localdomain"
-  password             = "passw1rd"
-	visibility           = "limited"
+	login       = "tftest1"
+	email       = "tftest1@localhost.localdomain"
+	password    = "passw1rd"
+	description = "Purely for testing... 123"
+	visibility  = "limited"
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -102,7 +103,7 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("created"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing... 123")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("email"), knownvalue.StringRegexp(regexp.MustCompile(`^[0-9a-z]+@[a-z]+\.[a-z]+$`))),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("followers_count"), knownvalue.Int64Exact(0)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("following_count"), knownvalue.Int64Exact(0)),
@@ -130,10 +131,10 @@ resource "forgejo_user" "test" {
 resource "forgejo_user" "test" {
 	login                = "tftest1"
 	email                = "tftest1@localhost.localdomain"
-  password             = "passw1rd"
+	password             = "passw1rd"
 	active               = false
 	admin                = true
-	description          = "Purely for testing..."
+	description          = "Purely for testing... 456"
 	location             = "Mêlée Island"
 	must_change_password = false
 	prohibit_login       = true
@@ -148,7 +149,7 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("created"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing...")),
+					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing... 456")),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("email"), knownvalue.StringRegexp(regexp.MustCompile(`^[0-9a-z]+@[a-z]+\.[a-z]+$`))),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("followers_count"), knownvalue.Int64Exact(0)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("following_count"), knownvalue.Int64Exact(0)),

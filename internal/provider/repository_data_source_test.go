@@ -18,13 +18,13 @@ func TestAccRepositoryDataSource(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
-  name = "tftest"
+	name = "tftest"
 }
 data "forgejo_repository" "test" {
-  owner = {
-	  login = "tfadmin"
+	owner = {
+		login = "tfadmin"
 	}
-  name = forgejo_repository.test.name
+	name = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
@@ -81,17 +81,17 @@ data "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "owner" {
-  name = "test_org"
+	name = "test_org"
 }
 resource "forgejo_repository" "test" {
-  owner = forgejo_organization.owner.name
-  name = "tftest"
+	owner = forgejo_organization.owner.name
+	name = "tftest"
 }
 data "forgejo_repository" "test" {
-  owner = {
-	  login = forgejo_organization.owner.name
+	owner = {
+		login = forgejo_organization.owner.name
 	}
-  name = forgejo_repository.test.name
+	name = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
@@ -148,15 +148,15 @@ data "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
-  name       = "tftest"
-  clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
-  mirror     = false
+	name       = "tftest"
+	clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
+	mirror     = false
 }
 data "forgejo_repository" "test" {
-  owner = {
-	  login = "tfadmin"
+	owner = {
+		login = "tfadmin"
 	}
-  name = forgejo_repository.test.name
+	name = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
@@ -213,15 +213,15 @@ data "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
-  name       = "tftest"
-  clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
-  mirror     = true
+	name       = "tftest"
+	clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
+	mirror     = true
 }
 data "forgejo_repository" "test" {
-  owner = {
-	  login = "tfadmin"
+	owner = {
+		login = "tfadmin"
 	}
-  name = forgejo_repository.test.name
+	name = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),

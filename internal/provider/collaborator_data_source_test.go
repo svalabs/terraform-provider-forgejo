@@ -29,7 +29,7 @@ resource "forgejo_user" "test" {
 resource "forgejo_collaborator" "test" {
 	repository_id = forgejo_repository.test.id
 	user          = forgejo_user.test.login
-  permission    = "read"
+	permission    = "read"
 }
 data "forgejo_collaborator" "test" {
 	repository_id = forgejo_repository.test.id

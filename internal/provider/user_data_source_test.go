@@ -21,10 +21,10 @@ func TestAccUserDataSource(t *testing.T) {
 resource "forgejo_user" "test" {
 	login    = "tftest"
 	email    = "tftest@localhost.localdomain"
-  password = "passw0rd"
+	password = "passw0rd"
 }
 data "forgejo_user" "test" {
-  login = forgejo_user.test.login
+	login = forgejo_user.test.login
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("active"), knownvalue.NotNull()),

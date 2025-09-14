@@ -24,20 +24,20 @@ func TestAccDeployKeyDataSource(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "tls_private_key" "test" {
-  algorithm = "ED25519"
+	algorithm = "ED25519"
 }
 resource "forgejo_repository" "test" {
-  name = "test_repo"
+	name = "test_repo"
 }
 resource "forgejo_deploy_key" "test" {
-  repository_id = forgejo_repository.test.id
-  key           = trimspace(tls_private_key.test.public_key_openssh)
-  title         = "tftest"
-  read_only     = false
+	repository_id = forgejo_repository.test.id
+	key           = trimspace(tls_private_key.test.public_key_openssh)
+	title         = "tftest"
+	read_only     = false
 }
 data "forgejo_deploy_key" "test" {
-  repository_id = forgejo_repository.test.id
-  title         = forgejo_deploy_key.test.title
+	repository_id = forgejo_repository.test.id
+	title         = forgejo_deploy_key.test.title
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
