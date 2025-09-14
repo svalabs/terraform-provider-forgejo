@@ -48,10 +48,10 @@ resource "forgejo_repository" "personal_non_defaults" {
   trust_model    = "collaborator"
   archived       = true
 
-  internal_tracker = {
-    enable_time_tracker                   = false
-    allow_only_contributors_to_track_time = false
-    enable_issue_dependencies             = false
+  external_tracker = {
+    external_tracker_url    = "https://github.com/svalabs/terraform-provider-forgejo/issues"
+    external_tracker_format = "https://github.com/svalabs/terraform-provider-forgejo/issues/{index}"
+    external_tracker_style  = "numeric"
   }
 }
 
@@ -82,10 +82,10 @@ resource "forgejo_repository" "org_non_defaults" {
   trust_model    = "collaborator"
   archived       = true
 
-  internal_tracker = {
-    enable_time_tracker                   = false
-    allow_only_contributors_to_track_time = false
-    enable_issue_dependencies             = false
+  external_tracker = {
+    external_tracker_url    = "https://github.com/svalabs/terraform-provider-forgejo/issues"
+    external_tracker_format = "https://github.com/svalabs/terraform-provider-forgejo/issues/{index}"
+    external_tracker_style  = "numeric"
   }
 }
 
@@ -118,10 +118,10 @@ resource "forgejo_repository" "user_non_defaults" {
   trust_model    = "collaborator"
   archived       = true
 
-  internal_tracker = {
-    enable_time_tracker                   = false
-    allow_only_contributors_to_track_time = false
-    enable_issue_dependencies             = false
+  external_tracker = {
+    external_tracker_url    = "https://github.com/svalabs/terraform-provider-forgejo/issues"
+    external_tracker_format = "https://github.com/svalabs/terraform-provider-forgejo/issues/{index}"
+    external_tracker_style  = "numeric"
   }
 }
 
@@ -213,17 +213,20 @@ resource "forgejo_repository" "mirror" {
 <a id="nestedatt--external_tracker"></a>
 ### Nested Schema for `external_tracker`
 
+Required:
+
+- `external_tracker_format` (String) External Issue Tracker URL Format. Use the placeholders {user}, {repo} and {index} for the username, repository name and issue index.
+- `external_tracker_url` (String) URL of external issue tracker.
+
 Optional:
 
-- `external_tracker_format` (String) External issue tracker URL format.
-- `external_tracker_style` (String) External issue tracker number format.
-- `external_tracker_url` (String) URL of external issue tracker.
+- `external_tracker_style` (String) External Issue Tracker Number Format, either `numeric` or `alphanumeric`.
 
 
 <a id="nestedatt--external_wiki"></a>
 ### Nested Schema for `external_wiki`
 
-Optional:
+Required:
 
 - `external_wiki_url` (String) URL of external wiki.
 
@@ -233,9 +236,9 @@ Optional:
 
 Optional:
 
-- `allow_only_contributors_to_track_time` (Boolean) Let only contributors track time.
-- `enable_issue_dependencies` (Boolean) Enable dependencies for issues and pull requests.
-- `enable_time_tracker` (Boolean) Enable time tracking.
+- `allow_only_contributors_to_track_time` (Boolean) Let only contributors track time?
+- `enable_issue_dependencies` (Boolean) Enable dependencies for issues and pull requests?
+- `enable_time_tracker` (Boolean) Enable time tracking?
 
 
 <a id="nestedatt--permissions"></a>
