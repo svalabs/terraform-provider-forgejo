@@ -23,11 +23,8 @@
   "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/src,ro=false",
   "workspaceFolder": "/src",
 
-  "runArgs": ["--net=host"],
-
-  "remoteEnv": {
-    // "FORGEJO_USERNAME": "${localEnv:FORGEJO_USERNAME}",
-    // "FORGEJO_PASSWORD": "${localEnv:FORGEJO_PASSWORD}",
-    "FORGEJO_API_TOKEN": "${localEnv:FORGEJO_API_TOKEN}"
-  }
+  "runArgs": [
+    "--net=host",
+    "--env-file", ".env"
+  ]
 }
