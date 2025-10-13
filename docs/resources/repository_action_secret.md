@@ -43,6 +43,6 @@ resource "forgejo_repository_action_secret" "this" {
 
 ### Required
 
-- `data` (String, Sensitive) The value of the secret.
-- `name` (String) The name of the secret.
+- `data` (String, Sensitive) Data of the secret.
+- `name` (String) Name of the secret.
 - `repository_id` (Number) Numeric identifier of the repository.

@@ -55,14 +55,14 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "The name of the secret.",
+				Description: "Name of the secret.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"data": schema.StringAttribute{
-				Description: "The data of the secret.",
+				Description: "Data of the secret.",
 				Required:    true,
 				Sensitive:   true,
 			},
