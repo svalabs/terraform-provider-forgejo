@@ -4,10 +4,12 @@
 ![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
 
 This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu](https://opentofu.org/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
+The project is based on the awsome [Forgejo SDK for Go](https://codeberg.org/mvdkleijn/forgejo-sdk) by [Martijn van der Kleijn](https://vanderkleijn.net/). Thanks, Martijn, for the heavy lifting!
 
 ## Contents
 
-The Forgejo Terraform/OpenTofu Provider allows managing resources within Forgejo. It currently provides the following...
+The Forgejo Terraform/OpenTofu Provider allows managing resources and data source within Forgejo instances.
+It currently provides the following...
 
 Resources:
 
@@ -15,6 +17,7 @@ Resources:
 - `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
+- `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
 Data Sources:
@@ -60,7 +63,7 @@ The following API token permissions are required:
 - `write:repository`
 - `write:user`
 
-Optional, for administrative privileges (required to manage users and user repositories):
+Optionally, for administrative privileges (required to manage users and user repositories):
 
 - `write:admin`
 
@@ -142,7 +145,8 @@ resource "forgejo_repository" "mirror" {
 }
 ```
 
-These examples create repositories with most attributes set to their default values. However, many settings can be customized:
+These examples create repositories with most attributes set to their default values.
+However, many settings can be customized:
 
 ```terraform
 resource "forgejo_repository" "example" {
