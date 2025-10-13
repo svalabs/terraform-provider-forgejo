@@ -1,3 +1,25 @@
+## 0.5.0 (October 13, 2025)
+
+FEATURES:
+
+- **New Resource**: `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
+- **New Resource**: `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
+
+BUG FIXES:
+
+- `forgejo_repository`: improve schema validation for tracker and wiki attributes ([documentation](docs/resources/repository.md))
+
+ENHANCEMENTS:
+
+- Add more test cases
+- Improve documentation
+
+DEPENDENCIES:
+
+- Bump actions/setup-go from 5.5.0 to 6.0.0
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.15.1 to 1.16.1
+- Bump github.com/hashicorp/terraform-plugin-go from 0.28.0 to 0.29.0
+
 ## 0.4.0 (August 24, 2025)
 
 FEATURES:
