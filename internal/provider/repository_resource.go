@@ -557,7 +557,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Default branch of the repository.",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("main"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"archived": schema.BoolAttribute{
 				Description: "Is the repository archived?",
