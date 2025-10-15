@@ -152,18 +152,18 @@ resource "forgejo_repository" "mirror" {
 
 ### Optional
 
-- `allow_merge_commits` (Boolean) Allowed to create merge commit?
-- `allow_rebase` (Boolean) Allowed to rebase then fast-forward?
-- `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit?
-- `allow_squash_merge` (Boolean) Allowed to create squash commit?
+- `allow_merge_commits` (Boolean) Allowed to create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
+- `allow_rebase` (Boolean) Allowed to rebase then fast-forward? **Note**: This setting is only effective if `has_pull_requests` is `true`.
+- `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
+- `allow_squash_merge` (Boolean) Allowed to create squash commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `archived` (Boolean) Is the repository archived?
 - `auth_token` (String, Sensitive) API token for authenticating with migrate / clone URL.
 - `auto_init` (Boolean) Whether the repository should be auto-intialized?
 - `clone_addr` (String) Migrate / clone from URL.
 - `default_branch` (String) Default branch of the repository.
 - `description` (String) Description of the repository.
-- `external_tracker` (Attributes) Settings for external issue tracker. (see [below for nested schema](#nestedatt--external_tracker))
-- `external_wiki` (Attributes) Settings for external wiki. (see [below for nested schema](#nestedatt--external_wiki))
+- `external_tracker` (Attributes) Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--external_tracker))
+- `external_wiki` (Attributes) Settings for external wiki. **Note**: This setting is only effective if `has_wiki` is `true`. (see [below for nested schema](#nestedatt--external_wiki))
 - `gitignores` (String) Gitignores to use.
 - `has_actions` (Boolean) Are integrated CI/CD pipelines enabled?
 - `has_issues` (Boolean) Is the repository issue tracker enabled?
@@ -172,8 +172,8 @@ resource "forgejo_repository" "mirror" {
 - `has_pull_requests` (Boolean) Are repository pull requests enabled?
 - `has_releases` (Boolean) Are repository releases enabled?
 - `has_wiki` (Boolean) Is the repository wiki enabled?
-- `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored?
-- `internal_tracker` (Attributes) Settings for built-in issue tracker. (see [below for nested schema](#nestedatt--internal_tracker))
+- `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored? **Note**: This setting is only effective if `has_pull_requests` is `true`.
+- `internal_tracker` (Attributes) Settings for built-in issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--internal_tracker))
 - `issue_labels` (String) Issue Label set to use.
 - `license` (String) License to use.
 - `mirror` (Boolean) Is the repository a mirror?
