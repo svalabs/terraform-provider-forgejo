@@ -88,6 +88,8 @@ type repositoryResourceModel struct {
 	MirrorInterval            types.String `tfsdk:"mirror_interval"`
 	MirrorUpdated             types.String `tfsdk:"mirror_updated"`
 	DefaultMergeStyle         types.String `tfsdk:"default_merge_style"`
+	AllowManualMerge          types.Bool   `tfsdk:"allow_manual_merge"`
+	AutodetectManualMerge     types.Bool   `tfsdk:"autodetect_manual_merge"`
 	IssueLabels               types.String `tfsdk:"issue_labels"`
 	AutoInit                  types.Bool   `tfsdk:"auto_init"`
 	Gitignores                types.String `tfsdk:"gitignores"`
@@ -191,9 +193,10 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 		o.MirrorInterval = m.MirrorInterval.ValueStringPointer()
 	}
 
-	// o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
-	// o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
-	// o.DefaultMergeStyle =
+	mergeStyle := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
+	o.DefaultMergeStyle = &mergeStyle
+	o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
+	o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Permission
@@ -654,6 +657,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 				Description: "Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`.",
 				Optional:    true,
+				Computed:    true,
 				Validators: []validator.Object{
 					objectvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("internal_tracker"),
@@ -675,6 +679,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 				Description: "Settings for external wiki. **Note**: This setting is only effective if `has_wiki` is `true`.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"has_pull_requests": schema.BoolAttribute{
 				Description: "Are repository pull requests enabled?",
@@ -765,8 +770,30 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 			},
 			"default_merge_style": schema.StringAttribute{
-				Description: "Default merge style of the repository.",
+				Description: "Default merge style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("merge"),
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						"merge",
+						"rebase",
+						"rebase-merge",
+						"squash",
+					),
+				},
+			},
+			"allow_manual_merge": schema.BoolAttribute{
+				Description: "Allowed to manually merge pull requests? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"autodetect_manual_merge": schema.BoolAttribute{
+				Description: "Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"issue_labels": schema.StringAttribute{
 				Description: "Issue Label set to use.",
@@ -814,7 +841,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "TrustModel of the repository.",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString(""),
+				Default:     stringdefault.StaticString("default"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -1093,9 +1120,9 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		"allow_squash_merge":          data.AllowSquash.ValueBool(),
 		"archived":                    data.Archived.ValueBool(),
 		"mirror_interval":             data.MirrorInterval.ValueString(),
-		// "allow_manual_merge": data.AllowManualMerge.ValueBool(),
-		// "autodetect_manual_merge": data.AutodetectManualMerge.ValueBool(),
-		// "default_merge_style":
+		"allow_manual_merge":          data.AllowManualMerge.ValueBool(),
+		"autodetect_manual_merge":     data.AutodetectManualMerge.ValueBool(),
+		"default_merge_style":         data.DefaultMergeStyle.ValueString(),
 	})
 
 	// Generate API request body from plan
@@ -1280,9 +1307,9 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		"allow_squash_merge":          data.AllowSquash.ValueBool(),
 		"archived":                    data.Archived.ValueBool(),
 		"mirror_interval":             data.MirrorInterval.ValueString(),
-		// "allow_manual_merge": data.AllowManualMerge.ValueBool(),
-		// "autodetect_manual_merge": data.AutodetectManualMerge.ValueBool(),
-		// "default_merge_style":
+		"allow_manual_merge":          data.AllowManualMerge.ValueBool(),
+		"autodetect_manual_merge":     data.AutodetectManualMerge.ValueBool(),
+		"default_merge_style":         data.DefaultMergeStyle.ValueString(),
 	})
 
 	// Generate API request body from plan

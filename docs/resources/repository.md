@@ -152,6 +152,7 @@ resource "forgejo_repository" "mirror" {
 
 ### Optional
 
+- `allow_manual_merge` (Boolean) Allowed to manually merge pull requests? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_merge_commits` (Boolean) Allowed to create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_rebase` (Boolean) Allowed to rebase then fast-forward? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
@@ -159,8 +160,10 @@ resource "forgejo_repository" "mirror" {
 - `archived` (Boolean) Is the repository archived?
 - `auth_token` (String, Sensitive) API token for authenticating with migrate / clone URL.
 - `auto_init` (Boolean) Whether the repository should be auto-intialized?
+- `autodetect_manual_merge` (Boolean) Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `clone_addr` (String) Migrate / clone from URL.
 - `default_branch` (String) Default branch of the repository.
+- `default_merge_style` (String) Default merge style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `description` (String) Description of the repository.
 - `external_tracker` (Attributes) Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--external_tracker))
 - `external_wiki` (Attributes) Settings for external wiki. **Note**: This setting is only effective if `has_wiki` is `true`. (see [below for nested schema](#nestedatt--external_wiki))
@@ -190,7 +193,6 @@ resource "forgejo_repository" "mirror" {
 - `avatar_url` (String) Avatar URL of the repository.
 - `clone_url` (String) Clone URL of the repository.
 - `created_at` (String) Time at which the repository was created.
-- `default_merge_style` (String) Default merge style of the repository.
 - `empty` (Boolean) Is the repository empty?
 - `fork` (Boolean) Is the repository a fork?
 - `forks_count` (Number) Number of forks of the repository.
