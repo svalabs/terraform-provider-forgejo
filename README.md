@@ -169,6 +169,26 @@ resource "forgejo_repository" "example" {
 
 Refer to the `examples/` directory for more usage examples.
 
+## Preventing Accidental Destruction
+
+Once repositories contain important data, you need to protect them against accidental destruction.
+Terraform will destroy and recreate a repository if any of the create-only attributes (`auto_init`, `gitignores`, `license`, etc.) are modified, resulting in permanent data loss.
+
+To prevent this, add the `prevent_destroy` lifecycle meta-argument to critical repository resources:
+
+```terraform
+resource "forgejo_repository" "important" {
+  ...
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+```
+
+**Note**: With `prevent_destroy` enabled, Terraform will refuse to destroy the resource and return an error if destruction is attempted.
+You must explicitly remove this setting before the resource can be destroyed.
+
 ## Troubleshooting
 
 ### Error: failed to verify certificate: certificate signed by unknown authority
