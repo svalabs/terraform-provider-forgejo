@@ -158,7 +158,7 @@ resource "forgejo_repository" "mirror" {
 - `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_squash_merge` (Boolean) Allowed to create squash commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `archived` (Boolean) Is the repository archived?
-- `auth_token` (String, Sensitive) API token for authenticating with migrate / clone URL.
+- `auth_token` (String, Sensitive) API token for authenticating with migrate / clone URL. **Note**: This setting is only effective if `clone_addr` is set.
 - `auto_init` (Boolean) Whether the repository should be auto-intialized?
 - `autodetect_manual_merge` (Boolean) Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `clone_addr` (String) Migrate / clone from URL.
@@ -178,12 +178,17 @@ resource "forgejo_repository" "mirror" {
 - `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `internal_tracker` (Attributes) Settings for built-in issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--internal_tracker))
 - `issue_labels` (String) Issue Label set to use.
+- `labels` (Boolean) Whether to migrate labels. **Note**: This setting is only effective if `clone_addr` is set.
+- `lfs` (Boolean) Whether to migrate LFS files. **Note**: This setting is only effective if `clone_addr` is set.
+- `lfs_endpoint` (String) LFS endpoint to use. **Note**: This setting is only effective if `lfs` is `true`.
 - `license` (String) License to use.
-- `mirror` (Boolean) Is the repository a mirror?
-- `mirror_interval` (String) Mirror interval of the repository.
+- `milestones` (Boolean) Whether to migrate milestones. **Note**: This setting is only effective if `clone_addr` is set.
+- `mirror` (Boolean) Is the repository a mirror? **Note**: This setting is only effective if `clone_addr` is set.
+- `mirror_interval` (String) Mirror interval of the repository. **Note**: This setting is only effective if `mirror` is `true`.
 - `owner` (String) Owner of the repository.
 - `private` (Boolean) Is the repository private?
 - `readme` (String) Readme of the repository to create.
+- `service` (String) Service to migrate from. **Note**: This setting is only effective if `clone_addr` is set.
 - `template` (Boolean) Is the repository a template?
 - `trust_model` (String) TrustModel of the repository.
 - `website` (String) Website of the repository.
@@ -217,7 +222,7 @@ resource "forgejo_repository" "mirror" {
 
 Required:
 
-- `external_tracker_format` (String) External Issue Tracker URL Format. Use the placeholders {user}, {repo} and {index} for the username, repository name and issue index.
+- `external_tracker_format` (String) External Issue Tracker URL Format. Use the placeholders `{user}`, `{repo}` and `{index}` for the username, repository name and issue index.
 - `external_tracker_url` (String) URL of external issue tracker.
 
 Optional:

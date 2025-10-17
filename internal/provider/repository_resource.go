@@ -98,6 +98,11 @@ type repositoryResourceModel struct {
 	TrustModel                types.String `tfsdk:"trust_model"`
 	CloneAddr                 types.String `tfsdk:"clone_addr"`
 	AuthToken                 types.String `tfsdk:"auth_token"`
+	LFS                       types.Bool   `tfsdk:"lfs"`
+	LFSEndpoint               types.String `tfsdk:"lfs_endpoint"`
+	Milestones                types.Bool   `tfsdk:"milestones"`
+	Labels                    types.Bool   `tfsdk:"labels"`
+	Service                   types.String `tfsdk:"service"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -193,10 +198,10 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 		o.MirrorInterval = m.MirrorInterval.ValueStringPointer()
 	}
 
-	mergeStyle := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
-	o.DefaultMergeStyle = &mergeStyle
 	o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
 	o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
+	mergeStyle := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
+	o.DefaultMergeStyle = &mergeStyle
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Permission
@@ -497,7 +502,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"mirror": schema.BoolAttribute{
-				Description: "Is the repository a mirror?",
+				Description: "Is the repository a mirror? **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
@@ -642,7 +647,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 						Required:    true,
 					},
 					"external_tracker_format": schema.StringAttribute{
-						Description: "External Issue Tracker URL Format. Use the placeholders {user}, {repo} and {index} for the username, repository name and issue index.",
+						Description: "External Issue Tracker URL Format. Use the placeholders `{user}`, `{repo}` and `{index}` for the username, repository name and issue index.",
 						Required:    true,
 					},
 					"external_tracker_style": schema.StringAttribute{
@@ -750,7 +755,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 			},
 			"mirror_interval": schema.StringAttribute{
-				Description: "Mirror interval of the repository.",
+				Description: "Mirror interval of the repository. **Note**: This setting is only effective if `mirror` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Validators: []validator.String{
@@ -864,13 +869,91 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"auth_token": schema.StringAttribute{
-				Description: "API token for authenticating with migrate / clone URL.",
+				Description: "API token for authenticating with migrate / clone URL. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("clone_addr"),
 					}...),
+				},
+			},
+			"lfs": schema.BoolAttribute{
+				Description: "Whether to migrate LFS files. **Note**: This setting is only effective if `clone_addr` is set.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+					}...),
+				},
+			},
+			"lfs_endpoint": schema.StringAttribute{
+				Description: "LFS endpoint to use. **Note**: This setting is only effective if `lfs` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("lfs"),
+					}...),
+				},
+			},
+			"milestones": schema.BoolAttribute{
+				Description: "Whether to migrate milestones. **Note**: This setting is only effective if `clone_addr` is set.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+					}...),
+				},
+			},
+			"labels": schema.BoolAttribute{
+				Description: "Whether to migrate labels. **Note**: This setting is only effective if `clone_addr` is set.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+					}...),
+				},
+			},
+			"service": schema.StringAttribute{
+				Description: "Service to migrate from. **Note**: This setting is only effective if `clone_addr` is set.",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+					}...),
+					stringvalidator.OneOf(
+						"git",
+						"github",
+						"gitlab",
+						"forgejo",
+						"gitea",
+						"gogs",
+					),
 				},
 			},
 		},
@@ -925,38 +1008,41 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			"name":              data.Name.ValueString(),
 			"owner":             data.Owner.ValueString(),
 			"clone_addr":        data.CloneAddr.ValueString(),
+			"service":           data.Service.ValueString(),
 			"auth_token":        data.AuthToken.ValueString(),
 			"mirror":            data.Mirror.ValueBool(),
 			"private":           data.Private.ValueBool(),
 			"description":       data.Description.ValueString(),
 			"has_wiki":          data.HasWiki.ValueBool(),
+			"milestones":        data.Milestones.ValueBool(),
+			"labels":            data.Labels.ValueBool(),
 			"has_issues":        data.HasIssues.ValueBool(),
 			"has_pull_requests": data.HasPullRequests.ValueBool(),
 			"has_releases":      data.HasReleases.ValueBool(),
 			"mirror_interval":   data.MirrorInterval.ValueString(),
+			"lfs":               data.LFS.ValueBool(),
+			"lfs_endpoint":      data.LFSEndpoint.ValueString(),
 		})
 
 		// Generate API request body from plan
 		copts := forgejo.MigrateRepoOption{
-			RepoName:  data.Name.ValueString(),
-			RepoOwner: data.Owner.ValueString(),
-			CloneAddr: data.CloneAddr.ValueString(),
-			// Service:      forgejo.GitServiceType(""),
-			// AuthUsername: "",
-			// AuthPassword: "",
-			AuthToken:   data.AuthToken.ValueString(),
-			Mirror:      data.Mirror.ValueBool(),
-			Private:     data.Private.ValueBool(),
-			Description: data.Description.ValueString(),
-			Wiki:        data.HasWiki.ValueBool(),
-			// Milestones:     false,
-			// Labels:         false,
+			RepoName:       data.Name.ValueString(),
+			RepoOwner:      data.Owner.ValueString(),
+			CloneAddr:      data.CloneAddr.ValueString(),
+			Service:        forgejo.GitServiceType(data.Service.ValueString()),
+			AuthToken:      data.AuthToken.ValueString(),
+			Mirror:         data.Mirror.ValueBool(),
+			Private:        data.Private.ValueBool(),
+			Description:    data.Description.ValueString(),
+			Wiki:           data.HasWiki.ValueBool(),
+			Milestones:     data.Milestones.ValueBool(),
+			Labels:         data.Labels.ValueBool(),
 			Issues:         data.HasIssues.ValueBool(),
 			PullRequests:   data.HasPullRequests.ValueBool(),
 			Releases:       data.HasReleases.ValueBool(),
 			MirrorInterval: data.MirrorInterval.ValueString(),
-			// LFS:            false,
-			// LFSEndpoint:    "",
+			LFS:            data.LFS.ValueBool(),
+			LFSEndpoint:    data.LFSEndpoint.ValueString(),
 		}
 
 		// Validate API request body
