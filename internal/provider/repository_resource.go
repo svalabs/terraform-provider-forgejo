@@ -152,16 +152,20 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.HasReleases = types.BoolValue(r.HasReleases)
 	m.HasPackages = types.BoolValue(r.HasPackages)
 	m.HasActions = types.BoolValue(r.HasActions)
-	m.IgnoreWhitespaceConflicts = types.BoolValue(r.IgnoreWhitespaceConflicts)
-	m.AllowMerge = types.BoolValue(r.AllowMerge)
-	m.AllowRebase = types.BoolValue(r.AllowRebase)
-	m.AllowRebaseMerge = types.BoolValue(r.AllowRebaseMerge)
-	m.AllowSquash = types.BoolValue(r.AllowSquash)
 	m.AvatarURL = types.StringValue(r.AvatarURL)
 	m.Internal = types.BoolValue(r.Internal)
 	m.MirrorInterval = types.StringValue(r.MirrorInterval)
 	m.MirrorUpdated = types.StringValue(r.MirrorUpdated.String())
-	m.DefaultMergeStyle = types.StringValue(string(r.DefaultMergeStyle))
+
+	if m.HasPullRequests.ValueBool() {
+		// only update PR settings if PRs are enabled
+		m.IgnoreWhitespaceConflicts = types.BoolValue(r.IgnoreWhitespaceConflicts)
+		m.AllowMerge = types.BoolValue(r.AllowMerge)
+		m.AllowRebase = types.BoolValue(r.AllowRebase)
+		m.AllowRebaseMerge = types.BoolValue(r.AllowRebaseMerge)
+		m.AllowSquash = types.BoolValue(r.AllowSquash)
+		m.DefaultMergeStyle = types.StringValue(string(r.DefaultMergeStyle))
+	}
 }
 
 // to is a helper function to save Terraform data model into an API struct.
