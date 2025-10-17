@@ -17,6 +17,7 @@ Resources:
 - `forgejo_collaborator` ([documentation](docs/resources/collaborator.md))
 - `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
+- `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
@@ -38,7 +39,7 @@ terraform {
   required_providers {
     forgejo = {
       source  = "svalabs/forgejo"
-      version = "~> 0.5.0"
+      version = "~> 0.5.1"
     }
   }
 }
@@ -174,7 +175,7 @@ Refer to the `examples/` directory for more usage examples.
 Once repositories contain important data, you need to protect them against accidental destruction.
 Terraform will destroy and recreate a repository if any of the create-only attributes (`auto_init`, `gitignores`, `license`, etc.) are modified, resulting in permanent data loss.
 
-To prevent this, add the `prevent_destroy` lifecycle meta-argument to critical repository resources:
+To prevent this, add the `prevent_destroy` lifecycle meta-argument to critical (repository) resources:
 
 ```terraform
 resource "forgejo_repository" "important" {
