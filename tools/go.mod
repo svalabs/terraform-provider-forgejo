@@ -2,7 +2,7 @@ module tools
 
 go 1.24.0
 
-toolchain go1.24.6
+toolchain go1.24.9
 
 require github.com/hashicorp/terraform-plugin-docs v0.19.4
 
