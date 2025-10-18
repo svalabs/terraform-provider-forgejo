@@ -1,6 +1,6 @@
 services:
   forgejo:
-    image: codeberg.org/forgejo/forgejo:10 # source: https://codeberg.org/forgejo/-/packages/container/forgejo/versions
+    image: codeberg.org/forgejo/forgejo:11 # source: https://codeberg.org/forgejo/-/packages/container/forgejo/versions
     container_name: forgejo
     restart: always
     volumes:
