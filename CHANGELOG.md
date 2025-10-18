@@ -1,3 +1,21 @@
+## 0.5.1 (October 18, 2025)
+
+BUG FIXES:
+
+- `forgejo_repository`: add remaining attributes ([documentation](docs/resources/repository.md))
+- `forgejo_repository`: flag create-only attributes with `RequiresReplace`
+- `forgejo_repository`: only update pull request settings if PRs are enabled
+- `forgejo_repository`: remove default value for `default_branch` attribute, to allow for mirroring repos with non-default branch
+
+ENHANCEMENTS:
+
+- Improve documentation and test cases
+- `forgejo_repository`: document dependencies for feature settings ([documentation](docs/resources/repository.md))
+
+DEPENDENCIES:
+
+- Bump github.com/hashicorp/terraform-plugin-framework-validators from 0.18.0 to 0.19.0
+
 ## 0.5.0 (October 13, 2025)
 
 FEATURES:
