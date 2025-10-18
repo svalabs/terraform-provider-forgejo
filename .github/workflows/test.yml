@@ -76,9 +76,9 @@ jobs:
       matrix:
         # list whatever Terraform versions here you would like to support
         terraform:
-          - "1.10.*"
           - "1.11.*"
           - "1.12.*"
+          - "1.13.*"
 
     steps:
       - name: Checkout repository
