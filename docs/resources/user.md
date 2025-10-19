@@ -60,10 +60,14 @@ resource "forgejo_user" "non_defaults" {
 
 - `active` (Boolean) Is the user active?
 - `admin` (Boolean) Is the user an administrator?
+- `allow_create_organization` (Boolean) Allow user to create organizations?
+- `allow_git_hook` (Boolean) Allow user to create Git hooks?
+- `allow_import_local` (Boolean) Allow user to import local repositories?
 - `description` (String) Description of the user.
 - `full_name` (String) Full name of the user.
 - `location` (String) Location of the user.
 - `login_name` (String) Login name of the user.
+- `max_repo_creation` (Number) Maximum number of repositories user can create. A value of -1 means no limit.
 - `must_change_password` (Boolean) Require user to change password?
 - `prohibit_login` (Boolean) Are user logins prohibited?
 - `restricted` (Boolean) Is the user restricted?
@@ -74,10 +78,11 @@ resource "forgejo_user" "non_defaults" {
 
 ### Read-Only
 
-- `avatar_url` (String) Avatar URL of the user.
+- `avatar_url` (String) URL to the user's avatar.
 - `created` (String) Date and time of user creation.
 - `followers_count` (Number) Number of following users.
 - `following_count` (Number) Number of users followed.
+- `html_url` (String) URL to the user's profile page.
 - `id` (Number) Numeric identifier of the user.
 - `language` (String) Locale of the user.
 - `last_login` (String) Date and time of last login.

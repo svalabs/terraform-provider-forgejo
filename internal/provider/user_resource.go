@@ -34,30 +34,35 @@ type userResource struct {
 // userResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#User
 type userResourceModel struct {
-	ID                 types.Int64  `tfsdk:"id"`
-	Name               types.String `tfsdk:"login"`
-	LoginName          types.String `tfsdk:"login_name"`
-	SourceID           types.Int64  `tfsdk:"source_id"`
-	FullName           types.String `tfsdk:"full_name"`
-	Email              types.String `tfsdk:"email"`
-	AvatarURL          types.String `tfsdk:"avatar_url"`
-	Language           types.String `tfsdk:"language"`
-	IsAdmin            types.Bool   `tfsdk:"admin"`
-	LastLogin          types.String `tfsdk:"last_login"`
-	Created            types.String `tfsdk:"created"`
-	Restricted         types.Bool   `tfsdk:"restricted"`
-	IsActive           types.Bool   `tfsdk:"active"`
-	ProhibitLogin      types.Bool   `tfsdk:"prohibit_login"`
-	Location           types.String `tfsdk:"location"`
-	Website            types.String `tfsdk:"website"`
-	Description        types.String `tfsdk:"description"`
-	Visibility         types.String `tfsdk:"visibility"`
-	FollowerCount      types.Int64  `tfsdk:"followers_count"`
-	FollowingCount     types.Int64  `tfsdk:"following_count"`
-	StarredRepoCount   types.Int64  `tfsdk:"starred_repos_count"`
-	Password           types.String `tfsdk:"password"`
-	MustChangePassword types.Bool   `tfsdk:"must_change_password"`
-	SendNotify         types.Bool   `tfsdk:"send_notify"`
+	ID                      types.Int64  `tfsdk:"id"`
+	Name                    types.String `tfsdk:"login"`
+	LoginName               types.String `tfsdk:"login_name"`
+	SourceID                types.Int64  `tfsdk:"source_id"`
+	FullName                types.String `tfsdk:"full_name"`
+	Email                   types.String `tfsdk:"email"`
+	HTMLURL                 types.String `tfsdk:"html_url"`
+	AvatarURL               types.String `tfsdk:"avatar_url"`
+	Language                types.String `tfsdk:"language"`
+	IsAdmin                 types.Bool   `tfsdk:"admin"`
+	LastLogin               types.String `tfsdk:"last_login"`
+	Created                 types.String `tfsdk:"created"`
+	Restricted              types.Bool   `tfsdk:"restricted"`
+	IsActive                types.Bool   `tfsdk:"active"`
+	ProhibitLogin           types.Bool   `tfsdk:"prohibit_login"`
+	Location                types.String `tfsdk:"location"`
+	Website                 types.String `tfsdk:"website"`
+	Description             types.String `tfsdk:"description"`
+	Visibility              types.String `tfsdk:"visibility"`
+	FollowerCount           types.Int64  `tfsdk:"followers_count"`
+	FollowingCount          types.Int64  `tfsdk:"following_count"`
+	StarredRepoCount        types.Int64  `tfsdk:"starred_repos_count"`
+	Password                types.String `tfsdk:"password"`
+	MustChangePassword      types.Bool   `tfsdk:"must_change_password"`
+	SendNotify              types.Bool   `tfsdk:"send_notify"`
+	AllowGitHook            types.Bool   `tfsdk:"allow_git_hook"`
+	AllowImportLocal        types.Bool   `tfsdk:"allow_import_local"`
+	AllowCreateOrganization types.Bool   `tfsdk:"allow_create_organization"`
+	MaxRepoCreation         types.Int64  `tfsdk:"max_repo_creation"`
 }
 
 func (m *userResourceModel) from(u *forgejo.User) {
@@ -67,6 +72,7 @@ func (m *userResourceModel) from(u *forgejo.User) {
 	m.SourceID = types.Int64Value(u.SourceID)
 	m.FullName = types.StringValue(u.FullName)
 	m.Email = types.StringValue(u.Email)
+	m.HTMLURL = types.StringValue(u.HTMLURL)
 	m.AvatarURL = types.StringValue(u.AvatarURL)
 	m.Language = types.StringValue(u.Language)
 	m.IsAdmin = types.BoolValue(u.IsAdmin)
@@ -99,15 +105,17 @@ func (m *userResourceModel) to(o *forgejo.EditUserOption) {
 	o.Location = m.Location.ValueStringPointer()
 	o.Active = m.IsActive.ValueBoolPointer()
 	o.Admin = m.IsAdmin.ValueBoolPointer()
-	// o.AllowGitHook =
-	// o.AllowImportLocal =
-	// o.MaxRepoCreation =
+	o.AllowGitHook = m.AllowGitHook.ValueBoolPointer()
+	o.AllowImportLocal = m.AllowImportLocal.ValueBoolPointer()
 	o.ProhibitLogin = m.ProhibitLogin.ValueBoolPointer()
-	// o.AllowCreateOrganization =
+	o.AllowCreateOrganization = m.AllowCreateOrganization.ValueBoolPointer()
 	o.Restricted = m.Restricted.ValueBoolPointer()
 
 	vt := forgejo.VisibleType(m.Visibility.ValueString())
 	o.Visibility = &vt
+
+	mrc := int(m.MaxRepoCreation.ValueInt64())
+	o.MaxRepoCreation = &mrc
 }
 
 // Metadata returns the resource type name.
@@ -158,7 +166,11 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Required:    true,
 			},
 			"avatar_url": schema.StringAttribute{
-				Description: "Avatar URL of the user.",
+				Description: "URL to the user's avatar.",
+				Computed:    true,
+			},
+			"html_url": schema.StringAttribute{
+				Description: "URL to the user's profile page.",
 				Computed:    true,
 			},
 			"language": schema.StringAttribute{
@@ -222,7 +234,9 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Description: "Visibility of the user.",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("public"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						"public",
@@ -259,6 +273,30 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
+			},
+			"allow_git_hook": schema.BoolAttribute{
+				Description: "Allow user to create Git hooks?",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"allow_import_local": schema.BoolAttribute{
+				Description: "Allow user to import local repositories?",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"allow_create_organization": schema.BoolAttribute{
+				Description: "Allow user to create organizations?",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+			},
+			"max_repo_creation": schema.Int64Attribute{
+				Description: "Maximum number of repositories user can create. A value of -1 means no limit.",
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(-1),
 			},
 		},
 	}
@@ -362,24 +400,24 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	tflog.Info(ctx, "Update user", map[string]any{
-		"source_id":            data.SourceID.ValueInt64(),
-		"login_name":           data.LoginName.ValueString(),
-		"email":                data.Email.ValueString(),
-		"full_name":            data.FullName.ValueString(),
-		"password":             data.Password.ValueString(),
-		"description":          data.Description.ValueString(),
-		"must_change_password": data.MustChangePassword.ValueBool(),
-		"website":              data.Website.ValueString(),
-		"location":             data.Location.ValueString(),
-		"active":               data.IsActive.ValueBool(),
-		"admin":                data.IsAdmin.ValueBool(),
-		// "allow_git_hook":
-		// "allow_import_local":
-		// "max_repo_creation":
-		"prohibit_login": data.ProhibitLogin.ValueBool(),
-		// "allow_create_organization":
-		"restricted": data.Restricted.ValueBool(),
-		"visibility": data.Visibility.ValueString(),
+		"source_id":                 data.SourceID.ValueInt64(),
+		"login_name":                data.LoginName.ValueString(),
+		"email":                     data.Email.ValueString(),
+		"full_name":                 data.FullName.ValueString(),
+		"password":                  data.Password.ValueString(),
+		"description":               data.Description.ValueString(),
+		"must_change_password":      data.MustChangePassword.ValueBool(),
+		"website":                   data.Website.ValueString(),
+		"location":                  data.Location.ValueString(),
+		"active":                    data.IsActive.ValueBool(),
+		"admin":                     data.IsAdmin.ValueBool(),
+		"allow_git_hook":            data.AllowGitHook.ValueBool(),
+		"allow_import_local":        data.AllowImportLocal.ValueBool(),
+		"max_repo_creation":         data.MaxRepoCreation.ValueInt64(),
+		"prohibit_login":            data.ProhibitLogin.ValueBool(),
+		"allow_create_organization": data.AllowCreateOrganization.ValueBool(),
+		"restricted":                data.Restricted.ValueBool(),
+		"visibility":                data.Visibility.ValueString(),
 	})
 
 	// Generate API request body from plan
@@ -523,24 +561,24 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	tflog.Info(ctx, "Update user", map[string]any{
-		"source_id":            data.SourceID.ValueInt64(),
-		"login_name":           data.LoginName.ValueString(),
-		"email":                data.Email.ValueString(),
-		"full_name":            data.FullName.ValueString(),
-		"password":             data.Password.ValueString(),
-		"description":          data.Description.ValueString(),
-		"must_change_password": data.MustChangePassword.ValueBool(),
-		"website":              data.Website.ValueString(),
-		"location":             data.Location.ValueString(),
-		"active":               data.IsActive.ValueBool(),
-		"admin":                data.IsAdmin.ValueBool(),
-		// "allow_git_hook":
-		// "allow_import_local":
-		// "max_repo_creation":
-		"prohibit_login": data.ProhibitLogin.ValueBool(),
-		// "allow_create_organization":
-		"restricted": data.Restricted.ValueBool(),
-		"visibility": data.Visibility.ValueString(),
+		"source_id":                 data.SourceID.ValueInt64(),
+		"login_name":                data.LoginName.ValueString(),
+		"email":                     data.Email.ValueString(),
+		"full_name":                 data.FullName.ValueString(),
+		"password":                  data.Password.ValueString(),
+		"description":               data.Description.ValueString(),
+		"must_change_password":      data.MustChangePassword.ValueBool(),
+		"website":                   data.Website.ValueString(),
+		"location":                  data.Location.ValueString(),
+		"active":                    data.IsActive.ValueBool(),
+		"admin":                     data.IsAdmin.ValueBool(),
+		"allow_git_hook":            data.AllowGitHook.ValueBool(),
+		"allow_import_local":        data.AllowImportLocal.ValueBool(),
+		"max_repo_creation":         data.MaxRepoCreation.ValueInt64(),
+		"prohibit_login":            data.ProhibitLogin.ValueBool(),
+		"allow_create_organization": data.AllowCreateOrganization.ValueBool(),
+		"restricted":                data.Restricted.ValueBool(),
+		"visibility":                data.Visibility.ValueString(),
 	})
 
 	// Generate API request body from plan

@@ -48,6 +48,7 @@ data "forgejo_user" "this" {
 - `followers_count` (Number) Number of following users.
 - `following_count` (Number) Number of users followed.
 - `full_name` (String) Full name of the user.
+- `html_url` (String) URL to the user's profile page.
 - `id` (Number) Numeric identifier of the user.
 - `is_admin` (Boolean) Is the user an administrator?
 - `language` (String) Locale of the user.

@@ -32,6 +32,7 @@ type userDataSourceModel struct {
 	SourceID         types.Int64  `tfsdk:"source_id"`
 	FullName         types.String `tfsdk:"full_name"`
 	Email            types.String `tfsdk:"email"`
+	HTMLURL          types.String `tfsdk:"html_url"`
 	AvatarURL        types.String `tfsdk:"avatar_url"`
 	Language         types.String `tfsdk:"language"`
 	IsAdmin          types.Bool   `tfsdk:"is_admin"`
@@ -86,6 +87,10 @@ func (d *userDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 			},
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the user.",
+				Computed:    true,
+			},
+			"html_url": schema.StringAttribute{
+				Description: "URL to the user's profile page.",
 				Computed:    true,
 			},
 			"language": schema.StringAttribute{
@@ -218,6 +223,7 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.SourceID = types.Int64Value(usr.SourceID)
 	data.FullName = types.StringValue(usr.FullName)
 	data.Email = types.StringValue(usr.Email)
+	data.HTMLURL = types.StringValue(usr.HTMLURL)
 	data.AvatarURL = types.StringValue(usr.AvatarURL)
 	data.Language = types.StringValue(usr.Language)
 	data.IsAdmin = types.BoolValue(usr.IsAdmin)

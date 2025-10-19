@@ -204,8 +204,9 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 
 	o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
 	o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
-	mergeStyle := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
-	o.DefaultMergeStyle = &mergeStyle
+
+	ms := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
+	o.DefaultMergeStyle = &ms
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Permission
