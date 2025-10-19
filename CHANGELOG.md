@@ -1,3 +1,18 @@
+## 0.5.2 (October 19, 2025)
+
+BUG FIXES:
+
+- `forgejo_repository`: add `regexp` to allowed attribute values for `external_tracker_style`
+
+ENHANCEMENTS:
+
+- Update local test environment to forgejo:11
+- Include Terraform 1.13 and exclude Terraform 1.10 from acceptance tests
+
+DEPENDENCIES:
+
+- Update to go 1.24.9
+
 ## 0.5.1 (October 18, 2025)
 
 BUG FIXES:
