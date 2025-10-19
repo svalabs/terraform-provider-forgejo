@@ -227,7 +227,7 @@ Required:
 
 Optional:
 
-- `external_tracker_style` (String) External Issue Tracker Number Format, either `numeric` or `alphanumeric`.
+- `external_tracker_style` (String) External Issue Tracker Number Format.
 
 
 <a id="nestedatt--external_wiki"></a>

@@ -655,12 +655,16 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 						Required:    true,
 					},
 					"external_tracker_style": schema.StringAttribute{
-						Description: "External Issue Tracker Number Format, either `numeric` or `alphanumeric`.",
+						Description: "External Issue Tracker Number Format.",
 						Optional:    true,
 						Computed:    true,
 						Default:     stringdefault.StaticString("numeric"),
 						Validators: []validator.String{
-							stringvalidator.OneOf([]string{"numeric", "alphanumeric"}...),
+							stringvalidator.OneOf(
+								"numeric",
+								"alphanumeric",
+								"regexp",
+							),
 						},
 					},
 				},
