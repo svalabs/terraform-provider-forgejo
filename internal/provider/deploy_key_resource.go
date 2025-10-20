@@ -96,10 +96,16 @@ func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"fingerprint": schema.StringAttribute{
 				Description: "Fingerprint of the deploy key.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"created_at": schema.StringAttribute{
 				Description: "Time at which the deploy key was created.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"read_only": schema.BoolAttribute{
 				Description: "Does the key have only read access?",

@@ -460,6 +460,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
@@ -758,10 +759,16 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the repository.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"internal": schema.BoolAttribute{
 				Description: "Is the repository internal?",
 				Computed:    true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"mirror_interval": schema.StringAttribute{
 				Description: "Mirror interval of the repository. **Note**: This setting is only effective if `mirror` is `true`.",
