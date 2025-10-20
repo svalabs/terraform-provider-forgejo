@@ -1,3 +1,10 @@
+## 0.5.3 (October 20, 2025)
+
+BUG FIXES:
+
+- `forgejo_repository`: mark create-only attributes as requiring resource replacement only if configuration value is not null
+- `forgejo_user`: add remaining attributes ([documentation](docs/resources/user.md))
+
 ## 0.5.2 (October 19, 2025)
 
 BUG FIXES:
