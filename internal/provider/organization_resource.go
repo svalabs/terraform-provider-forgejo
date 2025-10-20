@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -32,14 +33,15 @@ type organizationResource struct {
 // organizationResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Organization
 type organizationResourceModel struct {
-	ID          types.Int64  `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	FullName    types.String `tfsdk:"full_name"`
-	AvatarURL   types.String `tfsdk:"avatar_url"`
-	Description types.String `tfsdk:"description"`
-	Website     types.String `tfsdk:"website"`
-	Location    types.String `tfsdk:"location"`
-	Visibility  types.String `tfsdk:"visibility"`
+	ID                        types.Int64  `tfsdk:"id"`
+	Name                      types.String `tfsdk:"name"`
+	FullName                  types.String `tfsdk:"full_name"`
+	AvatarURL                 types.String `tfsdk:"avatar_url"`
+	Description               types.String `tfsdk:"description"`
+	Website                   types.String `tfsdk:"website"`
+	Location                  types.String `tfsdk:"location"`
+	Visibility                types.String `tfsdk:"visibility"`
+	RepoAdminChangeTeamAccess types.Bool   `tfsdk:"repo_admin_change_team_access"`
 }
 
 func (m *organizationResourceModel) from(o *forgejo.Organization) {
@@ -121,7 +123,9 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				Description: "Visibility of the organization. Possible values are 'public' (default), 'limited', or 'private'.",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("public"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						"public",
@@ -129,6 +133,12 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 						"private",
 					),
 				},
+			},
+			"repo_admin_change_team_access": schema.BoolAttribute{
+				Description: "Whether repository admin can add and remove access for teams.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
 			},
 		},
 	}
@@ -171,22 +181,24 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	tflog.Info(ctx, "Create organization", map[string]any{
-		"name":        data.Name.ValueString(),
-		"full_name":   data.FullName.ValueString(),
-		"description": data.Description.ValueString(),
-		"website":     data.Website.ValueString(),
-		"location":    data.Location.ValueString(),
-		"visibility":  data.Visibility.ValueString(),
+		"name":                          data.Name.ValueString(),
+		"full_name":                     data.FullName.ValueString(),
+		"description":                   data.Description.ValueString(),
+		"website":                       data.Website.ValueString(),
+		"location":                      data.Location.ValueString(),
+		"visibility":                    data.Visibility.ValueString(),
+		"repo_admin_change_team_access": data.RepoAdminChangeTeamAccess.ValueBool(),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.CreateOrgOption{
-		Name:        data.Name.ValueString(),
-		FullName:    data.FullName.ValueString(),
-		Description: data.Description.ValueString(),
-		Website:     data.Website.ValueString(),
-		Location:    data.Location.ValueString(),
-		Visibility:  forgejo.VisibleType(data.Visibility.ValueString()),
+		Name:                      data.Name.ValueString(),
+		FullName:                  data.FullName.ValueString(),
+		Description:               data.Description.ValueString(),
+		Website:                   data.Website.ValueString(),
+		Location:                  data.Location.ValueString(),
+		Visibility:                forgejo.VisibleType(data.Visibility.ValueString()),
+		RepoAdminChangeTeamAccess: data.RepoAdminChangeTeamAccess.ValueBool(),
 	}
 
 	// Validate API request body
