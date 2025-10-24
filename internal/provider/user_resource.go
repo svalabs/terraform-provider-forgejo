@@ -89,7 +89,7 @@ func (m *userResourceModel) from(u *forgejo.User) {
 	m.FollowingCount = types.Int64Value(int64(u.FollowingCount))
 	m.StarredRepoCount = types.Int64Value(int64(u.StarredRepoCount))
 }
-func (m *userResourceModel) to(o *forgejo.EditUserOption) {
+func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) {
 	if o == nil {
 		o = new(forgejo.EditUserOption)
 	}
@@ -98,7 +98,12 @@ func (m *userResourceModel) to(o *forgejo.EditUserOption) {
 	o.LoginName = m.LoginName.ValueString()
 	o.Email = m.Email.ValueStringPointer()
 	o.FullName = m.FullName.ValueStringPointer()
-	o.Password = m.Password.ValueString()
+
+	if s != nil && !m.Password.Equal(s.Password) {
+		// only update password if it has changed
+		o.Password = m.Password.ValueString()
+	}
+
 	o.Description = m.Description.ValueStringPointer()
 	o.MustChangePassword = m.MustChangePassword.ValueBoolPointer()
 	o.Website = m.Website.ValueStringPointer()
@@ -422,7 +427,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Generate API request body from plan
 	eopts := forgejo.EditUserOption{}
-	data.to(&eopts)
+	data.to(nil, &eopts)
 
 	// Validate API request body
 	// err := eopts.Validate()
@@ -551,39 +556,49 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer un(trace(ctx, "Update user resource"))
 
-	var data userResourceModel
+	var (
+		plan  userResourceModel
+		state userResourceModel
+	)
 
 	// Read Terraform plan data into model
-	diags := req.Plan.Get(ctx, &data)
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Read Terraform prior state data into model
+	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Info(ctx, "Update user", map[string]any{
-		"source_id":                 data.SourceID.ValueInt64(),
-		"login_name":                data.LoginName.ValueString(),
-		"email":                     data.Email.ValueString(),
-		"full_name":                 data.FullName.ValueString(),
-		"password":                  data.Password.ValueString(),
-		"description":               data.Description.ValueString(),
-		"must_change_password":      data.MustChangePassword.ValueBool(),
-		"website":                   data.Website.ValueString(),
-		"location":                  data.Location.ValueString(),
-		"active":                    data.IsActive.ValueBool(),
-		"admin":                     data.IsAdmin.ValueBool(),
-		"allow_git_hook":            data.AllowGitHook.ValueBool(),
-		"allow_import_local":        data.AllowImportLocal.ValueBool(),
-		"max_repo_creation":         data.MaxRepoCreation.ValueInt64(),
-		"prohibit_login":            data.ProhibitLogin.ValueBool(),
-		"allow_create_organization": data.AllowCreateOrganization.ValueBool(),
-		"restricted":                data.Restricted.ValueBool(),
-		"visibility":                data.Visibility.ValueString(),
+		"source_id":                 plan.SourceID.ValueInt64(),
+		"login_name":                plan.LoginName.ValueString(),
+		"email":                     plan.Email.ValueString(),
+		"full_name":                 plan.FullName.ValueString(),
+		"password":                  plan.Password.ValueString(),
+		"description":               plan.Description.ValueString(),
+		"must_change_password":      plan.MustChangePassword.ValueBool(),
+		"website":                   plan.Website.ValueString(),
+		"location":                  plan.Location.ValueString(),
+		"active":                    plan.IsActive.ValueBool(),
+		"admin":                     plan.IsAdmin.ValueBool(),
+		"allow_git_hook":            plan.AllowGitHook.ValueBool(),
+		"allow_import_local":        plan.AllowImportLocal.ValueBool(),
+		"max_repo_creation":         plan.MaxRepoCreation.ValueInt64(),
+		"prohibit_login":            plan.ProhibitLogin.ValueBool(),
+		"allow_create_organization": plan.AllowCreateOrganization.ValueBool(),
+		"restricted":                plan.Restricted.ValueBool(),
+		"visibility":                plan.Visibility.ValueString(),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.EditUserOption{}
-	data.to(&opts)
+	plan.to(&state, &opts)
 
 	// Validate API request body
 	// err := opts.Validate()
@@ -595,7 +610,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Use Forgejo client to update existing user
 	res, err := r.client.AdminEditUser(
-		data.Name.ValueString(),
+		plan.Name.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -610,13 +625,13 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		case 403:
 			msg = fmt.Sprintf(
 				"User with name %s forbidden: %s",
-				data.Name.String(),
+				plan.Name.String(),
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
 				"User with name %s not found: %s",
-				data.Name.String(),
+				plan.Name.String(),
 				err,
 			)
 		case 422:
@@ -630,7 +645,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Use Forgejo client to fetch updated user
-	usr, res, err := r.client.GetUserInfo(data.Name.ValueString())
+	usr, res, err := r.client.GetUserInfo(plan.Name.ValueString())
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
 			"status": res.Status,
@@ -641,7 +656,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		case 404:
 			msg = fmt.Sprintf(
 				"User with name %s not found: %s",
-				data.Name.String(),
+				plan.Name.String(),
 				err,
 			)
 		default:
@@ -653,10 +668,10 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map response body to model
-	data.from(usr)
+	plan.from(usr)
 
 	// Save data into Terraform state
-	diags = resp.State.Set(ctx, &data)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 }
 
