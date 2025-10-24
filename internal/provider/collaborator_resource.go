@@ -298,7 +298,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// Map response body to model
-	data.Permission = types.StringValue(perms.Role)
+	data.Permission = types.StringValue(string(perms.Permission))
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)

@@ -170,7 +170,7 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Map response body to model
-	data.Permission = types.StringValue(perms.Role)
+	data.Permission = types.StringValue(string(perms.Permission))
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
