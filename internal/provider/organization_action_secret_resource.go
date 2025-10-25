@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,6 +37,7 @@ type organizationActionSecretResourceModel struct {
 	Organization types.String `tfsdk:"organization"`
 	Name         types.String `tfsdk:"name"`
 	Data         types.String `tfsdk:"data"`
+	CreatedAt    types.String `tfsdk:"created_at"`
 }
 
 // Metadata returns the resource type name.
@@ -59,11 +64,21 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 30),
+				},
 			},
 			"data": schema.StringAttribute{
 				Description: "Data of the secret.",
 				Required:    true,
 				Sensitive:   true,
+			},
+			"created_at": schema.StringAttribute{
+				Description: "Time at which the secret was created.",
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -153,6 +168,15 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 		return
 	}
 
+	// Use Forgejo client to get organization action secret
+	secret, diags := r.getSecret(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	data.CreatedAt = types.StringValue(secret.Created.Format(time.RFC3339))
+
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -171,53 +195,14 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	tflog.Info(ctx, "List organization action secrets", map[string]any{
-		"org":  data.Organization.ValueString(),
-		"name": data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to list organization action secrets
-	secrets, res, err := r.client.ListOrgActionSecret(
-		data.Organization.ValueString(),
-		forgejo.ListOrgActionSecretOption{},
-	)
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Organization action secrets with org %s not found: %s",
-				data.Organization.ValueString(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to list organization action secrets", msg)
-
+	// Use Forgejo client to get organization action secret
+	secret, diags := r.getSecret(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
 		return
 	}
 
-	// Search for organization action secrets with given name
-	idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
-		return strings.EqualFold(s.Name, data.Name.ValueString())
-	})
-	if idx == -1 {
-		resp.Diagnostics.AddError(
-			"Unable to get organization action secret by name",
-			fmt.Sprintf(
-				"Organization action secret with org %s and name %s not found.",
-				data.Organization.String(),
-				data.Name.String(),
-			),
-		)
-
-		return
-	}
+	data.CreatedAt = types.StringValue(secret.Created.Format(time.RFC3339))
 
 	/*
 	 * The secret exists, so we re-save the state from the prior state data.
@@ -321,6 +306,60 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 			data.Name.String(),
 		),
 	)
+}
+
+func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *organizationActionSecretResourceModel) (*forgejo.Secret, diag.Diagnostics) {
+	tflog.Info(ctx, "List organization action secrets", map[string]any{
+		"org":  data.Organization.ValueString(),
+		"name": data.Name.ValueString(),
+	})
+
+	// Use Forgejo client to list organization action secrets
+	secrets, res, err := r.client.ListOrgActionSecret(
+		data.Organization.ValueString(),
+		forgejo.ListOrgActionSecretOption{},
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		var diags diag.Diagnostics
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Organization action secrets with org %s not found: %s",
+				data.Organization.String(),
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		diags.AddError("Unable to list organization action secrets", msg)
+
+		return nil, diags
+	}
+
+	// Search for organization action secrets with given name
+	idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
+		return strings.EqualFold(s.Name, data.Name.ValueString())
+	})
+	if idx == -1 {
+		var diags diag.Diagnostics
+		diags.AddError(
+			"Unable to get organization action secret by name",
+			fmt.Sprintf(
+				"Organization action secret with org %s and name %s not found.",
+				data.Organization.String(),
+				data.Name.String(),
+			),
+		)
+
+		return nil, diags
+	}
+
+	return secrets[idx], nil
 }
 
 // NewOrganizationActionSecretResource is a helper function to simplify the provider implementation.

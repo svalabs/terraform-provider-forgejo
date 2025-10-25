@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,6 +38,7 @@ type repositoryActionSecretResourceModel struct {
 	RepositoryID types.Int64  `tfsdk:"repository_id"`
 	Name         types.String `tfsdk:"name"`
 	Data         types.String `tfsdk:"data"`
+	CreatedAt    types.String `tfsdk:"created_at"`
 }
 
 // Metadata returns the resource type name.
@@ -60,11 +65,21 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 30),
+				},
 			},
 			"data": schema.StringAttribute{
 				Description: "Data of the secret.",
 				Required:    true,
 				Sensitive:   true,
+			},
+			"created_at": schema.StringAttribute{
+				Description: "Time at which the secret was created.",
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -190,6 +205,20 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 		return
 	}
 
+	// Use Forgejo client to get repository action secret
+	secret, diags := r.getSecret(
+		ctx,
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
+		&data,
+	)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	data.CreatedAt = types.StringValue(secret.Created.Format(time.RFC3339))
+
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -241,57 +270,19 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "List repository action secrets", map[string]any{
-		"user": repo.Owner.ValueString(),
-		"repo": repo.Name.ValueString(),
-		"name": data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to list repository action secrets
-	secrets, res, err := r.client.ListRepoActionSecret(
+	// Use Forgejo client to get repository action secret
+	secret, diags := r.getSecret(
+		ctx,
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
-		forgejo.ListRepoActionSecretOption{},
+		&data,
 	)
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository action secrets with user %s and repo %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to list repository action secrets", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
 		return
 	}
 
-	// Search for repository action secrets with given name
-	idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
-		return strings.EqualFold(s.Name, data.Name.ValueString())
-	})
-	if idx == -1 {
-		resp.Diagnostics.AddError(
-			"Unable to get repository action secret by name",
-			fmt.Sprintf(
-				"Repository action secret with user %s repo %s and name %s not found.",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.Name.String(),
-			),
-		)
-
-		return
-	}
+	data.CreatedAt = types.StringValue(secret.Created.Format(time.RFC3339))
 
 	/*
 	 * The secret exists, so we re-save the state from the prior state data.
@@ -466,6 +457,64 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 			data.Name.String(),
 		),
 	)
+}
+
+func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, repoName string, data *repositoryActionSecretResourceModel) (*forgejo.Secret, diag.Diagnostics) {
+	tflog.Info(ctx, "List repository action secrets", map[string]any{
+		"user": owner,
+		"repo": repoName,
+		"name": data.Name.ValueString(),
+	})
+
+	// Use Forgejo client to list repository action secrets
+	secrets, res, err := r.client.ListRepoActionSecret(
+		owner,
+		repoName,
+		forgejo.ListRepoActionSecretOption{},
+	)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		var diags diag.Diagnostics
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository action secrets with user \"%s\" and repo \"%s\" not found: %s",
+				owner,
+				repoName,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		diags.AddError("Unable to list repository action secrets", msg)
+
+		return nil, diags
+	}
+
+	// Search for repository action secrets with given name
+	idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
+		return strings.EqualFold(s.Name, data.Name.ValueString())
+	})
+	if idx == -1 {
+		var diags diag.Diagnostics
+		diags.AddError(
+			"Unable to get repository action secret by name",
+			fmt.Sprintf(
+				"Repository action secret with user \"%s\" repo \"%s\" and name %s not found.",
+				owner,
+				repoName,
+				data.Name.String(),
+			),
+		)
+
+		return nil, diags
+	}
+
+	return secrets[idx], nil
 }
 
 // NewRepositoryActionSecretResource is a helper function to simplify the provider implementation.

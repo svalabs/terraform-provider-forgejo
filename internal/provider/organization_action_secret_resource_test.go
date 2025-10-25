@@ -30,6 +30,7 @@ resource "forgejo_organization_action_secret" "test" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_secret")),
 					statecheck.ExpectSensitiveValue("forgejo_organization_action_secret.test", tfjsonpath.New("data")),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 				},
 			},
 			// Recreate and Read testing
@@ -48,6 +49,7 @@ resource "forgejo_organization_action_secret" "test" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),
 					statecheck.ExpectSensitiveValue("forgejo_organization_action_secret.test", tfjsonpath.New("data")),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 				},
 			},
 			// Update and Read testing
@@ -66,6 +68,7 @@ resource "forgejo_organization_action_secret" "test" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),
 					statecheck.ExpectSensitiveValue("forgejo_organization_action_secret.test", tfjsonpath.New("data")),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 				},
 			},
 			// Delete testing automatically occurs in TestCase

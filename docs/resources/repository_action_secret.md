@@ -46,3 +46,7 @@ resource "forgejo_repository_action_secret" "this" {
 - `data` (String, Sensitive) Data of the secret.
 - `name` (String) Name of the secret.
 - `repository_id` (Number) Numeric identifier of the repository.
+
+### Read-Only
+
+- `created_at` (String) Time at which the secret was created.
