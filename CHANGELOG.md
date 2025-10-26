@@ -1,3 +1,14 @@
+## 0.5.4 (October 26, 2025)
+
+BUG FIXES:
+
+- `forgejo_collaborator`: load correct result field into data model
+- `forgejo_deploy_key`, `forgejo_repository`: mark "sticky" attributes, to minimize number of unknown values during plan
+- `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: add missing `created_at` attribute ([documentation](docs/resources/organization_action_secret.md))
+- `forgejo_organization`: add missing `repo_admin_change_team_access` attribute ([documentation](docs/resources/organization.md))
+- `forgejo_user`: only update password if it has changed, to not trigger false notifications
+- `forgejo_user`: rename `created` attribute for consistency
+
 ## 0.5.3 (October 20, 2025)
 
 BUG FIXES:
