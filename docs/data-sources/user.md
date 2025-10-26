@@ -42,7 +42,7 @@ data "forgejo_user" "this" {
 
 - `active` (Boolean) Is the user active?
 - `avatar_url` (String) Avatar URL of the user.
-- `created` (String) Date and time of user creation.
+- `created_at` (String) Time at which the user was created.
 - `description` (String) Description of the user.
 - `email` (String) Email address of the user.
 - `followers_count` (Number) Number of following users.
@@ -52,7 +52,7 @@ data "forgejo_user" "this" {
 - `id` (Number) Numeric identifier of the user.
 - `is_admin` (Boolean) Is the user an administrator?
 - `language` (String) Locale of the user.
-- `last_login` (String) Date and time of last login.
+- `last_login` (String) Time at which the user last logged in.
 - `location` (String) Location of the user.
 - `login_name` (String) Login name of the user.
 - `prohibit_login` (Boolean) Are user logins prohibited?

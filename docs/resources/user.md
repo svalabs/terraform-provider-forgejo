@@ -79,11 +79,11 @@ resource "forgejo_user" "non_defaults" {
 ### Read-Only
 
 - `avatar_url` (String) URL to the user's avatar.
-- `created` (String) Date and time of user creation.
+- `created_at` (String) Time at which the user was created.
 - `followers_count` (Number) Number of following users.
 - `following_count` (Number) Number of users followed.
 - `html_url` (String) URL to the user's profile page.
 - `id` (Number) Numeric identifier of the user.
 - `language` (String) Locale of the user.
-- `last_login` (String) Date and time of last login.
+- `last_login` (String) Time at which the user last logged in.
 - `starred_repos_count` (Number) Number of starred repositories.

@@ -37,7 +37,7 @@ type userDataSourceModel struct {
 	Language         types.String `tfsdk:"language"`
 	IsAdmin          types.Bool   `tfsdk:"is_admin"`
 	LastLogin        types.String `tfsdk:"last_login"`
-	Created          types.String `tfsdk:"created"`
+	Created          types.String `tfsdk:"created_at"`
 	Restricted       types.Bool   `tfsdk:"restricted"`
 	IsActive         types.Bool   `tfsdk:"active"`
 	ProhibitLogin    types.Bool   `tfsdk:"prohibit_login"`
@@ -102,11 +102,11 @@ func (d *userDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 				Computed:    true,
 			},
 			"last_login": schema.StringAttribute{
-				Description: "Date and time of last login.",
+				Description: "Time at which the user last logged in.",
 				Computed:    true,
 			},
-			"created": schema.StringAttribute{
-				Description: "Date and time of user creation.",
+			"created_at": schema.StringAttribute{
+				Description: "Time at which the user was created.",
 				Computed:    true,
 			},
 			"restricted": schema.BoolAttribute{
