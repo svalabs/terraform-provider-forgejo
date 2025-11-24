@@ -7,7 +7,6 @@ import (
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -254,7 +253,7 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 	})
 
 	// Convert model to API request
-	opts, diags := r.modelToCreateOption(ctx, &data)
+	opts := r.modelToCreateOption(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -364,7 +363,7 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 	})
 
 	// Convert model to API request
-	opts, diags := r.modelToEditOption(ctx, &data)
+	opts := r.modelToEditOption(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -599,11 +598,8 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 	response.Diagnostics.Append(diags...)
 }
 
-// Helper function to convert model to CreateBranchProtectionOption
-func (r *repositoryBranchProtectionResource) modelToCreateOption(
-	ctx context.Context,
-	data *repositoryBranchProtectionResourceModel) (forgejo.CreateBranchProtectionOption, diag.Diagnostics) {
-	var diags diag.Diagnostics
+// Helper function to convert model to CreateBranchProtectionOption.
+func (r *repositoryBranchProtectionResource) modelToCreateOption(ctx context.Context, data *repositoryBranchProtectionResourceModel) forgejo.CreateBranchProtectionOption {
 
 	opts := forgejo.CreateBranchProtectionOption{
 		BranchName: data.BranchName.ValueString(),
@@ -708,13 +704,11 @@ func (r *repositoryBranchProtectionResource) modelToCreateOption(
 		opts.DismissStaleApprovals = *data.DismissStaleApprovals.ValueBoolPointer()
 	}
 
-	return opts, diags
+	return opts
 }
 
-// Helper function to convert model to EditBranchProtectionOption
-func (r *repositoryBranchProtectionResource) modelToEditOption(ctx context.Context, data *repositoryBranchProtectionResourceModel) (forgejo.EditBranchProtectionOption, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+// Helper function to convert model to EditBranchProtectionOption.
+func (r *repositoryBranchProtectionResource) modelToEditOption(ctx context.Context, data *repositoryBranchProtectionResourceModel) forgejo.EditBranchProtectionOption {
 	opts := forgejo.EditBranchProtectionOption{}
 
 	if !data.EnablePush.IsNull() {
@@ -818,5 +812,5 @@ func (r *repositoryBranchProtectionResource) modelToEditOption(ctx context.Conte
 		opts.DismissStaleApprovals = data.DismissStaleApprovals.ValueBoolPointer()
 	}
 
-	return opts, diags
+	return opts
 }
