@@ -85,6 +85,12 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:  "forgejo_repository.test",
+				ImportState:   true,
+				ImportStateId: "tfadmin/tftest",
+			},
 			// Recreate and Read testing (org repo)
 			{
 				Config: providerConfig + `

@@ -3,7 +3,9 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
@@ -29,8 +31,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &repositoryResource{}
-	_ resource.ResourceWithConfigure = &repositoryResource{}
+	_ resource.Resource                = &repositoryResource{}
+	_ resource.ResourceWithConfigure   = &repositoryResource{}
+	_ resource.ResourceWithImportState = &repositoryResource{}
 )
 
 // repositoryResource is the resource implementation.
@@ -1537,6 +1540,68 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 		return
 	}
+}
+
+func (r *repositoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	un(trace(ctx, "Import repository resource"))
+
+	cmp := strings.Split(req.ID, "/")
+	if len(cmp) != 2 {
+		resp.Diagnostics.AddError(req.ID, "must be in format owner/repository")
+		return
+	}
+	owner, repositoryName := cmp[0], cmp[1]
+
+	tflog.Info(ctx, "Get repository by name", map[string]any{
+		"owner": owner,
+		"name":  repositoryName,
+	})
+
+	// Use Forgejo client to import existing repository
+	repository, response, err := r.client.GetRepo(owner, repositoryName)
+	if err != nil {
+		if response == nil {
+			resp.Diagnostics.AddError(req.ID, fmt.Sprintf("Unexpected error during import of repository (%s/%s): %s", owner, repositoryName, err))
+			return
+		}
+
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": response.Status,
+		})
+
+		var msg string
+		switch response.StatusCode {
+		case http.StatusNotFound:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s not found: %s",
+				owner,
+				repositoryName,
+				err.Error(),
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to import repository", msg)
+
+		return
+	}
+	if response.StatusCode != http.StatusOK {
+		resp.Diagnostics.AddError(req.ID, fmt.Sprintf("Unexpected status code from api importing repository (%s/%s): %d", owner, repositoryName, response.StatusCode))
+		return
+	}
+
+	var state repositoryResourceModel
+	state.from(repository)
+	diags := state.permissionsFrom(ctx, repository.Permissions)
+	diags.Append(state.internalTrackerFrom(ctx, repository.InternalTracker)...)
+	diags.Append(state.externalTrackerFrom(ctx, repository.ExternalTracker)...)
+	diags.Append(state.externalWikiFrom(ctx, repository.ExternalWiki)...)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 // NewRepositoryResource is a helper function to simplify the provider implementation.

@@ -126,3 +126,20 @@ resource "forgejo_repository" "mirror" {
   mirror          = true
   mirror_interval = "12h0m0s" # optional
 }
+
+# Import repository
+resource "forgejo_repository" "imported" {
+  owner = forgejo_user.owner.login
+  name  = "repository-to-be-imported"
+
+  # Other mandatory and optional attributes of the repository.
+  # Remember attributes have to match the actual repository configuration
+  # otherwise Terraform will try to apply changes to the actual repository
+  # during import.
+}
+
+import {
+  # The owner (or organization) of the repository / the repository's name.
+  id = "test_user/repository-to-be-imported"
+  to = forgejo_repository.imported
+}
