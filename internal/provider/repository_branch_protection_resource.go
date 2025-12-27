@@ -30,7 +30,6 @@ type repositoryBranchProtectionResource struct {
 // repositoryBranchProtectionResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#CreateBranchProtectionOption
 type repositoryBranchProtectionResourceModel struct {
-	ID                            types.String `tfsdk:"id"`
 	Owner                         types.String `tfsdk:"owner"`
 	Repo                          types.String `tfsdk:"repo"`
 	BranchName                    types.String `tfsdk:"branch_name"`
@@ -69,13 +68,6 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 	resp.Schema = schema.Schema{
 		Description: "Forgejo repository branch protection resource.",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Description: "Computed ID of the branch protection (format: owner/repo/branch_name).",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(), // avoiding unnecessarily showing changes, i.e. '(known after apply)', on update/refresh
-				},
-			},
 			"owner": schema.StringAttribute{
 				Description: "Owner of the repository.",
 				Required:    true,
@@ -300,12 +292,6 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 		return
 	}
 
-	// Set the ID
-	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
-		data.Owner.ValueString(),
-		data.Repo.ValueString(),
-		data.BranchName.ValueString()))
-
 	// Update model with response data
 	tflog.Trace(ctx, "created branch protection resource")
 
@@ -357,12 +343,6 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Set the ID (in case it wasn't set or needs to be refreshed)
-	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
-		data.Owner.ValueString(),
-		data.Repo.ValueString(),
-		data.BranchName.ValueString()))
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -434,12 +414,6 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Set the ID
-	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
-		data.Owner.ValueString(),
-		data.Repo.ValueString(),
-		data.BranchName.ValueString()))
 
 	// Update model with response data
 	diags = resp.State.Set(ctx, &data)
@@ -525,7 +499,6 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 
 	// Map response to model
 	var data repositoryBranchProtectionResourceModel
-	data.ID = types.StringValue(request.ID)
 	data.Owner = types.StringValue(owner)
 	data.Repo = types.StringValue(repo)
 	data.BranchName = types.StringValue(branchName)
@@ -543,7 +516,6 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 
 // Helper function to convert model to CreateBranchProtectionOption.
 func (r *repositoryBranchProtectionResource) modelToCreateOption(ctx context.Context, data *repositoryBranchProtectionResourceModel) forgejo.CreateBranchProtectionOption {
-
 	opts := forgejo.CreateBranchProtectionOption{
 		BranchName: data.BranchName.ValueString(),
 	}

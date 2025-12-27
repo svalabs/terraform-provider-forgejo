@@ -35,10 +35,11 @@ resource "forgejo_repository_branch_protection" "test" {
 			},
 			// ImportState testing
 			{
-				ResourceName:      "forgejo_repository_branch_protection.test",
-				ImportStateId:     "tfadmin/test_repo_branch_protection/main",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         "forgejo_repository_branch_protection.test",
+				ImportStateId:                        "tfadmin/test_repo_branch_protection/main",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "branch_name",
 			},
 			// Update and Read testing
 			{
