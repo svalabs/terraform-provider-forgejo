@@ -7,6 +7,7 @@ import (
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -278,7 +279,11 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 	}
 
 	// Update model with response data to ensure Computed fields are correctly populated
-	r.mapResponseToModel(protection, &data)
+	diags = r.mapResponseToModel(protection, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Set the ID
 	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
@@ -311,22 +316,32 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 		data.BranchName.ValueString(),
 	)
 	if err != nil {
-		if res != nil && res.StatusCode == 404 {
-			// Branch protection no longer exists
-			tflog.Trace(ctx, "branch protection not found, removing from state")
-			resp.State.RemoveResource(ctx)
-			return
-		}
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
 
-		resp.Diagnostics.AddError(
-			"Unable to read branch protection",
-			fmt.Sprintf("Error: %s", err),
-		)
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Branch with name %s not found: %s",
+				data.BranchName.String(),
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		resp.Diagnostics.AddError("Unable to get branch", msg)
+
 		return
 	}
 
 	// Update model with response data
-	r.mapResponseToModel(protection, &data)
+	diags = r.mapResponseToModel(protection, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Set the ID (in case it wasn't set or needs to be refreshed)
 	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
@@ -336,61 +351,6 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
-}
-
-func (r *repositoryBranchProtectionResource) mapResponseToModel(protection *forgejo.BranchProtection, data *repositoryBranchProtectionResourceModel) {
-	data.EnablePush = types.BoolValue(protection.EnablePush)
-	data.EnablePushWhitelist = types.BoolValue(protection.EnablePushWhitelist)
-	data.PushWhitelistDeployKeys = types.BoolValue(protection.PushWhitelistDeployKeys)
-	data.EnableStatusCheck = types.BoolValue(protection.EnableStatusCheck)
-	data.RequireSignedCommits = types.BoolValue(protection.RequireSignedCommits)
-
-	if protection.ProtectedFilePatterns != "" {
-		data.ProtectedFilePatterns = types.StringValue(protection.ProtectedFilePatterns)
-	} else {
-		data.ProtectedFilePatterns = types.StringNull()
-	}
-
-	if protection.UnprotectedFilePatterns != "" {
-		data.UnprotectedFilePatterns = types.StringValue(protection.UnprotectedFilePatterns)
-	} else {
-		data.UnprotectedFilePatterns = types.StringNull()
-	}
-
-	data.EnableMergeWhitelist = types.BoolValue(protection.EnableMergeWhitelist)
-	data.EnableApprovalsWhitelist = types.BoolValue(protection.EnableApprovalsWhitelist)
-
-	if protection.RequiredApprovals != 0 {
-		data.RequiredApprovals = types.Int64Value(protection.RequiredApprovals)
-	} else {
-		data.RequiredApprovals = types.Int64Null()
-	}
-
-	data.BlockOnRejectedReviews = types.BoolValue(protection.BlockOnRejectedReviews)
-	data.BlockOnOfficialReviewRequests = types.BoolValue(protection.BlockOnOfficialReviewRequests)
-	data.BlockOnOutdatedBranch = types.BoolValue(protection.BlockOnOutdatedBranch)
-	data.DismissStaleApprovals = types.BoolValue(protection.DismissStaleApprovals)
-
-	// Handle Lists
-	data.PushWhitelistUsernames = r.stringSliceToList(protection.PushWhitelistUsernames)
-	data.PushWhitelistTeams = r.stringSliceToList(protection.PushWhitelistTeams)
-	data.StatusCheckContexts = r.stringSliceToList(protection.StatusCheckContexts)
-	data.MergeWhitelistUsernames = r.stringSliceToList(protection.MergeWhitelistUsernames)
-	data.MergeWhitelistTeams = r.stringSliceToList(protection.MergeWhitelistTeams)
-	data.ApprovalsWhitelistUsernames = r.stringSliceToList(protection.ApprovalsWhitelistUsernames)
-	data.ApprovalsWhitelistTeams = r.stringSliceToList(protection.ApprovalsWhitelistTeams)
-}
-
-func (r *repositoryBranchProtectionResource) stringSliceToList(slice []string) types.List {
-	if len(slice) == 0 {
-		return types.ListNull(types.StringType)
-	}
-	elements := make([]attr.Value, len(slice))
-	for i, v := range slice {
-		elements[i] = types.StringValue(v)
-	}
-	l, _ := types.ListValue(types.StringType, elements)
-	return l
 }
 
 func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -449,7 +409,11 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 	}
 
 	// Update model with response data
-	r.mapResponseToModel(protection, &data)
+	diags = r.mapResponseToModel(protection, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Set the ID
 	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
@@ -546,10 +510,14 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 	data.Repo = types.StringValue(repo)
 	data.BranchName = types.StringValue(branchName)
 
-	r.mapResponseToModel(protection, &data)
+	diags := r.mapResponseToModel(protection, &data)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
-	diags := response.State.Set(ctx, &data)
+	diags = response.State.Set(ctx, &data)
 	response.Diagnostics.Append(diags...)
 }
 
@@ -768,4 +736,76 @@ func (r *repositoryBranchProtectionResource) modelToEditOption(ctx context.Conte
 	}
 
 	return opts
+}
+
+func (r *repositoryBranchProtectionResource) mapResponseToModel(protection *forgejo.BranchProtection, data *repositoryBranchProtectionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	data.EnablePush = types.BoolValue(protection.EnablePush)
+	data.EnablePushWhitelist = types.BoolValue(protection.EnablePushWhitelist)
+	data.PushWhitelistDeployKeys = types.BoolValue(protection.PushWhitelistDeployKeys)
+	data.EnableStatusCheck = types.BoolValue(protection.EnableStatusCheck)
+	data.RequireSignedCommits = types.BoolValue(protection.RequireSignedCommits)
+
+	if protection.ProtectedFilePatterns != "" {
+		data.ProtectedFilePatterns = types.StringValue(protection.ProtectedFilePatterns)
+	} else {
+		data.ProtectedFilePatterns = types.StringNull()
+	}
+
+	if protection.UnprotectedFilePatterns != "" {
+		data.UnprotectedFilePatterns = types.StringValue(protection.UnprotectedFilePatterns)
+	} else {
+		data.UnprotectedFilePatterns = types.StringNull()
+	}
+
+	data.EnableMergeWhitelist = types.BoolValue(protection.EnableMergeWhitelist)
+	data.EnableApprovalsWhitelist = types.BoolValue(protection.EnableApprovalsWhitelist)
+
+	if protection.RequiredApprovals != 0 {
+		data.RequiredApprovals = types.Int64Value(protection.RequiredApprovals)
+	} else {
+		data.RequiredApprovals = types.Int64Null()
+	}
+
+	data.BlockOnRejectedReviews = types.BoolValue(protection.BlockOnRejectedReviews)
+	data.BlockOnOfficialReviewRequests = types.BoolValue(protection.BlockOnOfficialReviewRequests)
+	data.BlockOnOutdatedBranch = types.BoolValue(protection.BlockOnOutdatedBranch)
+	data.DismissStaleApprovals = types.BoolValue(protection.DismissStaleApprovals)
+
+	// Handle Lists
+	var d diag.Diagnostics
+	data.PushWhitelistUsernames, d = r.stringSliceToList(protection.PushWhitelistUsernames)
+	diags.Append(d...)
+
+	data.PushWhitelistTeams, d = r.stringSliceToList(protection.PushWhitelistTeams)
+	diags.Append(d...)
+
+	data.StatusCheckContexts, d = r.stringSliceToList(protection.StatusCheckContexts)
+	diags.Append(d...)
+
+	data.MergeWhitelistUsernames, d = r.stringSliceToList(protection.MergeWhitelistUsernames)
+	diags.Append(d...)
+
+	data.MergeWhitelistTeams, d = r.stringSliceToList(protection.MergeWhitelistTeams)
+	diags.Append(d...)
+
+	data.ApprovalsWhitelistUsernames, d = r.stringSliceToList(protection.ApprovalsWhitelistUsernames)
+	diags.Append(d...)
+
+	data.ApprovalsWhitelistTeams, d = r.stringSliceToList(protection.ApprovalsWhitelistTeams)
+	diags.Append(d...)
+
+	return diags
+}
+
+func (r *repositoryBranchProtectionResource) stringSliceToList(slice []string) (types.List, diag.Diagnostics) {
+	if len(slice) == 0 {
+		return types.ListNull(types.StringType), nil
+	}
+	elements := make([]attr.Value, len(slice))
+	for i, v := range slice {
+		elements[i] = types.StringValue(v)
+	}
+	return types.ListValue(types.StringType, elements)
 }
