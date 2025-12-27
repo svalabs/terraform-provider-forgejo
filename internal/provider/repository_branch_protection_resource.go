@@ -110,11 +110,13 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 			"push_whitelist_usernames": schema.ListAttribute{
 				Description: "Usernames allowed to push.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			"push_whitelist_teams": schema.ListAttribute{
 				Description: "Teams allowed to push.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			"push_whitelist_deploy_keys": schema.BoolAttribute{
@@ -130,6 +132,7 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 			"status_check_contexts": schema.ListAttribute{
 				Description: "Status check contexts that must pass.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			"require_signed_commits": schema.BoolAttribute{
@@ -140,10 +143,12 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 			"protected_file_patterns": schema.StringAttribute{
 				Description: "Patterns for protected files.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"unprotected_file_patterns": schema.StringAttribute{
 				Description: "Patterns for unprotected files.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"enable_merge_whitelist": schema.BoolAttribute{
 				Description: "Enable merge whitelist.",
@@ -153,11 +158,13 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 			"merge_whitelist_usernames": schema.ListAttribute{
 				Description: "Usernames allowed to merge.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			"merge_whitelist_teams": schema.ListAttribute{
 				Description: "Teams allowed to merge.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			"enable_approvals_whitelist": schema.BoolAttribute{
@@ -168,15 +175,18 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 			"approvals_whitelist_usernames": schema.ListAttribute{
 				Description: "Usernames that can approve.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			"approvals_whitelist_teams": schema.ListAttribute{
 				Description: "Teams that can approve.",
 				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 			},
 			"required_approvals": schema.Int64Attribute{
 				Description: "Number of required approvals.",
+				Computed:    true,
 				Optional:    true,
 			},
 			"block_on_rejected_reviews": schema.BoolAttribute{
@@ -243,6 +253,11 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 
 	// Convert model to API request
 	opts := r.modelToCreateOption(ctx, &data)
+
+	tflog.Debug(ctx, "Create branch protection request parameters", map[string]any{
+		"options": opts,
+	})
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -372,6 +387,11 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 
 	// Convert model to API request
 	opts := r.modelToEditOption(ctx, &data)
+
+	tflog.Debug(ctx, "Update branch protection request parameters", map[string]any{
+		"options": opts,
+	})
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
