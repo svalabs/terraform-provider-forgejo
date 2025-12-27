@@ -140,7 +140,7 @@ resource "forgejo_repository_branch_protection" "test" {
 	branch_name                      = "main"
 	repo                              = forgejo_repository.test.name
 	owner                             = forgejo_repository.test.owner
-	enable_push                       = false
+	enable_push                       = true
 	enable_push_whitelist             = true
 	push_whitelist_usernames          = ["tfadmin"]
 	require_signed_commits            = true
@@ -151,7 +151,7 @@ resource "forgejo_repository_branch_protection" "test" {
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(2)),

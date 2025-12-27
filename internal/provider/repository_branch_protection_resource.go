@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -101,13 +100,11 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 				Description: "Enable push to the branch.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(true),
 			},
 			"enable_push_whitelist": schema.BoolAttribute{
 				Description: "Enable push whitelist.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"push_whitelist_usernames": schema.ListAttribute{
 				Description: "Usernames allowed to push.",
@@ -123,13 +120,11 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 				Description: "Allow deploy keys to push.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"enable_status_check": schema.BoolAttribute{
 				Description: "Enable status checks.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"status_check_contexts": schema.ListAttribute{
 				Description: "Status check contexts that must pass.",
@@ -140,7 +135,6 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 				Description: "Require signed commits.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"protected_file_patterns": schema.StringAttribute{
 				Description: "Patterns for protected files.",
@@ -154,7 +148,6 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 				Description: "Enable merge whitelist.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"merge_whitelist_usernames": schema.ListAttribute{
 				Description: "Usernames allowed to merge.",
@@ -170,7 +163,6 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 				Description: "Enable approvals whitelist.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"approvals_whitelist_usernames": schema.ListAttribute{
 				Description: "Usernames that can approve.",
@@ -190,25 +182,21 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 				Description: "Block merge on rejected reviews.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"block_on_official_review_requests": schema.BoolAttribute{
 				Description: "Block merge on official review requests.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"block_on_outdated_branch": schema.BoolAttribute{
 				Description: "Block merge on outdated branch.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 			"dismiss_stale_approvals": schema.BoolAttribute{
 				Description: "Dismiss stale approvals.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(false),
 			},
 		},
 	}
@@ -260,7 +248,7 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 	}
 
 	// Create branch protection
-	_, res, err := r.client.CreateBranchProtection(
+	protection, res, err := r.client.CreateBranchProtection(
 		data.Owner.ValueString(),
 		data.Repo.ValueString(),
 		opts,
@@ -289,6 +277,9 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 		return
 	}
 
+	// Update model with response data to ensure Computed fields are correctly populated
+	r.mapResponseToModel(protection, &data)
+
 	// Set the ID
 	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
 		data.Owner.ValueString(),
@@ -314,7 +305,7 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 	}
 
 	// Get branch protection
-	_, res, err := r.client.GetBranchProtection(
+	protection, res, err := r.client.GetBranchProtection(
 		data.Owner.ValueString(),
 		data.Repo.ValueString(),
 		data.BranchName.ValueString(),
@@ -334,15 +325,72 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 		return
 	}
 
+	// Update model with response data
+	r.mapResponseToModel(protection, &data)
+
 	// Set the ID (in case it wasn't set or needs to be refreshed)
 	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
 		data.Owner.ValueString(),
 		data.Repo.ValueString(),
 		data.BranchName.ValueString()))
 
-	// Update model with response data
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
+}
+
+func (r *repositoryBranchProtectionResource) mapResponseToModel(protection *forgejo.BranchProtection, data *repositoryBranchProtectionResourceModel) {
+	data.EnablePush = types.BoolValue(protection.EnablePush)
+	data.EnablePushWhitelist = types.BoolValue(protection.EnablePushWhitelist)
+	data.PushWhitelistDeployKeys = types.BoolValue(protection.PushWhitelistDeployKeys)
+	data.EnableStatusCheck = types.BoolValue(protection.EnableStatusCheck)
+	data.RequireSignedCommits = types.BoolValue(protection.RequireSignedCommits)
+
+	if protection.ProtectedFilePatterns != "" {
+		data.ProtectedFilePatterns = types.StringValue(protection.ProtectedFilePatterns)
+	} else {
+		data.ProtectedFilePatterns = types.StringNull()
+	}
+
+	if protection.UnprotectedFilePatterns != "" {
+		data.UnprotectedFilePatterns = types.StringValue(protection.UnprotectedFilePatterns)
+	} else {
+		data.UnprotectedFilePatterns = types.StringNull()
+	}
+
+	data.EnableMergeWhitelist = types.BoolValue(protection.EnableMergeWhitelist)
+	data.EnableApprovalsWhitelist = types.BoolValue(protection.EnableApprovalsWhitelist)
+
+	if protection.RequiredApprovals != 0 {
+		data.RequiredApprovals = types.Int64Value(protection.RequiredApprovals)
+	} else {
+		data.RequiredApprovals = types.Int64Null()
+	}
+
+	data.BlockOnRejectedReviews = types.BoolValue(protection.BlockOnRejectedReviews)
+	data.BlockOnOfficialReviewRequests = types.BoolValue(protection.BlockOnOfficialReviewRequests)
+	data.BlockOnOutdatedBranch = types.BoolValue(protection.BlockOnOutdatedBranch)
+	data.DismissStaleApprovals = types.BoolValue(protection.DismissStaleApprovals)
+
+	// Handle Lists
+	data.PushWhitelistUsernames = r.stringSliceToList(protection.PushWhitelistUsernames)
+	data.PushWhitelistTeams = r.stringSliceToList(protection.PushWhitelistTeams)
+	data.StatusCheckContexts = r.stringSliceToList(protection.StatusCheckContexts)
+	data.MergeWhitelistUsernames = r.stringSliceToList(protection.MergeWhitelistUsernames)
+	data.MergeWhitelistTeams = r.stringSliceToList(protection.MergeWhitelistTeams)
+	data.ApprovalsWhitelistUsernames = r.stringSliceToList(protection.ApprovalsWhitelistUsernames)
+	data.ApprovalsWhitelistTeams = r.stringSliceToList(protection.ApprovalsWhitelistTeams)
+}
+
+func (r *repositoryBranchProtectionResource) stringSliceToList(slice []string) types.List {
+	if len(slice) == 0 {
+		return types.ListNull(types.StringType)
+	}
+	elements := make([]attr.Value, len(slice))
+	for i, v := range slice {
+		elements[i] = types.StringValue(v)
+	}
+	l, _ := types.ListValue(types.StringType, elements)
+	return l
 }
 
 func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -370,7 +418,7 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 	}
 
 	// Update branch protection
-	_, res, err := r.client.EditBranchProtection(
+	protection, res, err := r.client.EditBranchProtection(
 		data.Owner.ValueString(),
 		data.Repo.ValueString(),
 		data.BranchName.ValueString(),
@@ -399,6 +447,9 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 		resp.Diagnostics.AddError("Unable to update branch protection", msg)
 		return
 	}
+
+	// Update model with response data
+	r.mapResponseToModel(protection, &data)
 
 	// Set the ID
 	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
@@ -495,103 +546,7 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 	data.Repo = types.StringValue(repo)
 	data.BranchName = types.StringValue(branchName)
 
-	// Map protection settings
-	data.EnablePush = types.BoolValue(protection.EnablePush)
-	data.EnablePushWhitelist = types.BoolValue(protection.EnablePushWhitelist)
-	data.PushWhitelistDeployKeys = types.BoolValue(protection.PushWhitelistDeployKeys)
-	data.EnableStatusCheck = types.BoolValue(protection.EnableStatusCheck)
-	data.RequireSignedCommits = types.BoolValue(protection.RequireSignedCommits)
-
-	// Handle optional string attributes - use null if empty
-	if protection.ProtectedFilePatterns != "" {
-		data.ProtectedFilePatterns = types.StringValue(protection.ProtectedFilePatterns)
-	} else {
-		data.ProtectedFilePatterns = types.StringNull()
-	}
-
-	if protection.UnprotectedFilePatterns != "" {
-		data.UnprotectedFilePatterns = types.StringValue(protection.UnprotectedFilePatterns)
-	} else {
-		data.UnprotectedFilePatterns = types.StringNull()
-	}
-
-	data.EnableMergeWhitelist = types.BoolValue(protection.EnableMergeWhitelist)
-	data.EnableApprovalsWhitelist = types.BoolValue(protection.EnableApprovalsWhitelist)
-
-	// Handle required_approvals - use null if zero
-	if protection.RequiredApprovals != 0 {
-		data.RequiredApprovals = types.Int64Value(protection.RequiredApprovals)
-	} else {
-		data.RequiredApprovals = types.Int64Null()
-	}
-
-	data.BlockOnRejectedReviews = types.BoolValue(protection.BlockOnRejectedReviews)
-	data.BlockOnOfficialReviewRequests = types.BoolValue(protection.BlockOnOfficialReviewRequests)
-	data.BlockOnOutdatedBranch = types.BoolValue(protection.BlockOnOutdatedBranch)
-	data.DismissStaleApprovals = types.BoolValue(protection.DismissStaleApprovals)
-	data.PushWhitelistUsernames = types.ListNull(types.StringType)
-	data.PushWhitelistTeams = types.ListNull(types.StringType)
-	data.StatusCheckContexts = types.ListNull(types.StringType)
-	data.MergeWhitelistUsernames = types.ListNull(types.StringType)
-	data.MergeWhitelistTeams = types.ListNull(types.StringType)
-	data.ApprovalsWhitelistUsernames = types.ListNull(types.StringType)
-	data.ApprovalsWhitelistTeams = types.ListNull(types.StringType)
-
-	if len(protection.PushWhitelistUsernames) > 0 {
-		elements := make([]attr.Value, len(protection.PushWhitelistUsernames))
-		for i, username := range protection.PushWhitelistUsernames {
-			elements[i] = types.StringValue(username)
-		}
-		data.PushWhitelistUsernames, _ = types.ListValue(types.StringType, elements)
-	}
-
-	if len(protection.PushWhitelistTeams) > 0 {
-		elements := make([]attr.Value, len(protection.PushWhitelistTeams))
-		for i, team := range protection.PushWhitelistTeams {
-			elements[i] = types.StringValue(team)
-		}
-		data.PushWhitelistTeams, _ = types.ListValue(types.StringType, elements)
-	}
-
-	if len(protection.StatusCheckContexts) > 0 {
-		elements := make([]attr.Value, len(protection.StatusCheckContexts))
-		for i, checkContext := range protection.StatusCheckContexts {
-			elements[i] = types.StringValue(checkContext)
-		}
-		data.StatusCheckContexts, _ = types.ListValue(types.StringType, elements)
-	}
-
-	if len(protection.MergeWhitelistUsernames) > 0 {
-		elements := make([]attr.Value, len(protection.MergeWhitelistUsernames))
-		for i, username := range protection.MergeWhitelistUsernames {
-			elements[i] = types.StringValue(username)
-		}
-		data.MergeWhitelistUsernames, _ = types.ListValue(types.StringType, elements)
-	}
-
-	if len(protection.MergeWhitelistTeams) > 0 {
-		elements := make([]attr.Value, len(protection.MergeWhitelistTeams))
-		for i, team := range protection.MergeWhitelistTeams {
-			elements[i] = types.StringValue(team)
-		}
-		data.MergeWhitelistTeams, _ = types.ListValue(types.StringType, elements)
-	}
-
-	if len(protection.ApprovalsWhitelistUsernames) > 0 {
-		elements := make([]attr.Value, len(protection.ApprovalsWhitelistUsernames))
-		for i, username := range protection.ApprovalsWhitelistUsernames {
-			elements[i] = types.StringValue(username)
-		}
-		data.ApprovalsWhitelistUsernames, _ = types.ListValue(types.StringType, elements)
-	}
-
-	if len(protection.ApprovalsWhitelistTeams) > 0 {
-		elements := make([]attr.Value, len(protection.ApprovalsWhitelistTeams))
-		for i, team := range protection.ApprovalsWhitelistTeams {
-			elements[i] = types.StringValue(team)
-		}
-		data.ApprovalsWhitelistTeams, _ = types.ListValue(types.StringType, elements)
-	}
+	r.mapResponseToModel(protection, &data)
 
 	// Save data into Terraform state
 	diags := response.State.Set(ctx, &data)
