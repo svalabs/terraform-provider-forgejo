@@ -88,7 +88,3 @@ resource "forgejo_repository_branch_protection" "main" {
 - `required_approvals` (Number) Number of required approvals.
 - `status_check_contexts` (List of String) Status check contexts that must pass.
 - `unprotected_file_patterns` (String) Patterns for unprotected files.
-
-### Read-Only
-
-- `id` (String) Computed ID of the branch protection (format: owner/repo/branch_name).
