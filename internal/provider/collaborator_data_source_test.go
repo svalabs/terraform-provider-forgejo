@@ -15,6 +15,27 @@ func TestAccCollaboratorDataSource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Read testing (non-existent repository)
+			{
+				Config: providerConfig + `
+data "forgejo_collaborator" "test" {
+	repository_id = -1
+	user          = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+			},
+			// Read testing (non-existent user)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name  = "test_repo"
+}
+data "forgejo_collaborator" "test" {
+	repository_id = forgejo_repository.test.id
+	user          = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Collaborator with user \"tfadmin\" repo \"test_repo\" and name \"tftest\" not"),
+			},
 			// Read testing
 			{
 				Config: providerConfig + `
@@ -34,8 +55,7 @@ resource "forgejo_collaborator" "test" {
 data "forgejo_collaborator" "test" {
 	repository_id = forgejo_repository.test.id
 	user          = forgejo_user.test.login
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_collaborator.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_collaborator.test", tfjsonpath.New("user"), knownvalue.StringExact("tftest")),

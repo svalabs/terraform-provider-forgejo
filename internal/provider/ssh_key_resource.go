@@ -206,6 +206,12 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 				data.User.String(),
 				err,
 			)
+		case 404:
+			msg = fmt.Sprintf(
+				"SSH key with user %s not found: %s",
+				data.User.String(),
+				err,
+			)
 		case 422:
 			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:

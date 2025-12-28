@@ -1,6 +1,7 @@
 package provider_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +15,16 @@ func TestAccOrganizationActionSecretResource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Create and Read testing (non-existent organization)
+			{
+				Config: providerConfig + `
+resource "forgejo_organization_action_secret" "test" {
+	organization = "non_existent"
+	name         = "my_secret"
+	data         = "my_secret_value"
+}`,
+				ExpectError: regexp.MustCompile("Organization with name \"non_existent\" not found"),
+			},
 			// Create and Read testing
 			{
 				Config: providerConfig + `
@@ -24,8 +35,7 @@ resource "forgejo_organization_action_secret" "test" {
 	organization = forgejo_organization.test.name
 	name         = "my_secret"
 	data         = "my_secret_value"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_secret")),
@@ -43,8 +53,7 @@ resource "forgejo_organization_action_secret" "test" {
 	organization = forgejo_organization.test.name
 	name         = "my_new_secret"
 	data         = "my_secret_value"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),
@@ -62,8 +71,7 @@ resource "forgejo_organization_action_secret" "test" {
 	organization = forgejo_organization.test.name
 	name         = "my_new_secret"
 	data         = "my_new_secret_value"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),

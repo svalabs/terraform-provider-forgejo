@@ -15,6 +15,14 @@ func TestAccUserDataSource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Read testing (non-existent resource)
+			{
+				Config: providerConfig + `
+data "forgejo_user" "test" {
+	login = "non_existent"
+}`,
+				ExpectError: regexp.MustCompile("User with name \"non_existent\" not found"),
+			},
 			// Read testing
 			{
 				Config: providerConfig + `

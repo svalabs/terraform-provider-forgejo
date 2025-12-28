@@ -20,6 +20,20 @@ func TestAccDeployKeyResource(t *testing.T) {
 			},
 		},
 		Steps: []resource.TestStep{
+			// Create and Read testing (non-existent repository)
+			{
+				Config: providerConfig + `
+resource "tls_private_key" "test" {
+	algorithm = "ED25519"
+}
+resource "forgejo_deploy_key" "test" {
+	repository_id = -1
+	key           = trimspace(tls_private_key.test.public_key_openssh)
+	title         = "tftest"
+	read_only     = false
+}`,
+				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+			},
 			// Create and Read testing
 			{
 				Config: providerConfig + `
@@ -34,8 +48,7 @@ resource "forgejo_deploy_key" "test" {
 	key           = trimspace(tls_private_key.test.public_key_openssh)
 	title         = "tftest"
 	read_only     = false
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -61,8 +74,7 @@ resource "forgejo_deploy_key" "test" {
 	key           = trimspace(tls_private_key.test.public_key_openssh)
 	title         = "tftest"
 	read_only     = true
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -88,8 +100,7 @@ resource "forgejo_deploy_key" "test" {
 	key           = trimspace(tls_private_key.test.public_key_openssh)
 	title         = "tftest1"
 	read_only     = false
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),

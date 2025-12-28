@@ -15,6 +15,14 @@ func TestAccOrganizationDataSource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Read testing (non-existent resource)
+			{
+				Config: providerConfig + `
+data "forgejo_organization" "test" {
+	name = "non_existent"
+}`,
+				ExpectError: regexp.MustCompile("Organization with name \"non_existent\" not found"),
+			},
 			// Read testing
 			{
 				Config: providerConfig + `

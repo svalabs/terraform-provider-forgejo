@@ -1,6 +1,7 @@
 package provider_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +15,16 @@ func TestAccRepositoryActionSecretResource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Create and Read testing (non-existent repository)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository_action_secret" "test" {
+	repository_id = -1
+	name          = "my_secret"
+	data          = "my_secret_value"
+}`,
+				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+			},
 			// Create and Read testing
 			{
 				Config: providerConfig + `
@@ -24,8 +35,7 @@ resource "forgejo_repository_action_secret" "test" {
 	repository_id = forgejo_repository.test.id
 	name          = "my_secret"
 	data          = "my_secret_value"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_action_secret.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_secret")),
@@ -43,8 +53,7 @@ resource "forgejo_repository_action_secret" "test" {
 	repository_id = forgejo_repository.test.id
 	name          = "my_new_secret"
 	data          = "my_secret_value"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_action_secret.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),
@@ -62,8 +71,7 @@ resource "forgejo_repository_action_secret" "test" {
 	repository_id = forgejo_repository.test.id
 	name          = "my_new_secret"
 	data          = "my_new_secret_value"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_action_secret.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),

@@ -1,6 +1,7 @@
 package provider_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,13 +15,21 @@ func TestAccRepositoryResource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Create and Read testing (non-existent user)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	owner = "non_existent"
+	name  = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Neither organization nor user with name \"non_existent\" exists"),
+			},
 			// Create and Read testing (personal repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
 	name = "tftest"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -100,8 +109,7 @@ resource "forgejo_organization" "owner" {
 resource "forgejo_repository" "test" {
 	owner = forgejo_organization.owner.name
 	name  = "tftest"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -177,8 +185,7 @@ resource "forgejo_user" "owner" {
 resource "forgejo_repository" "test" {
 	owner = forgejo_user.owner.login
 	name  = "tftest"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -261,8 +268,7 @@ resource "forgejo_repository" "test" {
 	has_issues        = false
 	has_pull_requests = false
 	has_wiki          = false
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -360,8 +366,7 @@ resource "forgejo_repository" "test" {
 	ignore_whitespace_conflicts = true
 
 	has_wiki = true
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(false)),
@@ -474,8 +479,7 @@ resource "forgejo_repository" "test" {
 	external_wiki = {
 		external_wiki_url = "https://some.wiki"
 	}
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(false)),
@@ -589,8 +593,7 @@ resource "forgejo_repository" "test" {
 	external_wiki = {
 		external_wiki_url = "https://another.wiki"
 	}
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -670,8 +673,7 @@ resource "forgejo_user" "owner" {
 resource "forgejo_repository" "test" {
 	owner = forgejo_user.owner.login
 	name  = "tftest"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -743,8 +745,7 @@ resource "forgejo_repository" "test" {
 	name       = "tftest"
 	clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
 	mirror     = false
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -818,8 +819,7 @@ resource "forgejo_repository" "test" {
 	mirror      = false
 	archived    = true
 	description = "Purely for testing..."
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -891,8 +891,7 @@ resource "forgejo_repository" "test" {
 	name       = "tftest"
 	clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
 	mirror     = true
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -966,8 +965,7 @@ resource "forgejo_repository" "test" {
 	mirror          = true
 	mirror_interval = "12h0m0s"
 	description     = "Purely for testing..."
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1044,8 +1042,7 @@ resource "forgejo_repository" "test" {
 	lfs             = true
 	milestones      = true
 	labels          = true
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1117,8 +1114,7 @@ resource "forgejo_repository" "test" {
 	name            = "tftest-mirror-develop"
 	clone_addr      = "https://github.com/acch/test-non-default-branch"
 	mirror          = true
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1193,8 +1189,7 @@ resource "forgejo_repository" "test" {
 	mirror          = true
 	mirror_interval = "12h0m0s"
 	description     = "Purely for testing..."
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1270,8 +1265,7 @@ resource "forgejo_repository" "test" {
 	license      = "MIT"
 	readme       = "Default"
 	trust_model  = "collaborator"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),

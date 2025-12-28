@@ -20,6 +20,24 @@ func TestAccSSHKeyDataSource(t *testing.T) {
 			},
 		},
 		Steps: []resource.TestStep{
+			// Read testing (non-existent user)
+			{
+				Config: providerConfig + `
+data "forgejo_ssh_key" "test" {
+	user  = "non_existent"
+	title = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("SSH keys for user \"non_existent\" not found"),
+			},
+			// Read testing (non-existent resource)
+			{
+				Config: providerConfig + `
+data "forgejo_ssh_key" "test" {
+	user  = "tfadmin"
+	title = "non_existent"
+}`,
+				ExpectError: regexp.MustCompile("SSH key with user \"tfadmin\" and title \"non_existent\" not found"),
+			},
 			// Read testing
 			{
 				Config: providerConfig + `

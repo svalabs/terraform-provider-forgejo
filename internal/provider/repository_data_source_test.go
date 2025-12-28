@@ -1,6 +1,7 @@
 package provider_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +15,28 @@ func TestAccRepositoryDataSource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Read testing (non-existent user)
+			{
+				Config: providerConfig + `
+data "forgejo_repository" "test" {
+	owner = {
+		login = "non_existent"
+	}
+	name = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Repository with owner \"non_existent\" and name \"tftest\" not found"),
+			},
+			// Read testing (non-existent resource)
+			{
+				Config: providerConfig + `
+data "forgejo_repository" "test" {
+	owner = {
+		login = "tfadmin"
+	}
+	name = "non_existent"
+}`,
+				ExpectError: regexp.MustCompile("Repository with owner \"tfadmin\" and name \"non_existent\" not found"),
+			},
 			// Read testing (personal repo)
 			{
 				Config: providerConfig + `

@@ -20,6 +20,27 @@ func TestAccDeployKeyDataSource(t *testing.T) {
 			},
 		},
 		Steps: []resource.TestStep{
+			// Read testing (non-existent repository)
+			{
+				Config: providerConfig + `
+data "forgejo_deploy_key" "test" {
+	repository_id = -1
+	title         = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+			},
+			// Read testing (non-existent resource)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo"
+}
+data "forgejo_deploy_key" "test" {
+	repository_id = forgejo_repository.test.id
+	title         = "non_existent"
+}`,
+				ExpectError: regexp.MustCompile("Deploy key with user \"tfadmin\" repo \"test_repo\" and title \"non_existent\" not"),
+			},
 			// Read testing
 			{
 				Config: providerConfig + `

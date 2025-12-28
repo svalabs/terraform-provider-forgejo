@@ -20,6 +20,19 @@ func TestAccSSHKeyResource(t *testing.T) {
 			},
 		},
 		Steps: []resource.TestStep{
+			// Create and Read testing (non-existent user)
+			{
+				Config: providerConfig + `
+resource "tls_private_key" "test" {
+	algorithm = "ED25519"
+}
+resource "forgejo_ssh_key" "test" {
+	user  = "non_existent"
+	key   = trimspace(tls_private_key.test.public_key_openssh)
+	title = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("SSH key with user \"non_existent\" not found"),
+			},
 			// Create and Read testing
 			{
 				Config: providerConfig + `
@@ -30,8 +43,7 @@ resource "forgejo_ssh_key" "test" {
 	user  = "tfadmin"
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -54,8 +66,7 @@ resource "forgejo_ssh_key" "test" {
 	user  = "tfadmin"
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest1"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -83,8 +94,7 @@ resource "forgejo_ssh_key" "test" {
 	user  = forgejo_user.test.login
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
