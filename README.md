@@ -170,6 +170,18 @@ resource "forgejo_repository" "example" {
 
 Refer to the `examples/` directory for more usage examples.
 
+### Importing Existing Resources
+
+Some resources support import into Terraform state.
+Importing is useful for bringing existing, manually created resources under Terraform management.
+Each resource defines its own import identifier, which uniquely identifies the resource to be imported:
+
+| Resource             | Import Identifier                  |
+| -------------------- | ---------------------------------- |
+| `forgejo_repository` | `<<<repo_owner>>>/<<<repo_name>>>` |
+
+Refer to the `examples/` directory for more import examples.
+
 ## Preventing Accidental Destruction
 
 Once repositories contain important data, you need to protect them against accidental destruction.
