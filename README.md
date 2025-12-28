@@ -20,6 +20,7 @@ Resources:
 - `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
+- `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
 Data Sources:
@@ -28,6 +29,7 @@ Data Sources:
 - `forgejo_deploy_key` ([documentation](docs/data-sources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
+- `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))
 - `forgejo_user` ([documentation](docs/data-sources/user.md))
 
 ## Using the Provider

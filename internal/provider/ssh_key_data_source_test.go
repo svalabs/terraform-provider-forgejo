@@ -23,9 +23,17 @@ func TestAccSSHKeyDataSource(t *testing.T) {
 			// Read testing
 			{
 				Config: providerConfig + `
+resource "tls_private_key" "test" {
+	algorithm = "ED25519"
+}
+resource "forgejo_ssh_key" "test" {
+	user  = "tfadmin"
+	key   = trimspace(tls_private_key.test.public_key_openssh)
+	title = "tftest"
+}
 data "forgejo_ssh_key" "test" {
 	user  = "tfadmin"
-	title = "test_key"
+	title = forgejo_ssh_key.test.title
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
@@ -33,7 +41,7 @@ data "forgejo_ssh_key" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("key"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("read_only"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("title"), knownvalue.StringExact("test_key")),
+					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/user/keys/[0-9]+$"))),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact("tfadmin")),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("key_type"), knownvalue.StringExact("user")),

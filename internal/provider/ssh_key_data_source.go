@@ -186,11 +186,18 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 		var msg string
 		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"SSH key with user %s and id %d forbidden: %s",
+				data.User.String(),
+				data.KeyID.ValueInt64(),
+				err,
+			)
 		case 404:
 			msg = fmt.Sprintf(
 				"SSH key with user %s and id %d not found: %s",
 				data.User.String(),
-				keys[idx].ID,
+				data.KeyID.ValueInt64(),
 				err,
 			)
 		default:
