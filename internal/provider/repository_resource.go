@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"regexp"
 	"strings"
 
@@ -1542,12 +1541,17 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
+// ImportState reads an existing resource and adds it to Terraform state on success.
 func (r *repositoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	un(trace(ctx, "Import repository resource"))
+	defer un(trace(ctx, "Import repository resource"))
 
+	var state repositoryResourceModel
+
+	// Parse import identifier
 	cmp := strings.Split(req.ID, "/")
 	if len(cmp) != 2 {
-		resp.Diagnostics.AddError(req.ID, "must be in format owner/repository")
+		resp.Diagnostics.AddError(req.ID, "Import ID must be in format 'owner/name'")
+
 		return
 	}
 	owner, repositoryName := cmp[0], cmp[1]
@@ -1557,51 +1561,72 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 		"name":  repositoryName,
 	})
 
-	// Use Forgejo client to import existing repository
-	repository, response, err := r.client.GetRepo(owner, repositoryName)
+	// Use Forgejo client to get repository by owner and name
+	rep, res, err := r.client.GetRepo(owner, repositoryName)
 	if err != nil {
-		if response == nil {
-			resp.Diagnostics.AddError(req.ID, fmt.Sprintf("Unexpected error during import of repository (%s/%s): %s", owner, repositoryName, err))
+		if res == nil {
+			resp.Diagnostics.AddError(
+				req.ID,
+				fmt.Sprintf(
+					"Unexpected error during import of repository (%s/%s): %s",
+					owner,
+					repositoryName,
+					err,
+				),
+			)
+
 			return
 		}
 
 		tflog.Error(ctx, "Error", map[string]any{
-			"status": response.Status,
+			"status": res.Status,
 		})
 
 		var msg string
-		switch response.StatusCode {
-		case http.StatusNotFound:
+		switch res.StatusCode {
+		case 404:
 			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
+				"Repository with owner '%s' and name '%s' not found: %s",
 				owner,
 				repositoryName,
-				err.Error(),
+				err,
 			)
 		default:
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
-		resp.Diagnostics.AddError("Unable to import repository", msg)
+		resp.Diagnostics.AddError("Unable to get repository by name", msg)
 
 		return
 	}
-	if response.StatusCode != http.StatusOK {
-		resp.Diagnostics.AddError(req.ID, fmt.Sprintf("Unexpected status code from api importing repository (%s/%s): %d", owner, repositoryName, response.StatusCode))
+
+	if res.StatusCode != 200 {
+		resp.Diagnostics.AddError(
+			req.ID,
+			fmt.Sprintf(
+				"Unexpected status code from API during import of repository (%s/%s): %d",
+				owner,
+				repositoryName,
+				res.StatusCode,
+			),
+		)
+
 		return
 	}
 
-	var state repositoryResourceModel
-	state.from(repository)
-	diags := state.permissionsFrom(ctx, repository.Permissions)
-	diags.Append(state.internalTrackerFrom(ctx, repository.InternalTracker)...)
-	diags.Append(state.externalTrackerFrom(ctx, repository.ExternalTracker)...)
-	diags.Append(state.externalWikiFrom(ctx, repository.ExternalWiki)...)
-	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+	// Map response body to model
+	state.from(rep)
+	diags := state.permissionsFrom(ctx, rep.Permissions)
+	diags.Append(state.internalTrackerFrom(ctx, rep.InternalTracker)...)
+	diags.Append(state.externalTrackerFrom(ctx, rep.ExternalTracker)...)
+	diags.Append(state.externalWikiFrom(ctx, rep.ExternalWiki)...)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
 
 // NewRepositoryResource is a helper function to simplify the provider implementation.
