@@ -22,15 +22,12 @@ resource "forgejo_repository" "test" {
 	name = "test_repo_branch_protection"
 }
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name = "main"
-	repo        = forgejo_repository.test.name
-	owner       = forgejo_repository.test.owner
+	branch_name   = "main"
+	repository_id = forgejo_repository.test.id
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("repo"), knownvalue.StringExact("test_repo_branch_protection")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
 				},
 			},
 			// ImportState testing
@@ -48,15 +45,12 @@ resource "forgejo_repository" "test" {
 	name = "test_repo_branch_protection"
 }
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name = "develop"
-	repo        = forgejo_repository.test.name
-	owner       = forgejo_repository.test.owner
+	branch_name   = "develop"
+	repository_id = forgejo_repository.test.id
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("develop")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("repo"), knownvalue.StringExact("test_repo_branch_protection")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("owner"), knownvalue.NotNull()),
 				},
 			},
 		},
@@ -79,15 +73,12 @@ resource "forgejo_repository" "test" {
 	name  = "test_repo_branch_protection"
 }
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name = "main"
-	repo        = forgejo_repository.test.name
-	owner       = forgejo_repository.test.owner
+	branch_name    = "main"
+	repository_id  = forgejo_repository.test.id
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("repo"), knownvalue.StringExact("test_repo_branch_protection")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("owner"), knownvalue.StringExact("test_org_branch_protection")),
 				},
 			},
 		},
@@ -112,15 +103,12 @@ resource "forgejo_repository" "test" {
 	name  = "test_repo_branch_protection"
 }
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name = "main"
-	repo        = forgejo_repository.test.name
-	owner       = forgejo_repository.test.owner
+	branch_name		= "main"
+	repository_id	= forgejo_repository.test.id
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("repo"), knownvalue.StringExact("test_repo_branch_protection")),
-					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("owner"), knownvalue.StringExact("test_user_branch_protection")),
 				},
 			},
 		},
@@ -138,9 +126,8 @@ resource "forgejo_repository" "test" {
 	name = "test_repo_branch_protection"
 }
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name                      = "main"
-	repo                              = forgejo_repository.test.name
-	owner                             = forgejo_repository.test.owner
+	branch_name                       = "main"
+	repository_id      				  = forgejo_repository.test.id
 	enable_push                       = true
 	enable_push_whitelist             = true
 	push_whitelist_usernames          = ["tfadmin"]
@@ -173,9 +160,8 @@ resource "forgejo_repository" "test" {
 	name = "test_repo_branch_protection"
 }
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name = "release/*"
-	repo        = forgejo_repository.test.name
-	owner       = forgejo_repository.test.owner
+	branch_name 	     = "release/*"
+	repository_id        = forgejo_repository.test.id
 }
 `,
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -194,12 +180,11 @@ func TestAccRepositoryBranchProtectionResource_InvalidRepo(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name = "main"
-	repo        = "nonexistent_repo"
-	owner       = "tfadmin"
+	branch_name   = "main"
+	repository_id = 123
 }
 `,
-				ExpectError: regexp.MustCompile("Repository not found|404"),
+				ExpectError: regexp.MustCompile("Error: Unable to fetch repository details"),
 			},
 		},
 	})

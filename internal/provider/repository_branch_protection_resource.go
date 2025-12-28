@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,8 +31,7 @@ type repositoryBranchProtectionResource struct {
 // repositoryBranchProtectionResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#CreateBranchProtectionOption
 type repositoryBranchProtectionResourceModel struct {
-	Owner                         types.String `tfsdk:"owner"`
-	Repo                          types.String `tfsdk:"repo"`
+	RepositoryId                  types.Int64  `tfsdk:"repository_id"`
 	BranchName                    types.String `tfsdk:"branch_name"`
 	EnablePush                    types.Bool   `tfsdk:"enable_push"`
 	EnablePushWhitelist           types.Bool   `tfsdk:"enable_push_whitelist"`
@@ -68,18 +68,11 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 	resp.Schema = schema.Schema{
 		Description: "Forgejo repository branch protection resource.",
 		Attributes: map[string]schema.Attribute{
-			"owner": schema.StringAttribute{
-				Description: "Owner of the repository.",
+			"repository_id": schema.Int64Attribute{
+				Description: "The ID of the repository.",
 				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"repo": schema.StringAttribute{
-				Description: "Name of the repository.",
-				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
 				},
 			},
 			"branch_name": schema.StringAttribute{
@@ -237,10 +230,20 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 		return
 	}
 
+	repositoryID := data.RepositoryId.ValueInt64()
+
+	repo, diags := r.fetchRepository(repositoryID)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Create repository branch protection", map[string]any{
-		"owner":       data.Owner.ValueString(),
-		"repo":        data.Repo.ValueString(),
-		"branch_name": data.BranchName.ValueString(),
+		"repository_id":    repositoryID,
+		"repository_name":  repo.Name,
+		"repository_owner": repo.Owner.UserName,
+		"branch_name":      data.BranchName.ValueString(),
 	})
 
 	// Convert model to API request
@@ -257,8 +260,8 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 
 	// Create branch protection
 	protection, res, err := r.client.CreateBranchProtection(
-		data.Owner.ValueString(),
-		data.Repo.ValueString(),
+		repo.Owner.UserName,
+		repo.Name,
 		opts,
 	)
 	if err != nil {
@@ -310,10 +313,26 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 		return
 	}
 
+	repositoryID := data.RepositoryId.ValueInt64()
+
+	repo, diags := r.fetchRepository(repositoryID)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Info(ctx, "Read repository branch protection", map[string]any{
+		"repository_id":    repositoryID,
+		"repository_name":  repo.Name,
+		"repository_owner": repo.Owner.UserName,
+		"branch_name":      data.BranchName.ValueString(),
+	})
+
 	// Get branch protection
 	protection, res, err := r.client.GetBranchProtection(
-		data.Owner.ValueString(),
-		data.Repo.ValueString(),
+		repo.Owner.UserName,
+		repo.Name,
 		data.BranchName.ValueString(),
 	)
 	if err != nil {
@@ -359,10 +378,20 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 		return
 	}
 
+	repositoryID := data.RepositoryId.ValueInt64()
+
+	repo, diags := r.fetchRepository(repositoryID)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Update repository branch protection", map[string]any{
-		"owner":       data.Owner.ValueString(),
-		"repo":        data.Repo.ValueString(),
-		"branch_name": data.BranchName.ValueString(),
+		"repository_id":    repositoryID,
+		"repository_name":  repo.Name,
+		"repository_owner": repo.Owner.UserName,
+		"branch_name":      data.BranchName.ValueString(),
 	})
 
 	// Convert model to API request
@@ -379,8 +408,8 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 
 	// Update branch protection
 	protection, res, err := r.client.EditBranchProtection(
-		data.Owner.ValueString(),
-		data.Repo.ValueString(),
+		repo.Owner.UserName,
+		repo.Name,
 		data.BranchName.ValueString(),
 		opts,
 	)
@@ -431,16 +460,26 @@ func (r *repositoryBranchProtectionResource) Delete(ctx context.Context, req res
 		return
 	}
 
+	repositoryID := data.RepositoryId.ValueInt64()
+
+	repo, diags := r.fetchRepository(repositoryID)
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Delete repository branch protection", map[string]any{
-		"owner":       data.Owner.ValueString(),
-		"repo":        data.Repo.ValueString(),
-		"branch_name": data.BranchName.ValueString(),
+		"repository_id":    repositoryID,
+		"repository_name":  repo.Name,
+		"repository_owner": repo.Owner.UserName,
+		"branch_name":      data.BranchName.ValueString(),
 	})
 
 	// Delete branch protection
 	res, err := r.client.DeleteBranchProtection(
-		data.Owner.ValueString(),
-		data.Repo.ValueString(),
+		repo.Owner.UserName,
+		repo.Name,
 		data.BranchName.ValueString(),
 	)
 	if err != nil {
@@ -497,11 +536,16 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 		return
 	}
 
+	repository, _, err := r.client.GetRepo(owner, repo)
+	if err != nil {
+		response.Diagnostics.AddError("Unable to get repo", err.Error())
+		return
+	}
+
 	// Map response to model
 	var data repositoryBranchProtectionResourceModel
-	data.Owner = types.StringValue(owner)
-	data.Repo = types.StringValue(repo)
 	data.BranchName = types.StringValue(branchName)
+	data.RepositoryId = types.Int64Value(repository.ID)
 
 	diags := r.mapResponseToModel(protection, &data)
 	response.Diagnostics.Append(diags...)
@@ -620,6 +664,21 @@ func (r *repositoryBranchProtectionResource) modelToCreateOption(ctx context.Con
 	}
 
 	return opts
+}
+
+func (r *repositoryBranchProtectionResource) fetchRepository(id int64) (*forgejo.Repository, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	repo, _, err := r.client.GetRepoByID(id)
+	if err != nil {
+		diags.AddError(
+			"Unable to fetch repository details",
+			fmt.Sprintf("Could not retrieve repository with ID %d: %s", id, err),
+		)
+		return nil, diags
+	}
+
+	return repo, nil
 }
 
 // Helper function to convert model to EditBranchProtectionOption.

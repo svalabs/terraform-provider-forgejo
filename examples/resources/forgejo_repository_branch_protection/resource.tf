@@ -35,7 +35,6 @@ resource "forgejo_repository" "test_repo" {
 
 # Branch protection on the main branch
 resource "forgejo_repository_branch_protection" "main" {
-  branch_name = "main"
-  repo        = forgejo_repository.test_repo.name
-  owner       = forgejo_repository.test_repo.owner
+  branch_name   = "main"
+  repository_id = forgejo_repository.test_repo.id
 }

@@ -50,9 +50,8 @@ resource "forgejo_repository" "test_repo" {
 
 # Branch protection on the main branch
 resource "forgejo_repository_branch_protection" "main" {
-  branch_name = "main"
-  repo        = forgejo_repository.test_repo.name
-  owner       = forgejo_repository.test_repo.owner
+  branch_name   = "main"
+  repository_id = forgejo_repository.test_repo.id
 }
 ```
 
@@ -62,8 +61,7 @@ resource "forgejo_repository_branch_protection" "main" {
 ### Required
 
 - `branch_name` (String) Name of the branch to protect (can be a pattern).
-- `owner` (String) Owner of the repository.
-- `repo` (String) Name of the repository.
+- `repository_id` (Number) The ID of the repository.
 
 ### Optional
 
