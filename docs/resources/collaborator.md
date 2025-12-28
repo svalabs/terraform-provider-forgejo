@@ -3,12 +3,12 @@
 page_title: "forgejo_collaborator Resource - forgejo"
 subcategory: ""
 description: |-
-  Forgejo collaborator resource.
+  Forgejo repository collaborator resource.
 ---
 
 # forgejo_collaborator (Resource)
 
-Forgejo collaborator resource.
+Forgejo repository collaborator resource.
 
 ## Example Usage
 

@@ -3,12 +3,12 @@
 page_title: "forgejo_ssh_key Data Source - forgejo"
 subcategory: ""
 description: |-
-  Forgejo SSH key data source.
+  Forgejo user SSH key data source.
 ---
 
 # forgejo_ssh_key (Data Source)
 
-Forgejo SSH key data source.
+Forgejo user SSH key data source.
 
 ## Example Usage
 

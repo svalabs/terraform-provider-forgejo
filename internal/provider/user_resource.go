@@ -65,6 +65,7 @@ type userResourceModel struct {
 	MaxRepoCreation         types.Int64  `tfsdk:"max_repo_creation"`
 }
 
+// from is a helper function to load an API struct into Terraform data model.
 func (m *userResourceModel) from(u *forgejo.User) {
 	m.ID = types.Int64Value(u.ID)
 	m.Name = types.StringValue(u.UserName)
@@ -89,6 +90,8 @@ func (m *userResourceModel) from(u *forgejo.User) {
 	m.FollowingCount = types.Int64Value(int64(u.FollowingCount))
 	m.StarredRepoCount = types.Int64Value(int64(u.StarredRepoCount))
 }
+
+// to is a helper function to save Terraform data model into an API struct.
 func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) {
 	if o == nil {
 		o = new(forgejo.EditUserOption)
@@ -131,7 +134,8 @@ func (r *userResource) Metadata(_ context.Context, req resource.MetadataRequest,
 // Schema defines the schema for the resource.
 func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo user resource.",
+		Description: `Forgejo user resource.
+Note: Managing users requires administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{

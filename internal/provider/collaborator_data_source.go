@@ -38,7 +38,7 @@ func (d *collaboratorDataSource) Metadata(_ context.Context, req datasource.Meta
 // Schema defines the schema for the data source.
 func (d *collaboratorDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo collaborator data source.",
+		Description: "Forgejo repository collaborator data source.",
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{

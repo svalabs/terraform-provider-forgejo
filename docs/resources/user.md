@@ -4,11 +4,13 @@ page_title: "forgejo_user Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo user resource.
+  Note: Managing users requires administrative privileges!
 ---
 
 # forgejo_user (Resource)
 
 Forgejo user resource.
+Note: Managing users requires administrative privileges!
 
 ## Example Usage
 

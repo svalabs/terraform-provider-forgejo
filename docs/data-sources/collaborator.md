@@ -3,12 +3,12 @@
 page_title: "forgejo_collaborator Data Source - forgejo"
 subcategory: ""
 description: |-
-  Forgejo collaborator data source.
+  Forgejo repository collaborator data source.
 ---
 
 # forgejo_collaborator (Data Source)
 
-Forgejo collaborator data source.
+Forgejo repository collaborator data source.
 
 ## Example Usage
 

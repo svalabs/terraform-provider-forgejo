@@ -40,9 +40,12 @@ type organizationActionSecretResourceModel struct {
 	CreatedAt    types.String `tfsdk:"created_at"`
 }
 
+// from is a helper function to load an API struct into Terraform data model.
 func (m *organizationActionSecretResourceModel) from(s *forgejo.Secret) {
 	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
 }
+
+// to is a helper function to save Terraform data model into an API struct.
 func (m *organizationActionSecretResourceModel) to(o *forgejo.CreateSecretOption) {
 	if o == nil {
 		o = new(forgejo.CreateSecretOption)

@@ -44,6 +44,7 @@ type organizationResourceModel struct {
 	RepoAdminChangeTeamAccess types.Bool   `tfsdk:"repo_admin_change_team_access"`
 }
 
+// from is a helper function to load an API struct into Terraform data model.
 func (m *organizationResourceModel) from(o *forgejo.Organization) {
 	m.ID = types.Int64Value(o.ID)
 	m.Name = types.StringValue(o.UserName)
@@ -54,6 +55,8 @@ func (m *organizationResourceModel) from(o *forgejo.Organization) {
 	m.Location = types.StringValue(o.Location)
 	m.Visibility = types.StringValue(o.Visibility)
 }
+
+// to is a helper function to save Terraform data model into an API struct.
 func (m *organizationResourceModel) to(o *forgejo.EditOrgOption) {
 	if o == nil {
 		o = new(forgejo.EditOrgOption)

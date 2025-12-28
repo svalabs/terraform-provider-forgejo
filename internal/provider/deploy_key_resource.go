@@ -40,6 +40,7 @@ type deployKeyResourceModel struct {
 	ReadOnly     types.Bool   `tfsdk:"read_only"`
 }
 
+// from is a helper function to load an API struct into Terraform data model.
 func (m *deployKeyResourceModel) from(k *forgejo.DeployKey) {
 	m.KeyID = types.Int64Value(k.ID)
 	m.Key = types.StringValue(k.Key)
@@ -58,7 +59,7 @@ func (r *deployKeyResource) Metadata(_ context.Context, req resource.MetadataReq
 // Schema defines the schema for the resource.
 func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo deploy key resource.",
+		Description: "Forgejo repository deploy key resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{

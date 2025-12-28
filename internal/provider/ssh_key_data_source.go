@@ -46,7 +46,7 @@ func (d *sshKeyDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 // Schema defines the schema for the data source.
 func (d *sshKeyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo SSH key data source.",
+		Description: "Forgejo user SSH key data source.",
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{

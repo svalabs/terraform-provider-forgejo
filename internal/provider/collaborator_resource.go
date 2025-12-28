@@ -35,6 +35,7 @@ type collaboratorResourceModel struct {
 	Permission   types.String `tfsdk:"permission"`
 }
 
+// to is a helper function to save Terraform data model into an API struct.
 func (m *collaboratorResourceModel) to(o *forgejo.AddCollaboratorOption) {
 	if o == nil {
 		o = new(forgejo.AddCollaboratorOption)
@@ -52,7 +53,7 @@ func (r *collaboratorResource) Metadata(_ context.Context, req resource.Metadata
 // Schema defines the schema for the resource.
 func (r *collaboratorResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo collaborator resource.",
+		Description: "Forgejo repository collaborator resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{

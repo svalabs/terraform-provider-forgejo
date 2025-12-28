@@ -41,6 +41,7 @@ type sshKeyResourceModel struct {
 	KeyType     types.String `tfsdk:"key_type"`
 }
 
+// from is a helper function to load an API struct into Terraform data model.
 func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
 	m.KeyID = types.Int64Value(k.ID)
 	m.Key = types.StringValue(k.Key)
@@ -60,7 +61,8 @@ func (r *sshKeyResource) Metadata(_ context.Context, req resource.MetadataReques
 // Schema defines the schema for the resource.
 func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo SSH key resource.",
+		Description: `Forgejo user SSH key resource.
+Note: Managing user SSH keys requires administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{

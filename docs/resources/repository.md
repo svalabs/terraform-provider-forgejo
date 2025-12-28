@@ -4,11 +4,13 @@ page_title: "forgejo_repository Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo repository resource.
+  Note: Managing user repositories requires administrative privileges!
 ---
 
 # forgejo_repository (Resource)
 
 Forgejo repository resource.
+Note: Managing user repositories requires administrative privileges!
 
 ## Example Usage
 
