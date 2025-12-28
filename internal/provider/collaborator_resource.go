@@ -35,6 +35,15 @@ type collaboratorResourceModel struct {
 	Permission   types.String `tfsdk:"permission"`
 }
 
+func (m *collaboratorResourceModel) to(o *forgejo.AddCollaboratorOption) {
+	if o == nil {
+		o = new(forgejo.AddCollaboratorOption)
+	}
+
+	am := forgejo.AccessMode(m.Permission.ValueString())
+	o.Permission = &am
+}
+
 // Metadata returns the resource type name.
 func (r *collaboratorResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_collaborator"
@@ -152,8 +161,8 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 	})
 
 	// Generate API request body from plan
-	am := forgejo.AccessMode(data.Permission.ValueString())
-	opts := forgejo.AddCollaboratorOption{Permission: &am}
+	opts := forgejo.AddCollaboratorOption{}
+	data.to(&opts)
 
 	// Validate API request body
 	err = opts.Validate()
@@ -359,8 +368,8 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 	})
 
 	// Generate API request body from plan
-	am := forgejo.AccessMode(data.Permission.ValueString())
-	opts := forgejo.AddCollaboratorOption{Permission: &am}
+	opts := forgejo.AddCollaboratorOption{}
+	data.to(&opts)
 
 	// Validate API request body
 	err = opts.Validate()

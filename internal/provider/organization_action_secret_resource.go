@@ -40,6 +40,18 @@ type organizationActionSecretResourceModel struct {
 	CreatedAt    types.String `tfsdk:"created_at"`
 }
 
+func (m *organizationActionSecretResourceModel) from(s *forgejo.Secret) {
+	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
+}
+func (m *organizationActionSecretResourceModel) to(o *forgejo.CreateSecretOption) {
+	if o == nil {
+		o = new(forgejo.CreateSecretOption)
+	}
+
+	o.Name = m.Name.ValueString()
+	o.Data = m.Data.ValueString()
+}
+
 // Metadata returns the resource type name.
 func (r *organizationActionSecretResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_organization_action_secret"
@@ -127,10 +139,8 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 	})
 
 	// Generate API request body from plan
-	opts := forgejo.CreateSecretOption{
-		Name: data.Name.ValueString(),
-		Data: data.Data.ValueString(),
-	}
+	opts := forgejo.CreateSecretOption{}
+	data.to(&opts)
 
 	// Validate API request body
 	err := opts.Validate()
@@ -175,7 +185,8 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	data.CreatedAt = types.StringValue(secret.Created.Format(time.RFC3339))
+	// Map response body to model
+	data.from(secret)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -202,7 +213,8 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	data.CreatedAt = types.StringValue(secret.Created.Format(time.RFC3339))
+	// Map response body to model
+	data.from(secret)
 
 	/*
 	 * The secret exists, so we re-save the state from the prior state data.
@@ -233,10 +245,8 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 	})
 
 	// Generate API request body from plan
-	opts := forgejo.CreateSecretOption{
-		Name: data.Name.ValueString(),
-		Data: data.Data.ValueString(),
-	}
+	opts := forgejo.CreateSecretOption{}
+	data.to(&opts)
 
 	// Validate API request body
 	err := opts.Validate()
