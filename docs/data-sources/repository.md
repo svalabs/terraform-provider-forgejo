@@ -27,18 +27,14 @@ provider "forgejo" {
 
 # Existing user repository
 data "forgejo_repository" "user" {
-  owner = {
-    login = "test_user"
-  }
-  name = "user_test_repo"
+  owner = "test_user"
+  name  = "user_test_repo"
 }
 
 # Existing organization repository
 data "forgejo_repository" "org" {
-  owner = {
-    login = "test_org"
-  }
-  name = "org_test_repo"
+  owner = "test_org"
+  name  = "org_test_repo"
 }
 ```
 
@@ -48,7 +44,7 @@ data "forgejo_repository" "org" {
 ### Required
 
 - `name` (String) Name of the repository.
-- `owner` (Attributes) Owner of the repository. (see [below for nested schema](#nestedatt--owner))
+- `owner` (String) Owner of the repository (user or organization).
 
 ### Read-Only
 
@@ -98,21 +94,6 @@ data "forgejo_repository" "org" {
 - `updated_at` (String) Time at which the repository was updated.
 - `watchers_count` (Number) Number of watchers of the repository.
 - `website` (String) Website of the repository.
-
-<a id="nestedatt--owner"></a>
-### Nested Schema for `owner`
-
-Required:
-
-- `login` (String) Name of the user.
-
-Read-Only:
-
-- `email` (String) Email address of the user.
-- `full_name` (String) Full name of the user.
-- `id` (Number) Numeric identifier of the user.
-- `login_name` (String) Login name of the user.
-
 
 <a id="nestedatt--external_tracker"></a>
 ### Nested Schema for `external_tracker`

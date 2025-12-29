@@ -110,7 +110,11 @@ type repositoryResourceModel struct {
 // from is a helper function to load an API struct into Terraform data model.
 func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.ID = types.Int64Value(r.ID)
-	m.Owner = types.StringValue(r.Owner.UserName)
+
+	if r.Owner != nil {
+		m.Owner = types.StringValue(r.Owner.UserName)
+	}
+
 	m.Name = types.StringValue(r.Name)
 	m.FullName = types.StringValue(r.FullName)
 	m.Description = types.StringValue(r.Description)
@@ -458,7 +462,7 @@ Note: Managing user repositories requires administrative privileges!`,
 				},
 			},
 			"owner": schema.StringAttribute{
-				Description: "Owner of the repository.",
+				Description: "Owner of the repository (user or organization).",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{

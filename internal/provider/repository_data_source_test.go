@@ -19,10 +19,8 @@ func TestAccRepositoryDataSource(t *testing.T) {
 			{
 				Config: providerConfig + `
 data "forgejo_repository" "test" {
-	owner = {
-		login = "non_existent"
-	}
-	name = "tftest"
+	owner = "non_existent"
+	name  = "tftest"
 }`,
 				ExpectError: regexp.MustCompile("Repository with owner \"non_existent\" and name \"tftest\" not found"),
 			},
@@ -30,10 +28,8 @@ data "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 data "forgejo_repository" "test" {
-	owner = {
-		login = "tfadmin"
-	}
-	name = "non_existent"
+	owner = "tfadmin"
+	name  = "non_existent"
 }`,
 				ExpectError: regexp.MustCompile("Repository with owner \"tfadmin\" and name \"non_existent\" not found"),
 			},
@@ -44,10 +40,8 @@ resource "forgejo_repository" "test" {
 	name = "tftest"
 }
 data "forgejo_repository" "test" {
-	owner = {
-		login = "tfadmin"
-	}
-	name = forgejo_repository.test.name
+	owner = "tfadmin"
+	name  = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
@@ -86,7 +80,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
@@ -111,10 +105,8 @@ resource "forgejo_repository" "test" {
 	name = "tftest"
 }
 data "forgejo_repository" "test" {
-	owner = {
-		login = forgejo_organization.owner.name
-	}
-	name = forgejo_repository.test.name
+	owner = forgejo_organization.owner.name
+	name  = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
@@ -153,7 +145,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("test_org")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
@@ -176,10 +168,8 @@ resource "forgejo_repository" "test" {
 	mirror     = false
 }
 data "forgejo_repository" "test" {
-	owner = {
-		login = "tfadmin"
-	}
-	name = forgejo_repository.test.name
+	owner = "tfadmin"
+	name  = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
@@ -218,7 +208,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
@@ -241,10 +231,8 @@ resource "forgejo_repository" "test" {
 	mirror     = true
 }
 data "forgejo_repository" "test" {
-	owner = {
-		login = "tfadmin"
-	}
-	name = forgejo_repository.test.name
+	owner = "tfadmin"
+	name  = forgejo_repository.test.name
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
@@ -283,7 +271,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
@@ -29,7 +28,7 @@ type repositoryDataSource struct {
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Repository
 type repositoryDataSourceModel struct {
 	ID                        types.Int64  `tfsdk:"id"`
-	Owner                     types.Object `tfsdk:"owner"`
+	Owner                     types.String `tfsdk:"owner"`
 	Name                      types.String `tfsdk:"name"`
 	FullName                  types.String `tfsdk:"full_name"`
 	Description               types.String `tfsdk:"description"`
@@ -76,25 +75,6 @@ type repositoryDataSourceModel struct {
 	MirrorInterval            types.String `tfsdk:"mirror_interval"`
 	MirrorUpdated             types.String `tfsdk:"mirror_updated"`
 	DefaultMergeStyle         types.String `tfsdk:"default_merge_style"`
-}
-
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#User
-type repositoryDataSourceUser struct {
-	ID        types.Int64  `tfsdk:"id"`
-	UserName  types.String `tfsdk:"login"`
-	LoginName types.String `tfsdk:"login_name"`
-	FullName  types.String `tfsdk:"full_name"`
-	Email     types.String `tfsdk:"email"`
-}
-
-func (m repositoryDataSourceUser) attributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"id":         types.Int64Type,
-		"login":      types.StringType,
-		"login_name": types.StringType,
-		"full_name":  types.StringType,
-		"email":      types.StringType,
-	}
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Permission
@@ -168,30 +148,8 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Description: "Numeric identifier of the repository.",
 				Computed:    true,
 			},
-			"owner": schema.SingleNestedAttribute{
-				Attributes: map[string]schema.Attribute{
-					"id": schema.Int64Attribute{
-						Description: "Numeric identifier of the user.",
-						Computed:    true,
-					},
-					"login": schema.StringAttribute{
-						Description: "Name of the user.",
-						Required:    true,
-					},
-					"login_name": schema.StringAttribute{
-						Description: "Login name of the user.",
-						Computed:    true,
-					},
-					"full_name": schema.StringAttribute{
-						Description: "Full name of the user.",
-						Computed:    true,
-					},
-					"email": schema.StringAttribute{
-						Description: "Email address of the user.",
-						Computed:    true,
-					},
-				},
-				Description: "Owner of the repository.",
+			"owner": schema.StringAttribute{
+				Description: "Owner of the repository (user or organization).",
 				Required:    true,
 			},
 			"name": schema.StringAttribute{
@@ -457,10 +415,7 @@ func (d *repositoryDataSource) Configure(_ context.Context, req datasource.Confi
 func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	defer un(trace(ctx, "Read repository data source"))
 
-	var (
-		data  repositoryDataSourceModel
-		owner repositoryDataSourceUser
-	)
+	var data repositoryDataSourceModel
 
 	// Read Terraform configuration data into model
 	diags := req.Config.Get(ctx, &data)
@@ -469,21 +424,14 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	// Read repository owner into model
-	diags = data.Owner.As(ctx, &owner, basetypes.ObjectAsOptions{})
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	tflog.Info(ctx, "Get repository by name", map[string]any{
-		"owner": owner.UserName.ValueString(),
+		"owner": data.Owner.ValueString(),
 		"name":  data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to get repository by owner and name
 	rep, res, err := d.client.GetRepo(
-		owner.UserName.ValueString(),
+		data.Owner.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -496,7 +444,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		case 404:
 			msg = fmt.Sprintf(
 				"Repository with owner %s and name %s not found: %s",
-				owner.UserName.String(),
+				data.Owner.String(),
 				data.Name.String(),
 				err,
 			)
@@ -510,15 +458,22 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	// Map response body to model
 	data.ID = types.Int64Value(rep.ID)
+
+	if rep.Owner != nil {
+		data.Owner = types.StringValue(rep.Owner.UserName)
+	}
+
 	data.FullName = types.StringValue(rep.FullName)
 	data.Description = types.StringValue(rep.Description)
 	data.Empty = types.BoolValue(rep.Empty)
 	data.Private = types.BoolValue(rep.Private)
 	data.Fork = types.BoolValue(rep.Fork)
 	data.Template = types.BoolValue(rep.Template)
+
 	if rep.Parent != nil {
 		data.ParentID = types.Int64Value(rep.Parent.ID)
 	}
+
 	data.Mirror = types.BoolValue(rep.Mirror)
 	data.Size = types.Int64Value(int64(rep.Size))
 	data.HTMLURL = types.StringValue(rep.HTMLURL)
@@ -553,27 +508,6 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
 	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
 	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
-
-	// Repository owner
-	if rep.Owner != nil {
-		ownerElement := repositoryDataSourceUser{
-			ID:        types.Int64Value(rep.Owner.ID),
-			UserName:  types.StringValue(rep.Owner.UserName),
-			LoginName: types.StringValue(rep.Owner.LoginName),
-			FullName:  types.StringValue(rep.Owner.FullName),
-			Email:     types.StringValue(rep.Owner.Email),
-		}
-		ownerValue, diags := types.ObjectValueFrom(
-			ctx,
-			ownerElement.attributeTypes(),
-			ownerElement,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		data.Owner = ownerValue
-	}
 
 	// Repository permissions
 	if rep.Permissions != nil {

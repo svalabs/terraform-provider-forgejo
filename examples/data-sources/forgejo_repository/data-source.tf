@@ -12,16 +12,12 @@ provider "forgejo" {
 
 # Existing user repository
 data "forgejo_repository" "user" {
-  owner = {
-    login = "test_user"
-  }
-  name = "user_test_repo"
+  owner = "test_user"
+  name  = "user_test_repo"
 }
 
 # Existing organization repository
 data "forgejo_repository" "org" {
-  owner = {
-    login = "test_org"
-  }
-  name = "org_test_repo"
+  owner = "test_org"
+  name  = "org_test_repo"
 }

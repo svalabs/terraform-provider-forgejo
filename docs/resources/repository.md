@@ -204,7 +204,7 @@ import {
 - `milestones` (Boolean) Whether to migrate milestones. **Note**: This setting is only effective if `clone_addr` is set.
 - `mirror` (Boolean) Is the repository a mirror? **Note**: This setting is only effective if `clone_addr` is set.
 - `mirror_interval` (String) Mirror interval of the repository. **Note**: This setting is only effective if `mirror` is `true`.
-- `owner` (String) Owner of the repository.
+- `owner` (String) Owner of the repository (user or organization).
 - `private` (Boolean) Is the repository private?
 - `readme` (String) Readme of the repository to create.
 - `service` (String) Service to migrate from. **Note**: This setting is only effective if `clone_addr` is set.
