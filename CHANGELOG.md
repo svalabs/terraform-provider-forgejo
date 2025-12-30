@@ -1,3 +1,57 @@
+## 1.0.0 (December 30, 2025)
+
+BREAKING CHANGES:
+
+- `forgejo_repository`: Simplify data source schema for consistency.
+  Users upgrading to this version will need to update their configurations from:
+
+  ```terraform
+  data "forgejo_repository" "this" {
+    owner = {
+      login = "username"
+    }
+    ...
+  }
+  ```
+
+  to:
+
+  ```terraform
+  data "forgejo_repository" "this" {
+    owner = "username"
+    ...
+  }
+  ```
+
+FEATURES:
+
+- **New Resource**: `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
+- **New Data Source**: `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))
+- `forgejo_repository`: Implement resource import
+
+ENHANCEMENTS:
+
+- Extract helper functions to reduce code duplication
+- Include Terraform 1.14 and exclude Terraform 1.11 from acceptance tests
+- Increase test coverage
+
+DEPENDENCIES:
+
+- Update to Go 1.24.10
+- Bump actions/checkout from 5.0.0 to 6.0.1
+- Bump actions/setup-go from 6.0.0 to 6.1.0
+- Bump dessant/lock-threads from 5.0.1 to 6.0.0
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.16.1 to 1.17.0
+- Bump github.com/hashicorp/terraform-plugin-log from 0.9.0 to 0.10.0
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.13.3 to 1.14.0
+- Bump golang.org/x/crypto from 0.36.0 to 0.45.0 in /tools
+- Bump golang.org/x/crypto from 0.41.0 to 0.45.0
+- Bump golangci/golangci-lint-action from 8.0.0 to 9.2.0
+
+NEW CONTRIBUTORS 🎉:
+
+- [@cmdaltent](https://github.com/cmdaltent) — [#83: Implement repository resource import](https://github.com/svalabs/terraform-provider-forgejo/pull/83)
+
 ## 0.5.4 (October 26, 2025)
 
 BUG FIXES:
