@@ -4,7 +4,7 @@
 ![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
 
 This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu](https://opentofu.org/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
-The project is based on the awsome [Forgejo SDK for Go](https://codeberg.org/mvdkleijn/forgejo-sdk) by [Martijn van der Kleijn](https://vanderkleijn.net/).
+The project is based on the awesome [Forgejo SDK for Go](https://codeberg.org/mvdkleijn/forgejo-sdk) by [Martijn van der Kleijn](https://vanderkleijn.net/).
 Thanks, Martijn, for the heavy lifting!
 
 ## Contents
@@ -20,6 +20,7 @@ Resources:
 - `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
+- `forgejo_repository_branch_protection` ([documentation](docs/resources/repository_branch_protection.md))
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
@@ -146,6 +147,15 @@ resource "forgejo_repository" "mirror" {
   clone_addr      = "https://github.com/svalabs/terraform-provider-forgejo"
   mirror          = true
   mirror_interval = "12h0m0s"
+}
+```
+
+A **branch protection** can be created like so:
+
+```terraform
+resource "forgejo_repository_branch_protection" "main" {
+  branch_name   = "main"
+  repository_id = forgejo_repository.test_repo.name
 }
 ```
 
