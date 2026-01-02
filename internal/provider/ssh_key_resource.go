@@ -53,6 +53,16 @@ func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
 	m.KeyType = types.StringValue(k.KeyType)
 }
 
+// to is a helper function to save Terraform data model into an API struct.
+func (m *sshKeyResourceModel) to(o *forgejo.CreateKeyOption) {
+	if o == nil {
+		o = new(forgejo.CreateKeyOption)
+	}
+
+	o.Title = m.Title.ValueString()
+	o.Key = m.Key.ValueString()
+}
+
 // Metadata returns the resource type name.
 func (r *sshKeyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_ssh_key"
@@ -175,10 +185,9 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	})
 
 	// Generate API request body from plan
-	opts := forgejo.CreateKeyOption{
-		Title: data.Title.ValueString(),
-		Key:   data.Key.ValueString(),
-	}
+	// TODO: extract this into to() helper function
+	opts := forgejo.CreateKeyOption{}
+	data.to(&opts)
 
 	// Validate API request body
 	// err := opts.Validate()

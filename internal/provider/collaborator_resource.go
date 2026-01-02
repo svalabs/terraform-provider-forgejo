@@ -35,6 +35,11 @@ type collaboratorResourceModel struct {
 	Permission   types.String `tfsdk:"permission"`
 }
 
+// from is a helper function to populate Terraform data model from an API struct.
+func (m *collaboratorResourceModel) from(perms *forgejo.CollaboratorPermissionResult) {
+	m.Permission = types.StringValue(string(perms.Permission))
+}
+
 // to is a helper function to save Terraform data model into an API struct.
 func (m *collaboratorResourceModel) to(o *forgejo.AddCollaboratorOption) {
 	if o == nil {
@@ -308,7 +313,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// Map response body to model
-	data.Permission = types.StringValue(string(perms.Permission))
+	data.from(perms)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)

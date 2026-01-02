@@ -51,6 +51,17 @@ func (m *deployKeyResourceModel) from(k *forgejo.DeployKey) {
 	m.ReadOnly = types.BoolValue(k.ReadOnly)
 }
 
+// to is a helper function to save Terraform data model into an API struct.
+func (m *deployKeyResourceModel) to(o *forgejo.CreateKeyOption) {
+	if o == nil {
+		o = new(forgejo.CreateKeyOption)
+	}
+
+	o.Title = m.Title.ValueString()
+	o.Key = m.Key.ValueString()
+	o.ReadOnly = m.ReadOnly.ValueBool()
+}
+
 // Metadata returns the resource type name.
 func (r *deployKeyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_deploy_key"
@@ -197,11 +208,8 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 	})
 
 	// Generate API request body from plan
-	opts := forgejo.CreateKeyOption{
-		Title:    data.Title.ValueString(),
-		Key:      data.Key.ValueString(),
-		ReadOnly: data.ReadOnly.ValueBool(),
-	}
+	opts := forgejo.CreateKeyOption{}
+	data.to(&opts)
 
 	// Validate API request body
 	// err := opts.Validate()
