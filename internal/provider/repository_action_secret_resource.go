@@ -139,30 +139,10 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -181,7 +161,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 	data.to(&opts)
 
 	// Validate API request body
-	err = opts.Validate()
+	err := opts.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError("Input validation error", err.Error())
 
@@ -189,7 +169,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 	}
 
 	// Use Forgejo client to create new repository action secret
-	res, err = r.client.CreateRepoActionSecret(
+	res, err := r.client.CreateRepoActionSecret(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		opts,
@@ -254,30 +234,10 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -324,30 +284,10 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -366,7 +306,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 	data.to(&opts)
 
 	// Validate API request body
-	err = opts.Validate()
+	err := opts.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError("Input validation error", err.Error())
 
@@ -374,7 +314,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 	}
 
 	// Use Forgejo client to update repository action secret
-	res, err = r.client.CreateRepoActionSecret(
+	res, err := r.client.CreateRepoActionSecret(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		opts,
@@ -424,30 +364,10 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

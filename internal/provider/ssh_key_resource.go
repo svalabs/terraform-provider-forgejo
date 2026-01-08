@@ -185,7 +185,6 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	})
 
 	// Generate API request body from plan
-	// TODO: extract this into to() helper function
 	opts := forgejo.CreateKeyOption{}
 	data.to(&opts)
 

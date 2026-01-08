@@ -1319,30 +1319,10 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.ID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.ID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.ID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.ID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -1637,4 +1617,38 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 // NewRepositoryResource is a helper function to simplify the provider implementation.
 func NewRepositoryResource() resource.Resource {
 	return &repositoryResource{}
+}
+
+// getRepositoryByID fetches a repository by its ID and handles errors consistently.
+func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.Repository, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Get repository by id", map[string]any{
+		"id": id,
+	})
+
+	// Use Forgejo client to get repository by id
+	rep, res, err := client.GetRepoByID(id)
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		var msg string
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with id %d not found: %s",
+				id,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+		diags.AddError("Unable to get repository by id", msg)
+
+		return nil, diags
+	}
+
+	return rep, diags
 }

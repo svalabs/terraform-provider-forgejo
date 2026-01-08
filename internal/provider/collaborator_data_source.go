@@ -96,30 +96,10 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := d.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, d.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

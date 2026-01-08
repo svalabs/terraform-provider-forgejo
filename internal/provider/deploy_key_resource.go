@@ -169,30 +169,10 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -273,30 +253,10 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -372,30 +332,10 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -409,7 +349,7 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 	})
 
 	// Use Forgejo client to delete existing deploy key
-	res, err = r.client.DeleteDeployKey(
+	res, err := r.client.DeleteDeployKey(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		data.KeyID.ValueInt64(),

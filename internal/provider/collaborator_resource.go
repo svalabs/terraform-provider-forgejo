@@ -129,30 +129,10 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -171,7 +151,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 	data.to(&opts)
 
 	// Validate API request body
-	err = opts.Validate()
+	err := opts.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError("Input validation error", err.Error())
 
@@ -179,7 +159,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Use Forgejo client to add new collaborator
-	res, err = r.client.AddCollaborator(
+	res, err := r.client.AddCollaborator(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		data.User.ValueString(),
@@ -239,30 +219,10 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -336,30 +296,10 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -378,14 +318,14 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 	data.to(&opts)
 
 	// Validate API request body
-	err = opts.Validate()
+	err := opts.Validate()
 	if err != nil {
 		resp.Diagnostics.AddError("Input validation error", err.Error())
 
 		return
 	}
 
-	res, err = r.client.AddCollaborator(
+	res, err := r.client.AddCollaborator(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		data.User.ValueString(),
@@ -445,30 +385,10 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
-		"id": data.RepositoryID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get repository by id
-	rep, res, err := r.client.GetRepoByID(data.RepositoryID.ValueInt64())
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				data.RepositoryID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by id", msg)
-
+	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -482,7 +402,7 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 	})
 
 	// Use Forgejo client to delete existing collaborator
-	res, err = r.client.DeleteCollaborator(
+	res, err := r.client.DeleteCollaborator(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		data.User.ValueString(),
