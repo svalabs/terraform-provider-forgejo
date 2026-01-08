@@ -130,7 +130,11 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -220,7 +224,11 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -297,7 +305,11 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -386,7 +398,11 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

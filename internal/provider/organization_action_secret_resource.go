@@ -184,7 +184,7 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 	// Use Forgejo client to get organization action secret
 	secret, diags := r.getSecret(ctx, &data)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -212,7 +212,7 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 	// Use Forgejo client to get organization action secret
 	secret, diags := r.getSecret(ctx, &data)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -321,7 +321,15 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 	)
 }
 
+// NewOrganizationActionSecretResource is a helper function to simplify the provider implementation.
+func NewOrganizationActionSecretResource() resource.Resource {
+	return &organizationActionSecretResource{}
+}
+
+// getSecret returns the secret with the given name from the organization.
 func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *organizationActionSecretResourceModel) (*forgejo.Secret, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	tflog.Info(ctx, "List organization action secrets", map[string]any{
 		"org":  data.Organization.ValueString(),
 		"name": data.Name.ValueString(),
@@ -337,7 +345,6 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 			"status": res.Status,
 		})
 
-		var diags diag.Diagnostics
 		var msg string
 		switch res.StatusCode {
 		case 404:
@@ -359,7 +366,6 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 		return strings.EqualFold(s.Name, data.Name.ValueString())
 	})
 	if idx == -1 {
-		var diags diag.Diagnostics
 		diags.AddError(
 			"Unable to get organization action secret by name",
 			fmt.Sprintf(
@@ -372,10 +378,5 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 		return nil, diags
 	}
 
-	return secrets[idx], nil
-}
-
-// NewOrganizationActionSecretResource is a helper function to simplify the provider implementation.
-func NewOrganizationActionSecretResource() resource.Resource {
-	return &organizationActionSecretResource{}
+	return secrets[idx], diags
 }

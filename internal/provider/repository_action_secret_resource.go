@@ -140,7 +140,11 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -206,7 +210,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 		&data,
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -235,7 +239,11 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -252,7 +260,7 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 		&data,
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -285,7 +293,11 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -365,7 +377,11 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -392,7 +408,15 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 	)
 }
 
+// NewRepositoryActionSecretResource is a helper function to simplify the provider implementation.
+func NewRepositoryActionSecretResource() resource.Resource {
+	return &repositoryActionSecretResource{}
+}
+
+// getSecret returns the secret with the given name from the repository.
 func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, repoName string, data *repositoryActionSecretResourceModel) (*forgejo.Secret, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	tflog.Info(ctx, "List repository action secrets", map[string]any{
 		"user": owner,
 		"repo": repoName,
@@ -410,7 +434,6 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 			"status": res.Status,
 		})
 
-		var diags diag.Diagnostics
 		var msg string
 		switch res.StatusCode {
 		case 404:
@@ -433,7 +456,6 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 		return strings.EqualFold(s.Name, data.Name.ValueString())
 	})
 	if idx == -1 {
-		var diags diag.Diagnostics
 		diags.AddError(
 			"Unable to get repository action secret by name",
 			fmt.Sprintf(
@@ -447,10 +469,5 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 		return nil, diags
 	}
 
-	return secrets[idx], nil
-}
-
-// NewRepositoryActionSecretResource is a helper function to simplify the provider implementation.
-func NewRepositoryActionSecretResource() resource.Resource {
-	return &repositoryActionSecretResource{}
+	return secrets[idx], diags
 }

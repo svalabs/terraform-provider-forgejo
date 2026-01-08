@@ -97,7 +97,11 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, d.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		d.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

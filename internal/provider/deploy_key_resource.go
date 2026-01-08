@@ -170,7 +170,11 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -254,7 +258,11 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -333,7 +341,11 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	// Use Forgejo client to get repository by id
-	rep, diags := getRepositoryByID(ctx, r.client, data.RepositoryID.ValueInt64())
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
