@@ -172,51 +172,15 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	tflog.Info(ctx, "Get SSH key by id", map[string]any{
-		"user":   data.User.ValueString(),
-		"key_id": keys[idx].ID,
-	})
-
-	// Use Forgejo client to get SSH key
-	key, res, err := d.client.GetPublicKey(keys[idx].ID)
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"SSH key with user %s and id %d forbidden: %s",
-				data.User.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"SSH key with user %s and id %d not found: %s",
-				data.User.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get SSH key by id", msg)
-
-		return
-	}
-
 	// Map response body to model
-	data.KeyID = types.Int64Value(key.ID)
-	data.Key = types.StringValue(key.Key)
-	data.URL = types.StringValue(key.URL)
-	data.Title = types.StringValue(key.Title)
-	data.Fingerprint = types.StringValue(key.Fingerprint)
-	data.Created = types.StringValue(key.Created.String())
-	data.ReadOnly = types.BoolValue(key.ReadOnly)
-	data.KeyType = types.StringValue(key.KeyType)
+	data.KeyID = types.Int64Value(keys[idx].ID)
+	data.Key = types.StringValue(keys[idx].Key)
+	data.URL = types.StringValue(keys[idx].URL)
+	data.Title = types.StringValue(keys[idx].Title)
+	data.Fingerprint = types.StringValue(keys[idx].Fingerprint)
+	data.Created = types.StringValue(keys[idx].Created.String())
+	data.ReadOnly = types.BoolValue(keys[idx].ReadOnly)
+	data.KeyType = types.StringValue(keys[idx].KeyType)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
