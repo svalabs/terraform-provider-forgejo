@@ -159,22 +159,26 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 		opts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 400:
-			msg = fmt.Sprintf("Generic error: %s", err)
-		case 404:
-			msg = fmt.Sprintf(
-				"Organization with name %s not found: %s",
-				data.Organization.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 400:
+				msg = fmt.Sprintf("Generic error: %s", err)
+			case 404:
+				msg = fmt.Sprintf(
+					"Organization with name %s not found: %s",
+					data.Organization.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to create organization action secret", msg)
 
@@ -265,22 +269,26 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 		opts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 400:
-			msg = fmt.Sprintf("Generic error: %s", err)
-		case 404:
-			msg = fmt.Sprintf(
-				"Organization with name %s not found: %s",
-				data.Organization.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 400:
+				msg = fmt.Sprintf("Generic error: %s", err)
+			case 404:
+				msg = fmt.Sprintf(
+					"Organization with name %s not found: %s",
+					data.Organization.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to update organization action secret", msg)
 
@@ -341,20 +349,24 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 		forgejo.ListOrgActionSecretOption{},
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Organization action secrets with org %s not found: %s",
-				data.Organization.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Organization action secrets with org %s not found: %s",
+					data.Organization.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		diags.AddError("Unable to list organization action secrets", msg)
 
@@ -367,7 +379,7 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 	})
 	if idx == -1 {
 		diags.AddError(
-			"Unable to get organization action secret by name",
+			"Unable to find organization action secret by name",
 			fmt.Sprintf(
 				"Organization action secret with org %s and name %s not found.",
 				data.Organization.String(),

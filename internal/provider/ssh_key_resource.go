@@ -202,28 +202,32 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 		opts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"SSH key with user %s forbidden: %s",
-				data.User.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"SSH key with user %s not found: %s",
-				data.User.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"SSH key with user %s forbidden: %s",
+					data.User.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"SSH key with user %s not found: %s",
+					data.User.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to create SSH key", msg)
 
@@ -251,7 +255,7 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	tflog.Info(ctx, "Get SSH key by id", map[string]any{
+	tflog.Info(ctx, "Read SSH key", map[string]any{
 		"user":   data.User.ValueString(),
 		"key_id": data.KeyID.ValueInt64(),
 	})
@@ -259,30 +263,34 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Use Forgejo client to get SSH key
 	key, res, err := r.client.GetPublicKey(data.KeyID.ValueInt64())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"SSH key with user %s and id %d forbidden: %s",
-				data.User.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"SSH key with user %s and id %d not found: %s",
-				data.User.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"SSH key with user %s and id %d forbidden: %s",
+					data.User.String(),
+					data.KeyID.ValueInt64(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"SSH key with user %s and id %d not found: %s",
+					data.User.String(),
+					data.KeyID.ValueInt64(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		resp.Diagnostics.AddError("Unable to get SSH key by id", msg)
+		resp.Diagnostics.AddError("Unable to read SSH key", msg)
 
 		return
 	}
@@ -329,28 +337,32 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		int(data.KeyID.ValueInt64()),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"SSH key with user %s and id %d forbidden: %s",
-				data.User.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"SSH key with user %s and id %d not found: %s",
-				data.User.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"SSH key with user %s and id %d forbidden: %s",
+					data.User.String(),
+					data.KeyID.ValueInt64(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"SSH key with user %s and id %d not found: %s",
+					data.User.String(),
+					data.KeyID.ValueInt64(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to delete SSH key", msg)
 

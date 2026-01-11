@@ -149,21 +149,25 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		forgejo.ListDeployKeysOptions{},
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Deploy keys with user %s and repo %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Deploy keys with user %s and repo %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to list deploy keys", msg)
 
@@ -176,7 +180,7 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	})
 	if idx == -1 {
 		resp.Diagnostics.AddError(
-			"Unable to get deploy key by title",
+			"Unable to find deploy key by title",
 			fmt.Sprintf(
 				"Deploy key with user %s repo %s and title %s not found.",
 				repo.Owner.String(),

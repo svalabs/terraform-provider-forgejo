@@ -1167,37 +1167,41 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s forbidden: %s",
-				data.Owner.String(),
-				data.Name.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository owner with name %s not found: %s",
-				data.Owner.String(),
-				err,
-			)
-		case 409:
-			msg = fmt.Sprintf(
-				"Repository with name %s already exists: %s",
-				data.Name.String(),
-				err,
-			)
-		case 413:
-			msg = fmt.Sprintf("Quota exceeded: %s", err)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Repository with owner %s and name %s forbidden: %s",
+					data.Owner.String(),
+					data.Name.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository owner with name %s not found: %s",
+					data.Owner.String(),
+					err,
+				)
+			case 409:
+				msg = fmt.Sprintf(
+					"Repository with name %s already exists: %s",
+					data.Name.String(),
+					err,
+				)
+			case 413:
+				msg = fmt.Sprintf("Quota exceeded: %s", err)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to create repository", msg)
 
@@ -1260,30 +1264,34 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		eopts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Repository with owner '%s' and name %s forbidden: %s",
-				rep.Owner.UserName,
-				data.Name.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner '%s' and name %s not found: %s",
-				rep.Owner.UserName,
-				data.Name.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name %s forbidden: %s",
+					rep.Owner.UserName,
+					data.Name.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name %s not found: %s",
+					rep.Owner.UserName,
+					data.Name.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository", msg)
 
@@ -1431,30 +1439,34 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		opts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Repository with owner '%s' and name %s forbidden: %s",
-				owner,
-				state.Name.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner '%s' and name %s not found: %s",
-				owner,
-				state.Name.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name %s forbidden: %s",
+					owner,
+					state.Name.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name %s not found: %s",
+					owner,
+					state.Name.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository", msg)
 
@@ -1501,28 +1513,32 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 		data.Name.ValueString(),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s forbidden: %s",
-				data.Owner.String(),
-				data.Name.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				data.Owner.String(),
-				data.Name.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Repository with owner %s and name %s forbidden: %s",
+					data.Owner.String(),
+					data.Name.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner %s and name %s not found: %s",
+					data.Owner.String(),
+					data.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to delete repository", msg)
 
@@ -1545,7 +1561,7 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	}
 	owner, repositoryName := cmp[0], cmp[1]
 
-	tflog.Info(ctx, "Get repository by name", map[string]any{
+	tflog.Info(ctx, "Read repository", map[string]any{
 		"owner": owner,
 		"name":  repositoryName,
 	})
@@ -1553,51 +1569,27 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	// Use Forgejo client to get repository by owner and name
 	rep, res, err := r.client.GetRepo(owner, repositoryName)
 	if err != nil {
+		var msg string
 		if res == nil {
-			resp.Diagnostics.AddError(
-				req.ID,
-				fmt.Sprintf(
-					"Unexpected error during import of repository (%s/%s): %s",
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' not found: %s",
 					owner,
 					repositoryName,
 					err,
-				),
-			)
-
-			return
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner '%s' and name '%s' not found: %s",
-				owner,
-				repositoryName,
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-		resp.Diagnostics.AddError("Unable to get repository by name", msg)
-
-		return
-	}
-
-	if res.StatusCode != 200 {
-		resp.Diagnostics.AddError(
-			req.ID,
-			fmt.Sprintf(
-				"Unexpected status code from API during import of repository (%s/%s): %d",
-				owner,
-				repositoryName,
-				res.StatusCode,
-			),
-		)
+		resp.Diagnostics.AddError("Unable to read repository", msg)
 
 		return
 	}
@@ -1627,29 +1619,33 @@ func NewRepositoryResource() resource.Resource {
 func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.Repository, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	tflog.Info(ctx, "Get repository by id", map[string]any{
+	tflog.Info(ctx, "Read repository", map[string]any{
 		"id": id,
 	})
 
 	// Use Forgejo client to get repository by id
 	rep, res, err := client.GetRepoByID(id)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
-				id,
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with id %d not found: %s",
+					id,
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		diags.AddError("Unable to get repository by id", msg)
+		diags.AddError("Unable to read repository", msg)
 
 		return nil, diags
 	}

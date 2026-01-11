@@ -189,29 +189,33 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	tflog.Info(ctx, "Get user by name", map[string]any{
+	tflog.Info(ctx, "Read user", map[string]any{
 		"name": data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to get user by name
 	usr, res, err := d.client.GetUserInfo(data.Name.ValueString())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"User with name %s not found: %s",
-				data.Name.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"User with name %s not found: %s",
+					data.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		resp.Diagnostics.AddError("Unable to get user by name", msg)
+		resp.Diagnostics.AddError("Unable to read user", msg)
 
 		return
 	}

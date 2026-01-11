@@ -143,7 +143,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "Add collaborator to repository", map[string]any{
+	tflog.Info(ctx, "Create collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),
 		"repo":         repo.Name.ValueString(),
 		"collaborator": data.User.ValueString(),
@@ -170,34 +170,38 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 		opts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s forbidden: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		resp.Diagnostics.AddError("Unable to add collaborator", msg)
+		resp.Diagnostics.AddError("Unable to create collaborator", msg)
 
 		return
 	}
@@ -237,7 +241,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "Get collaborator permission", map[string]any{
+	tflog.Info(ctx, "Read collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),
 		"repo":         repo.Name.ValueString(),
 		"collaborator": data.User.ValueString(),
@@ -250,32 +254,36 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 		data.User.ValueString(),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s forbidden: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		resp.Diagnostics.AddError("Unable to get collaborator permission", msg)
+		resp.Diagnostics.AddError("Unable to read collaborator", msg)
 
 		return
 	}
@@ -337,6 +345,7 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Use Forgejo client to update existing collaborator
 	res, err := r.client.AddCollaborator(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
@@ -344,32 +353,36 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 		opts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s forbidden: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to update collaborator", msg)
 
@@ -411,7 +424,7 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "Delete collaborator from repository", map[string]any{
+	tflog.Info(ctx, "Delete collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),
 		"repo":         repo.Name.ValueString(),
 		"collaborator": data.User.ValueString(),
@@ -424,24 +437,28 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 		data.User.ValueString(),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to delete collaborator", msg)
 

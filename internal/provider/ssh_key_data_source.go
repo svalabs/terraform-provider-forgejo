@@ -135,20 +135,24 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		forgejo.ListPublicKeysOptions{},
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"SSH keys for user %s not found: %s",
-				data.User.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"SSH keys for user %s not found: %s",
+					data.User.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to list SSH keys", msg)
 
@@ -161,7 +165,7 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	})
 	if idx == -1 {
 		resp.Diagnostics.AddError(
-			"Unable to get SSH key by title",
+			"Unable to find SSH key by title",
 			fmt.Sprintf(
 				"SSH key with user %s and title %s not found.",
 				data.User.String(),
