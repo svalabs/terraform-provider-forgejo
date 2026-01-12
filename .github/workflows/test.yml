@@ -94,43 +94,13 @@ jobs:
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - name: Set up Docker Compose
-        uses: docker/setup-compose-action@v1
-
-      - name: Start Forgejo server
-        working-directory: ./docker
-        run: |
-          docker compose pull --quiet
-          docker compose up --no-start
-          docker run --rm -v docker_forgejo:/data alpine mkdir -p /data/gitea/conf
-          docker compose cp app.ini forgejo:/data/gitea/conf/app.ini
-          docker compose start
-      - name: Wait for 30 seconds
-        run: sleep 30s
-      - name: Create admin user
-        working-directory: ./docker
-        run: >
-          docker compose exec -u git forgejo
-          /usr/local/bin/forgejo admin user create
-          --username tfadmin
-          --email tfadmin@localhost
-          --random-password
-          --admin
-      - name: Generate admin token
-        id: admin
-        working-directory: ./docker
-        run: >
-          echo "token=$(docker compose exec -u git forgejo
-          /usr/local/bin/forgejo admin user generate-access-token
-          --username tfadmin
-          --scopes write:organization,write:repository,write:user,write:admin
-          --raw)" >> "$GITHUB_OUTPUT"
 
       - name: Download Go modules
         run: go mod download
       - name: Run acceptance tests
         env:
           TF_ACC: "1"
-          FORGEJO_API_TOKEN: ${{ steps.admin.outputs.token }}
+          # Set to the latest version supported by Github Actions
+          DOCKER_API_VERSION: "1.48"
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
