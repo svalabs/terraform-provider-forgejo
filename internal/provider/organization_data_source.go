@@ -169,3 +169,37 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 func NewOrganizationDataSource() datasource.DataSource {
 	return &organizationDataSource{}
 }
+
+// Use Forgejo client to get an organization by ID.
+func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID types.Int64) (organization *forgejo.Organization, err error) {
+	tflog.Info(ctx, "Getting organization by its ID", map[string]any{
+		"organization_id": orgID,
+	})
+
+	organizations, resp, err := client.AdminListOrgs(forgejo.AdminListOrgsOptions{})
+	if err != nil {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": resp.Status,
+		})
+
+		switch resp.StatusCode {
+		case 403:
+			err = fmt.Errorf(
+				"not allowed to list organizations: %s",
+				err,
+			)
+		default:
+			err = fmt.Errorf("unknown error: %s", err)
+		}
+		return nil, err
+	}
+
+	for _, potentialOrganization := range organizations {
+		if orgID.Equal(types.Int64Value(potentialOrganization.ID)) {
+			organization = potentialOrganization
+			break
+		}
+	}
+
+	return organization, nil
+}
