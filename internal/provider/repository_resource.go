@@ -106,6 +106,7 @@ type repositoryResourceModel struct {
 	Milestones                types.Bool   `tfsdk:"milestones"`
 	Labels                    types.Bool   `tfsdk:"labels"`
 	Service                   types.String `tfsdk:"service"`
+	ArchiveOnDestroy          types.Bool   `tfsdk:"archive_on_destroy"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -982,6 +983,12 @@ Note: Managing user repositories requires administrative privileges!`,
 					),
 				},
 			},
+			"archive_on_destroy": schema.BoolAttribute{
+				Description: "Archive the repo instead of delete?",
+				Computed:    true,
+				Optional:    true,
+				Default:     booldefault.StaticBool(false),
+			},
 		},
 	}
 }
@@ -1505,48 +1512,74 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	tflog.Info(ctx, "Delete repository", map[string]any{
-		"owner": data.Owner.ValueString(),
-		"name":  data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to delete existing repository
-	res, err := r.client.DeleteRepo(
-		data.Owner.ValueString(),
-		data.Name.ValueString(),
+	var (
+		res *forgejo.Response
+		err error
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
 
-			switch res.StatusCode {
-			case 403:
-				msg = fmt.Sprintf(
-					"Repository with owner %s and name %s forbidden: %s",
-					data.Owner.String(),
-					data.Name.String(),
-					err,
-				)
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository with owner %s and name %s not found: %s",
-					data.Owner.String(),
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
+	if data.ArchiveOnDestroy.ValueBool() {
+		tflog.Info(ctx, "Archive repository", map[string]any{
+			"owner": data.Owner.ValueString(),
+			"name":  data.Name.ValueString(),
+		})
+
+		archive := true
+		opts := forgejo.EditRepoOption{
+			Archived: &archive,
 		}
-		resp.Diagnostics.AddError("Unable to delete repository", msg)
 
+		_, res, err = r.client.EditRepo(
+			data.Owner.ValueString(),
+			data.Name.ValueString(),
+			opts,
+		)
+	} else {
+		tflog.Info(ctx, "Delete repository", map[string]any{
+			"owner": data.Owner.ValueString(),
+			"name":  data.Name.ValueString(),
+		})
+
+		// Use Forgejo client to delete existing repository
+		res, err = r.client.DeleteRepo(
+			data.Owner.ValueString(),
+			data.Name.ValueString(),
+		)
+	}
+
+	if err == nil {
 		return
 	}
+
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s forbidden: %s",
+				data.Owner.String(),
+				data.Name.String(),
+				err,
+			)
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with owner %s and name %s not found: %s",
+				data.Owner.String(),
+				data.Name.String(),
+				err,
+			)
+		case 422:
+			msg = fmt.Sprintf("Input validation error: %s", err)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+	}
+	resp.Diagnostics.AddError("Unable to delete repository", msg)
 }
 
 // ImportState reads an existing resource and adds it to Terraform state on success.
