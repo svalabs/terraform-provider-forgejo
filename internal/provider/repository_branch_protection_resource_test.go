@@ -24,8 +24,7 @@ resource "forgejo_repository" "test" {
 resource "forgejo_repository_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -69,11 +68,10 @@ resource "forgejo_repository_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 
-	enable_push          = true
+	enable_push            = true
 	require_signed_commits = true
 	required_approvals     = 1
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(true)),
@@ -115,8 +113,7 @@ resource "forgejo_repository_branch_protection" "test" {
 
 	enable_status_check   = true
 	status_check_contexts = ["ci/on-submit"]
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("dev")),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -164,8 +161,7 @@ resource "forgejo_repository" "test" {
 resource "forgejo_repository_branch_protection" "test" {
 	branch_name    = "main"
 	repository_id  = forgejo_repository.test.id
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -215,8 +211,7 @@ resource "forgejo_repository" "test" {
 resource "forgejo_repository_branch_protection" "test" {
 	branch_name		= "main"
 	repository_id	= forgejo_repository.test.id
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -258,7 +253,7 @@ resource "forgejo_repository" "test" {
 }
 resource "forgejo_repository_branch_protection" "test" {
 	branch_name                       = "main"
-	repository_id      				  = forgejo_repository.test.id
+	repository_id                     = forgejo_repository.test.id
 	enable_push                       = true
 	enable_push_whitelist             = true
 	push_whitelist_usernames          = ["tfadmin"]
@@ -267,8 +262,7 @@ resource "forgejo_repository_branch_protection" "test" {
 	block_on_rejected_reviews         = true
 	block_on_official_review_requests = true
 	dismiss_stale_approvals           = true
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.ListSizeExact(1)),
@@ -309,10 +303,9 @@ resource "forgejo_repository" "test" {
 	name = "test_repo_branch_protection"
 }
 resource "forgejo_repository_branch_protection" "test" {
-	branch_name 	     = "release/*"
-	repository_id        = forgejo_repository.test.id
-}
-`,
+	branch_name   = "release/*"
+	repository_id = forgejo_repository.test.id
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("release/*")),
 					statecheck.ExpectKnownValue("forgejo_repository_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -352,9 +345,8 @@ func TestAccRepositoryBranchProtectionResource_InvalidRepo(t *testing.T) {
 resource "forgejo_repository_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = 123
-}
-`,
-				ExpectError: regexp.MustCompile("Error: Unable to get repository by id"),
+}`,
+				ExpectError: regexp.MustCompile("Error: Unable to read repository"),
 			},
 		},
 	})
@@ -375,9 +367,8 @@ resource "forgejo_repository" "test" {
 resource "forgejo_repository_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
-}
-`,
-				ExpectError: regexp.MustCompile("Error: Unable to create branch protection"),
+}`,
+				ExpectError: regexp.MustCompile("Error: Unable to create repository branch protection"),
 			},
 		},
 	})
