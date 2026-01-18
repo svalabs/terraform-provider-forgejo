@@ -14,13 +14,13 @@ It currently provides the following...
 
 Resources:
 
+- `forgejo_branch_protection` ([documentation](docs/resources/branch_protection.md))
 - `forgejo_collaborator` ([documentation](docs/resources/collaborator.md))
 - `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
-- `forgejo_branch_protection` ([documentation](docs/resources/branch_protection.md))
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
@@ -42,7 +42,7 @@ terraform {
   required_providers {
     forgejo = {
       source  = "svalabs/forgejo"
-      version = "~> 1.0.0"
+      version = "~> 1.1.0"
     }
   }
 }
