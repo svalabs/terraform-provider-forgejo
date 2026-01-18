@@ -20,19 +20,19 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &repositoryBranchProtectionResource{}
-	_ resource.ResourceWithConfigure   = &repositoryBranchProtectionResource{}
-	_ resource.ResourceWithImportState = &repositoryBranchProtectionResource{}
+	_ resource.Resource                = &branchProtectionResource{}
+	_ resource.ResourceWithConfigure   = &branchProtectionResource{}
+	_ resource.ResourceWithImportState = &branchProtectionResource{}
 )
 
-// repositoryBranchProtectionResource is the resource implementation.
-type repositoryBranchProtectionResource struct {
+// branchProtectionResource is the resource implementation.
+type branchProtectionResource struct {
 	client *forgejo.Client
 }
 
-// repositoryBranchProtectionResourceModel maps the resource schema data.
+// branchProtectionResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#CreateBranchProtectionOption
-type repositoryBranchProtectionResourceModel struct {
+type branchProtectionResourceModel struct {
 	RepositoryId                  types.Int64  `tfsdk:"repository_id"`
 	BranchName                    types.String `tfsdk:"branch_name"`
 	EnablePush                    types.Bool   `tfsdk:"enable_push"`
@@ -59,14 +59,14 @@ type repositoryBranchProtectionResourceModel struct {
 }
 
 // Metadata returns the resource type name.
-func (r *repositoryBranchProtectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_repository_branch_protection"
+func (r *branchProtectionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_branch_protection"
 }
 
 // Schema defines the schema for the resource.
-func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *branchProtectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo repository branch protection resource.",
+		Description: "Forgejo branch protection resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{
@@ -200,7 +200,7 @@ func (r *repositoryBranchProtectionResource) Schema(ctx context.Context, req res
 }
 
 // Configure adds the provider configured client to the resource.
-func (r *repositoryBranchProtectionResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *branchProtectionResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -223,10 +223,10 @@ func (r *repositoryBranchProtectionResource) Configure(_ context.Context, req re
 }
 
 // Create creates the resource and sets the initial Terraform state.
-func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	defer un(trace(ctx, "Create repository branch protection resource"))
+func (r *branchProtectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	defer un(trace(ctx, "Create branch protection resource"))
 
-	var data repositoryBranchProtectionResourceModel
+	var data branchProtectionResourceModel
 
 	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
@@ -249,7 +249,7 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 	// Generate API request body from plan
 	opts := r.modelToCreateOption(ctx, &data)
 
-	tflog.Info(ctx, "Create repository branch protection", map[string]any{
+	tflog.Info(ctx, "Create branch protection", map[string]any{
 		"repository_id":    data.RepositoryId.ValueInt64(),
 		"repository_name":  repo.Name,
 		"repository_owner": repo.Owner.UserName,
@@ -285,7 +285,7 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to create repository branch protection", msg)
+		resp.Diagnostics.AddError("Unable to create branch protection", msg)
 
 		return
 	}
@@ -303,10 +303,10 @@ func (r *repositoryBranchProtectionResource) Create(ctx context.Context, req res
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	defer un(trace(ctx, "Read repository branch protection resource"))
+func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	defer un(trace(ctx, "Read branch protection resource"))
 
-	var data repositoryBranchProtectionResourceModel
+	var data branchProtectionResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -326,7 +326,7 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 		return
 	}
 
-	tflog.Info(ctx, "Read repository branch protection", map[string]any{
+	tflog.Info(ctx, "Read branch protection", map[string]any{
 		"repository_id":    data.RepositoryId.ValueInt64(),
 		"repository_name":  repo.Name,
 		"repository_owner": repo.Owner.UserName,
@@ -359,7 +359,7 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to read repository branch protection", msg)
+		resp.Diagnostics.AddError("Unable to read branch protection", msg)
 
 		return
 	}
@@ -377,10 +377,10 @@ func (r *repositoryBranchProtectionResource) Read(ctx context.Context, req resou
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	defer un(trace(ctx, "Update repository branch protection resource"))
+func (r *branchProtectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	defer un(trace(ctx, "Update branch protection resource"))
 
-	var data repositoryBranchProtectionResourceModel
+	var data branchProtectionResourceModel
 
 	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
@@ -403,7 +403,7 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 	// Convert model to API request
 	opts := r.modelToEditOption(ctx, &data)
 
-	tflog.Info(ctx, "Update repository branch protection", map[string]any{
+	tflog.Info(ctx, "Update branch protection", map[string]any{
 		"repository_id":    data.RepositoryId.ValueInt64(),
 		"repository_name":  repo.Name,
 		"repository_owner": repo.Owner.UserName,
@@ -440,7 +440,7 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to update repository branch protection", msg)
+		resp.Diagnostics.AddError("Unable to update branch protection", msg)
 
 		return
 	}
@@ -458,10 +458,10 @@ func (r *repositoryBranchProtectionResource) Update(ctx context.Context, req res
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
-func (r *repositoryBranchProtectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	defer un(trace(ctx, "Delete repository branch protection resource"))
+func (r *branchProtectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	defer un(trace(ctx, "Delete branch protection resource"))
 
-	var data repositoryBranchProtectionResourceModel
+	var data branchProtectionResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -481,7 +481,7 @@ func (r *repositoryBranchProtectionResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	tflog.Info(ctx, "Delete repository branch protection", map[string]any{
+	tflog.Info(ctx, "Delete branch protection", map[string]any{
 		"repository_id":    data.RepositoryId.ValueInt64(),
 		"repository_name":  repo.Name,
 		"repository_owner": repo.Owner.UserName,
@@ -510,17 +510,17 @@ func (r *repositoryBranchProtectionResource) Delete(ctx context.Context, req res
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to delete repository branch protection", msg)
+		resp.Diagnostics.AddError("Unable to delete branch protection", msg)
 
 		return
 	}
 }
 
 // ImportState reads an existing resource and adds it to Terraform state on success.
-func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	defer un(trace(ctx, "Import repository branch protection resource"))
+func (r *branchProtectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	defer un(trace(ctx, "Import branch protection resource"))
 
-	var data repositoryBranchProtectionResourceModel
+	var data branchProtectionResourceModel
 
 	// Parse import identifier
 	parts := strings.Split(req.ID, "/")
@@ -531,14 +531,18 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 	}
 	owner, repo, branchName := parts[0], parts[1], parts[2]
 
-	tflog.Info(ctx, "Read repository branch protection", map[string]any{
+	tflog.Info(ctx, "Read branch protection", map[string]any{
 		"owner":       owner,
 		"repo":        repo,
 		"branch_name": branchName,
 	})
 
 	// Use Forgejo client to get branch protection
-	protection, res, err := r.client.GetBranchProtection(owner, repo, branchName)
+	protection, res, err := r.client.GetBranchProtection(
+		owner,
+		repo,
+		branchName,
+	)
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -561,10 +565,15 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		response.Diagnostics.AddError("Unable to read repository branch protection", msg)
+		response.Diagnostics.AddError("Unable to read branch protection", msg)
 
 		return
 	}
+
+	tflog.Info(ctx, "Read repository", map[string]any{
+		"owner": owner,
+		"repo":  repo,
+	})
 
 	// Use Forgejo client to get repository by owner and name
 	repository, res, err := r.client.GetRepo(owner, repo)
@@ -608,13 +617,13 @@ func (r *repositoryBranchProtectionResource) ImportState(ctx context.Context, re
 	response.Diagnostics.Append(diags...)
 }
 
-// NewRepositoryBranchProtectionResource is a helper function to simplify the provider implementation.
-func NewRepositoryBranchProtectionResource() resource.Resource {
-	return &repositoryBranchProtectionResource{}
+// NewBranchProtectionResource is a helper function to simplify the provider implementation.
+func NewBranchProtectionResource() resource.Resource {
+	return &branchProtectionResource{}
 }
 
 // Helper function to convert model to CreateBranchProtectionOption.
-func (r *repositoryBranchProtectionResource) modelToCreateOption(ctx context.Context, data *repositoryBranchProtectionResourceModel) forgejo.CreateBranchProtectionOption {
+func (r *branchProtectionResource) modelToCreateOption(ctx context.Context, data *branchProtectionResourceModel) forgejo.CreateBranchProtectionOption {
 	opts := forgejo.CreateBranchProtectionOption{
 		BranchName: data.BranchName.ValueString(),
 	}
@@ -670,7 +679,7 @@ func (r *repositoryBranchProtectionResource) modelToCreateOption(ctx context.Con
 }
 
 // Helper function to convert model to EditBranchProtectionOption.
-func (r *repositoryBranchProtectionResource) modelToEditOption(ctx context.Context, data *repositoryBranchProtectionResourceModel) forgejo.EditBranchProtectionOption {
+func (r *branchProtectionResource) modelToEditOption(ctx context.Context, data *branchProtectionResourceModel) forgejo.EditBranchProtectionOption {
 	opts := forgejo.EditBranchProtectionOption{}
 
 	opts.EnablePush = data.EnablePush.ValueBoolPointer()
@@ -735,7 +744,7 @@ func (r *repositoryBranchProtectionResource) modelToEditOption(ctx context.Conte
 	return opts
 }
 
-func (r *repositoryBranchProtectionResource) mapResponseToModel(protection *forgejo.BranchProtection, data *repositoryBranchProtectionResourceModel) diag.Diagnostics {
+func (r *branchProtectionResource) mapResponseToModel(protection *forgejo.BranchProtection, data *branchProtectionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	data.EnablePush = types.BoolValue(protection.EnablePush)
@@ -796,7 +805,7 @@ func (r *repositoryBranchProtectionResource) mapResponseToModel(protection *forg
 	return diags
 }
 
-func (r *repositoryBranchProtectionResource) stringSliceToList(slice []string) (types.List, diag.Diagnostics) {
+func (r *branchProtectionResource) stringSliceToList(slice []string) (types.List, diag.Diagnostics) {
 	if len(slice) == 0 {
 		return types.ListNull(types.StringType), nil
 	}

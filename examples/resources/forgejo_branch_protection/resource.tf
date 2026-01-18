@@ -29,11 +29,11 @@ resource "forgejo_repository" "test_repo" {
 # id follows the format: <owner>/<repo>/<branch>
 import {
   id = "tfadmin/personal_test_repo/main"
-  to = forgejo_repository_branch_protection.main
+  to = forgejo_branch_protection.main
 }
 
 # Branch protection on the main branch
-resource "forgejo_repository_branch_protection" "main" {
+resource "forgejo_branch_protection" "main" {
   branch_name   = "main"
   repository_id = forgejo_repository.test_repo.id
 }

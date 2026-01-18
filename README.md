@@ -20,7 +20,7 @@ Resources:
 - `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
-- `forgejo_repository_branch_protection` ([documentation](docs/resources/repository_branch_protection.md))
+- `forgejo_branch_protection` ([documentation](docs/resources/branch_protection.md))
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
@@ -179,10 +179,10 @@ Some resources support import into Terraform state.
 Importing is useful for bringing existing, manually created resources under Terraform management.
 Each resource defines its own import identifier, which uniquely identifies the resource to be imported:
 
-| Resource                               | Import Identifier                               |
-|----------------------------------------|-------------------------------------------------|
-| `forgejo_repository`                   | `<<<repo_owner>>>/<<<repo_name>>>`              |
-| `forgejo_repository_branch_protection` | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>` |
+| Resource                    | Import Identifier                               |
+| --------------------------- | ----------------------------------------------- |
+| `forgejo_repository`        | `<<<repo_owner>>>/<<<repo_name>>>`              |
+| `forgejo_branch_protection` | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>` |
 
 Refer to the `examples/` directory for more import examples.
 
