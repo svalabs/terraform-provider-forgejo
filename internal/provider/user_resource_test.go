@@ -56,6 +56,12 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectSensitiveValue("forgejo_user.test", tfjsonpath.New("password")),
 				},
 			},
+			// Import testing
+			{
+				ResourceName:  "forgejo_user.test",
+				ImportState:   true,
+				ImportStateId: "tftest",
+			},
 			// Recreate and Read testing
 			{
 				Config: providerConfig + `
