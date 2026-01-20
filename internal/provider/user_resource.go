@@ -764,6 +764,47 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
+// ImportState reads an existing resource and adds it to Terraform state on success.
+func (r *userResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	defer un(trace(ctx, "Import user resource"))
+
+	var state userResourceModel
+
+	username := types.StringValue(req.ID)
+
+	tflog.Info(ctx, "Read user", map[string]any{
+		"username": username,
+	})
+
+	// Use Forgejo client to get user.
+	usr, res, err := r.client.GetUserInfo(username.ValueString())
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf("User with name %s not found: %s", username, err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Unable to read user '%s'", username), msg)
+		return
+	}
+
+	// Map response body to model
+	state.from(usr)
+
+	// Save data into Terraform state
+	diags := resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+}
+
 // NewUserResource is a helper function to simplify the provider implementation.
 func NewUserResource() resource.Resource {
 	return &userResource{}
