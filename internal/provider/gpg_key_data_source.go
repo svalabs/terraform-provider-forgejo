@@ -31,7 +31,7 @@ type gpgKeyDataSourceModel struct {
 	ID                types.Int64  `tfsdk:"id"`
 	KeyID             types.String `tfsdk:"key_id"`
 	PrimaryKeyID      types.String `tfsdk:"primary_key_id"`
-	Fingerprint       types.String `tfsdk:"fingerprint"`
+	PublicKey         types.String `tfsdk:"public_key"`
 	CanSign           types.Bool   `tfsdk:"can_sign"`
 	CanEncryptComms   types.Bool   `tfsdk:"can_encrypt_comms"`
 	CanEncryptStorage types.Bool   `tfsdk:"can_encrypt_storage"`
@@ -63,8 +63,8 @@ func (d *gpgKeyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Description: "Primary ID of the GPG key.",
 				Computed:    true,
 			},
-			"fingerprint": schema.StringAttribute{
-				Description: "Fingerprint of the GPG key.",
+			"public_key": schema.StringAttribute{
+				Description: "The public key.",
 				Computed:    true,
 			},
 			"can_sign": schema.BoolAttribute{
@@ -177,7 +177,7 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.ID = types.Int64Value(keys[idx].ID)
 	data.KeyID = types.StringValue(keys[idx].KeyID)
 	data.PrimaryKeyID = types.StringValue(keys[idx].PrimaryKeyID)
-	data.Fingerprint = types.StringValue(keys[idx].PublicKey)
+	data.PublicKey = types.StringValue(keys[idx].PublicKey)
 	data.CanSign = types.BoolValue(keys[idx].CanSign)
 	data.CanEncryptComms = types.BoolValue(keys[idx].CanEncryptComms)
 	data.CanEncryptStorage = types.BoolValue(keys[idx].CanEncryptStorage)

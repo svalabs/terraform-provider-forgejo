@@ -26,13 +26,13 @@ type gpgKeyResource struct {
 }
 
 // gpgKeyResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#PublicKey
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#GPGKey
 type gpgKeyResourceModel struct {
 	ArmoredPublicKey  types.String `tfsdk:"armored_public_key"`
 	ID                types.Int64  `tfsdk:"id"`
 	KeyID             types.String `tfsdk:"key_id"`
 	PrimaryKeyID      types.String `tfsdk:"primary_key_id"`
-	Fingerprint       types.String `tfsdk:"fingerprint"`
+	PublicKey         types.String `tfsdk:"public_key"`
 	CanSign           types.Bool   `tfsdk:"can_sign"`
 	CanEncryptComms   types.Bool   `tfsdk:"can_encrypt_comms"`
 	CanEncryptStorage types.Bool   `tfsdk:"can_encrypt_storage"`
@@ -46,7 +46,7 @@ func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) {
 	m.ID = types.Int64Value(k.ID)
 	m.KeyID = types.StringValue(k.KeyID)
 	m.PrimaryKeyID = types.StringValue(k.PrimaryKeyID)
-	m.Fingerprint = types.StringValue(k.PublicKey)
+	m.PublicKey = types.StringValue(k.PublicKey)
 	m.CanSign = types.BoolValue(k.CanSign)
 	m.CanEncryptComms = types.BoolValue(k.CanEncryptComms)
 	m.CanEncryptStorage = types.BoolValue(k.CanEncryptStorage)
@@ -72,8 +72,7 @@ func (r *gpgKeyResource) Metadata(_ context.Context, req resource.MetadataReques
 // Schema defines the schema for the resource.
 func (r *gpgKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Forgejo user GPG key resource.
-Note: Managing user GPG keys requires administrative privileges!`,
+		Description: "Forgejo user GPG key resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"armored_public_key": schema.StringAttribute{
@@ -95,8 +94,8 @@ Note: Managing user GPG keys requires administrative privileges!`,
 				Description: "Primary ID of the GPG key.",
 				Computed:    true,
 			},
-			"fingerprint": schema.StringAttribute{
-				Description: "Fingerprint of the GPG key.",
+			"public_key": schema.StringAttribute{
+				Description: "The public key.",
 				Computed:    true,
 			},
 			"can_sign": schema.BoolAttribute{
