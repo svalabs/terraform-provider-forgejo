@@ -19,6 +19,10 @@ Forgejo user GPG key data source.
 
 - `key_id` (String) ID of the GPG key.
 
+### Optional
+
+- `user` (String) Name of the user.
+
 ### Read-Only
 
 - `can_certify` (Boolean) Can this key certify.
@@ -27,6 +31,6 @@ Forgejo user GPG key data source.
 - `can_sign` (Boolean) Can this key sign.
 - `created_at` (String) Time at which the GPG key was created.
 - `expires_at` (String) Time at which the GPG key expires.
-- `fingerprint` (String) Fingerprint of the GPG key.
 - `id` (Number) Numeric identifier of the GPG key.
 - `primary_key_id` (String) Primary ID of the GPG key.
+- `public_key` (String) The public key.

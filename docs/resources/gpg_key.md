@@ -4,13 +4,11 @@ page_title: "forgejo_gpg_key Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo user GPG key resource.
-  Note: Managing user GPG keys requires administrative privileges!
 ---
 
 # forgejo_gpg_key (Resource)
 
 Forgejo user GPG key resource.
-Note: Managing user GPG keys requires administrative privileges!
 
 
 
@@ -29,7 +27,7 @@ Note: Managing user GPG keys requires administrative privileges!
 - `can_sign` (Boolean) Can this key sign.
 - `created_at` (String) Time at which the GPG key was created.
 - `expires_at` (String) Time at which the GPG key expires.
-- `fingerprint` (String) Fingerprint of the GPG key.
 - `id` (Number) Numeric identifier of the GPG key.
 - `key_id` (String) ID of the GPG key.
 - `primary_key_id` (String) Primary ID of the GPG key.
+- `public_key` (String) The public key.
