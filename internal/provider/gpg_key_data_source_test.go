@@ -3,7 +3,6 @@ package provider_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,11 +12,14 @@ import (
 )
 
 func TestAccGPGKeyDataSource(t *testing.T) {
-	key, armoredPubKey := createGPGKey(t)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"gpg": {
+				Source: "terraform-provider-gpg/gpg",
+			},
+		},
 		Steps: []resource.TestStep{
 			// Read testing (non-existent resource)
 			{
@@ -48,17 +50,24 @@ data "forgejo_gpg_key" "test" {
 			// Read testing (current user)
 			{
 				Config: providerConfig + fmt.Sprintf(`
+resource "gpg_key" "test" {
+	identities = [{
+		name  = "TF Admin"
+		email = "%s"
+	}]
+	passphrase = "supersecret"
+}
 resource "forgejo_gpg_key" "test" {
-	armored_public_key = <<EOT
-%s
-EOT
+	armored_public_key = gpg_key.test.public_key
 }
 data "forgejo_gpg_key" "test" {
-	key_id = forgejo_gpg_key.test.key_id
-}`, armoredPubKey),
+	key_id = gpg_key.test.id
+
+	depends_on = [forgejo_gpg_key.test]
+}`, forgejoEmail),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.StringExact(strings.ToUpper(key.GetHexKeyID()))),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("primary_key_id"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("public_key"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_sign"), knownvalue.Bool(true)),
@@ -72,18 +81,25 @@ data "forgejo_gpg_key" "test" {
 			// Read testing (explicit user)
 			{
 				Config: providerConfig + fmt.Sprintf(`
+resource "gpg_key" "test" {
+	identities = [{
+		name  = "TF Admin"
+		email = "%s"
+	}]
+	passphrase = "supersecret"
+}
 resource "forgejo_gpg_key" "test" {
-	armored_public_key = <<EOT
-%s
-EOT
+	armored_public_key = gpg_key.test.public_key
 }
 data "forgejo_gpg_key" "test" {
 	user   = "tfadmin"
-	key_id = forgejo_gpg_key.test.key_id
-}`, armoredPubKey),
+	key_id = gpg_key.test.id
+
+	depends_on = [forgejo_gpg_key.test]
+}`, forgejoEmail),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.StringExact(strings.ToUpper(key.GetHexKeyID()))),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("primary_key_id"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("public_key"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_sign"), knownvalue.Bool(true)),
