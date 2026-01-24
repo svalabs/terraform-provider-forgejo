@@ -50,7 +50,7 @@ data "forgejo_gpg_key" "test" {
 			// Read testing (current user)
 			{
 				Config: providerConfig + fmt.Sprintf(`
-resource "gpg_key" "test" {
+resource "gpg_key_pair" "test" {
 	identities = [{
 		name  = "TF Admin"
 		email = "%s"
@@ -58,10 +58,10 @@ resource "gpg_key" "test" {
 	passphrase = "supersecret"
 }
 resource "forgejo_gpg_key" "test" {
-	armored_public_key = gpg_key.test.public_key
+	armored_public_key = gpg_key_pair.test.public_key
 }
 data "forgejo_gpg_key" "test" {
-	key_id = gpg_key.test.id
+	key_id = gpg_key_pair.test.id
 
 	depends_on = [forgejo_gpg_key.test]
 }`, forgejoEmail),
@@ -81,7 +81,7 @@ data "forgejo_gpg_key" "test" {
 			// Read testing (explicit user)
 			{
 				Config: providerConfig + fmt.Sprintf(`
-resource "gpg_key" "test" {
+resource "gpg_key_pair" "test" {
 	identities = [{
 		name  = "TF Admin"
 		email = "%s"
@@ -89,11 +89,11 @@ resource "gpg_key" "test" {
 	passphrase = "supersecret"
 }
 resource "forgejo_gpg_key" "test" {
-	armored_public_key = gpg_key.test.public_key
+	armored_public_key = gpg_key_pair.test.public_key
 }
 data "forgejo_gpg_key" "test" {
 	user   = "tfadmin"
-	key_id = gpg_key.test.id
+	key_id = gpg_key_pair.test.id
 
 	depends_on = [forgejo_gpg_key.test]
 }`, forgejoEmail),

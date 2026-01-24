@@ -16,7 +16,7 @@ provider "forgejo" {
 }
 
 # GPG key
-resource "gpg_key" "test" {
+resource "gpg_key_pair" "test" {
   identities = [{
     name  = "Test User"
     email = "test_user@localhost.localdomain"
@@ -26,5 +26,5 @@ resource "gpg_key" "test" {
 
 # Forgejo GPG key
 resource "forgejo_gpg_key" "this" {
-  armored_public_key = gpg_key.test.public_key
+  armored_public_key = gpg_key_pair.test.public_key
 }

@@ -37,7 +37,7 @@ func TestAccGPGKeyResource(t *testing.T) {
 			// Create and Read testing
 			{
 				Config: providerConfig + fmt.Sprintf(`
-resource "gpg_key" "test" {
+resource "gpg_key_pair" "test" {
 	identities = [{
 		name  = "TF Admin"
 		email = "%s"
@@ -45,7 +45,7 @@ resource "gpg_key" "test" {
 	passphrase = "supersecret"
 }
 resource "forgejo_gpg_key" "test" {
-	armored_public_key = gpg_key.test.public_key
+	armored_public_key = gpg_key_pair.test.public_key
 }`, forgejoEmail),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("armored_public_key"), knownvalue.StringFunc(validateIsArmoredGPGKey)),
@@ -64,7 +64,7 @@ resource "forgejo_gpg_key" "test" {
 			// Recreate and Read testing
 			{
 				Config: providerConfig + fmt.Sprintf(`
-resource "gpg_key" "test" {
+resource "gpg_key_pair" "test" {
 	identities = [{
 		name  = "TF Admin"
 		email = "%s"
@@ -72,7 +72,7 @@ resource "gpg_key" "test" {
 	passphrase = "supersecret"
 }
 resource "forgejo_gpg_key" "test" {
-	armored_public_key = gpg_key.test.public_key
+	armored_public_key = gpg_key_pair.test.public_key
 }`, forgejoEmail),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("armored_public_key"), knownvalue.StringFunc(validateIsArmoredGPGKey)),
