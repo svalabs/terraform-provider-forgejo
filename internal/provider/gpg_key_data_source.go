@@ -28,8 +28,9 @@ type gpgKeyDataSource struct {
 // gpgKeyDataSourceModel maps the data source schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#GPGKey
 type gpgKeyDataSourceModel struct {
-	ID                types.Int64  `tfsdk:"id"`
+	User              types.String `tfsdk:"user"`
 	KeyID             types.String `tfsdk:"key_id"`
+	ID                types.Int64  `tfsdk:"id"`
 	PrimaryKeyID      types.String `tfsdk:"primary_key_id"`
 	PublicKey         types.String `tfsdk:"public_key"`
 	CanSign           types.Bool   `tfsdk:"can_sign"`
@@ -51,13 +52,17 @@ func (d *gpgKeyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 		Description: "Forgejo user GPG key data source.",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.Int64Attribute{
-				Description: "Numeric identifier of the GPG key.",
-				Computed:    true,
-			},
 			"key_id": schema.StringAttribute{
 				Description: "ID of the GPG key.",
 				Required:    true,
+			},
+			"user": schema.StringAttribute{
+				Description: "Name of the user.",
+				Optional:    true,
+			},
+			"id": schema.Int64Attribute{
+				Description: "Numeric identifier of the GPG key.",
+				Computed:    true,
 			},
 			"primary_key_id": schema.StringAttribute{
 				Description: "Primary ID of the GPG key.",
@@ -131,12 +136,26 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	tflog.Info(ctx, "List GPG keys")
+	user := data.User.ValueString()
+
+	tflog.Info(ctx, "List GPG keys", map[string]any{
+		"user": user,
+	})
 
 	// Use Forgejo client to list GPG keys
-	keys, res, err := d.client.ListMyGPGKeys(
-		&forgejo.ListGPGKeysOptions{},
-	)
+	var keys []*forgejo.GPGKey
+	var res *forgejo.Response
+	var err error
+	if user != "" {
+		keys, res, err = d.client.ListGPGKeys(
+			user,
+			forgejo.ListGPGKeysOptions{},
+		)
+	} else {
+		keys, res, err = d.client.ListMyGPGKeys(
+			&forgejo.ListGPGKeysOptions{},
+		)
+	}
 	if err != nil {
 		tflog.Error(ctx, "Error", map[string]any{
 			"status": res.Status,
@@ -145,8 +164,10 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		var msg string
 		switch res.StatusCode {
 		case 404:
+			// If the user was not provided, we should never get a 404, so the message here should always have a user.
 			msg = fmt.Sprintf(
-				"GPG keys not found: %s",
+				`GPG keys for user "%s" not found: %s`,
+				user,
 				err,
 			)
 		default:
@@ -162,13 +183,20 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return strings.EqualFold(k.KeyID, data.KeyID.ValueString())
 	})
 	if idx == -1 {
-		resp.Diagnostics.AddError(
-			"Unable to get GPG key by key_id",
-			fmt.Sprintf(
+		var msg string
+		if user != "" {
+			msg = fmt.Sprintf(
+				`GPG key with user "%s" and key_id %s not found.`,
+				user,
+				data.KeyID.String(),
+			)
+		} else {
+			msg = fmt.Sprintf(
 				"GPG key with key_id %s not found.",
 				data.KeyID.String(),
-			),
-		)
+			)
+		}
+		resp.Diagnostics.AddError( "Unable to get GPG key by key_id", msg)
 
 		return
 	}

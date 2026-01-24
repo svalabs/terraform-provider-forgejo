@@ -23,11 +23,29 @@ func TestAccGPGKeyDataSource(t *testing.T) {
 			{
 				Config: providerConfig + `
 data "forgejo_gpg_key" "test" {
-	key_id= "non_existent"
+	key_id = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("GPG key with key_id \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile(`GPG key with key_id "non_existent" not found`),
 			},
-			// Read testing
+			// Read testing (valid user, non-existent resource)
+			{
+				Config: providerConfig + `
+data "forgejo_gpg_key" "test" {
+	user   = "tfadmin"
+	key_id = "non_existent"
+}`,
+				ExpectError: regexp.MustCompile(`GPG key with user "tfadmin" and key_id "non_existent" not found`),
+			},
+			// Read testing (non-existent user)
+			{
+				Config: providerConfig + `
+data "forgejo_gpg_key" "test" {
+	user   = "invalid"
+	key_id = "non_existent"
+}`,
+				ExpectError: regexp.MustCompile(`GPG keys for user "invalid" not found`),
+			},
+			// Read testing (current user)
 			{
 				Config: providerConfig + fmt.Sprintf(`
 resource "forgejo_gpg_key" "test" {
@@ -36,6 +54,31 @@ resource "forgejo_gpg_key" "test" {
 EOT
 }
 data "forgejo_gpg_key" "test" {
+	key_id = forgejo_gpg_key.test.key_id
+}`, armoredPubKey),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.StringExact(strings.ToUpper(key.GetHexKeyID()))),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("primary_key_id"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("public_key"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_sign"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_encrypt_comms"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_encrypt_storage"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_certify"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("expires_at"), knownvalue.NotNull()),
+				},
+			},
+			// Read testing (explicit user)
+			{
+				Config: providerConfig + fmt.Sprintf(`
+resource "forgejo_gpg_key" "test" {
+	armored_public_key = <<EOT
+%s
+EOT
+}
+data "forgejo_gpg_key" "test" {
+	user   = "tfadmin"
 	key_id = forgejo_gpg_key.test.key_id
 }`, armoredPubKey),
 				ConfigStateChecks: []statecheck.StateCheck{
