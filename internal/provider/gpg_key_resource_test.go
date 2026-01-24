@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
+const forgejoEmail = "tfadmin@localhost"
+
 func TestAccGPGKeyResource(t *testing.T) {
 	key, armoredPubKey := createGPGKey(t)
 	newKey, newArmoredPubKey := createGPGKey(t)

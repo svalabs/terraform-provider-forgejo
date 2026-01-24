@@ -15,8 +15,8 @@ const (
 	// test configuration so the Forgejo client is properly configured.
 	// It is also possible to use the FORGEJO_ environment variables instead,
 	// such as updating the Makefile and running the testing through that tool.
-	providerConfig = `provider "forgejo" { host = "http://localhost:3000" }`
-	forgejoEmail   = "tfadmin@localhost"
+	providerConfig = `provider "forgejo" { host = "http://localhost:3000" }
+`
 )
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
