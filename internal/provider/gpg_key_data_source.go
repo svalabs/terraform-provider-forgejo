@@ -196,7 +196,7 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 				data.KeyID.String(),
 			)
 		}
-		resp.Diagnostics.AddError( "Unable to get GPG key by key_id", msg)
+		resp.Diagnostics.AddError("Unable to get GPG key by key_id", msg)
 
 		return
 	}
