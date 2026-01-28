@@ -804,6 +804,7 @@ Note: Managing user repositories requires administrative privileges!`,
 				Default:     stringdefault.StaticString("merge"),
 				Validators: []validator.String{
 					stringvalidator.OneOf(
+						"fast-forward-only",
 						"merge",
 						"rebase",
 						"rebase-merge",
