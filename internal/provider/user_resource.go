@@ -770,14 +770,12 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 
 	var state userResourceModel
 
-	username := types.StringValue(req.ID)
-
 	tflog.Info(ctx, "Read user", map[string]any{
-		"username": username,
+		"username": req.ID,
 	})
 
-	// Use Forgejo client to get user.
-	usr, res, err := r.client.GetUserInfo(username.ValueString())
+	// Use Forgejo client to get user by name
+	usr, res, err := r.client.GetUserInfo(req.ID)
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -786,14 +784,20 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 			tflog.Error(ctx, "Error", map[string]any{
 				"status": res.Status,
 			})
+
 			switch res.StatusCode {
 			case 404:
-				msg = fmt.Sprintf("User with name %s not found: %s", username, err)
+				msg = fmt.Sprintf(
+					"User with name '%s' not found: %s",
+					req.ID,
+					err,
+				)
 			default:
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Unable to read user '%s'", username), msg)
+		resp.Diagnostics.AddError("Unable to read user", msg)
+
 		return
 	}
 
