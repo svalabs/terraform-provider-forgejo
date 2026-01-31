@@ -247,14 +247,25 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	// Generate API request body from plan
-	opts := r.modelToCreateOption(ctx, &data)
+	opts := r.toCreateOption(ctx, &data)
 
 	tflog.Info(ctx, "Create branch protection", map[string]any{
-		"repository_id":    data.RepositoryId.ValueInt64(),
-		"repository_name":  repo.Name,
-		"repository_owner": repo.Owner.UserName,
-		"branch_name":      data.BranchName.ValueString(),
-		"options":          opts,
+		"repository_id":                     data.RepositoryId.ValueInt64(),
+		"repository_name":                   repo.Name,
+		"repository_owner":                  repo.Owner.UserName,
+		"branch_name":                       data.BranchName.ValueString(),
+		"enable_push":                       opts.EnablePush,
+		"enable_push_whitelist":             opts.EnablePushWhitelist,
+		"push_whitelist_deploy_keys":        opts.PushWhitelistDeployKeys,
+		"enable_status_check":               opts.EnableStatusCheck,
+		"require_signed_commits":            opts.RequireSignedCommits,
+		"enable_merge_whitelist":            opts.EnableMergeWhitelist,
+		"enable_approvals_whitelist":        opts.EnableApprovalsWhitelist,
+		"required_approvals":                opts.RequiredApprovals,
+		"block_on_rejected_reviews":         opts.BlockOnRejectedReviews,
+		"block_on_official_review_requests": opts.BlockOnOfficialReviewRequests,
+		"block_on_outdated_branch":          opts.BlockOnOutdatedBranch,
+		"dismiss_stale_approvals":           opts.DismissStaleApprovals,
 	})
 
 	// Use Forgejo client to create branch protection
@@ -274,7 +285,7 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 
 			switch res.StatusCode {
 			case 403:
-				msg = fmt.Sprintf("Forbidden: %s", err)
+				msg = fmt.Sprintf("Repository forbidden: %s", err)
 			case 404:
 				msg = fmt.Sprintf("Repository not found: %s", err)
 			case 422:
@@ -291,7 +302,7 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	// Update model with response data to ensure computed fields are correctly populated
-	diags = r.mapResponseToModel(protection, &data)
+	diags = r.from(protection, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -365,7 +376,7 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	// Update model with response data
-	diags = r.mapResponseToModel(protection, &data)
+	diags = r.from(protection, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -401,14 +412,25 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	// Convert model to API request
-	opts := r.modelToEditOption(ctx, &data)
+	opts := r.toEditOption(ctx, &data)
 
 	tflog.Info(ctx, "Update branch protection", map[string]any{
-		"repository_id":    data.RepositoryId.ValueInt64(),
-		"repository_name":  repo.Name,
-		"repository_owner": repo.Owner.UserName,
-		"branch_name":      data.BranchName.ValueString(),
-		"options":          opts,
+		"repository_id":                     data.RepositoryId.ValueInt64(),
+		"repository_name":                   repo.Name,
+		"repository_owner":                  repo.Owner.UserName,
+		"branch_name":                       data.BranchName.ValueString(),
+		"enable_push":                       opts.EnablePush,
+		"enable_push_whitelist":             opts.EnablePushWhitelist,
+		"push_whitelist_deploy_keys":        opts.PushWhitelistDeployKeys,
+		"enable_status_check":               opts.EnableStatusCheck,
+		"require_signed_commits":            opts.RequireSignedCommits,
+		"enable_merge_whitelist":            opts.EnableMergeWhitelist,
+		"enable_approvals_whitelist":        opts.EnableApprovalsWhitelist,
+		"required_approvals":                opts.RequiredApprovals,
+		"block_on_rejected_reviews":         opts.BlockOnRejectedReviews,
+		"block_on_official_review_requests": opts.BlockOnOfficialReviewRequests,
+		"block_on_outdated_branch":          opts.BlockOnOutdatedBranch,
+		"dismiss_stale_approvals":           opts.DismissStaleApprovals,
 	})
 
 	// Use Forgejo client to update branch protection
@@ -429,9 +451,9 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 
 			switch res.StatusCode {
 			case 403:
-				msg = fmt.Sprintf("Forbidden: %s", err)
+				msg = fmt.Sprintf("Repository forbidden: %s", err)
 			case 404:
-				msg = fmt.Sprintf("Branch protection not found: %s", err)
+				msg = fmt.Sprintf("Repository not found: %s", err)
 			case 422:
 				msg = fmt.Sprintf("Validation error: %s", err)
 			case 423:
@@ -446,7 +468,7 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	// Update model with response data
-	diags = r.mapResponseToModel(protection, &data)
+	diags = r.from(protection, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -606,7 +628,7 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 	// Map response to model
 	data.BranchName = types.StringValue(branchName)
 	data.RepositoryId = types.Int64Value(repository.ID)
-	diags := r.mapResponseToModel(protection, &data)
+	diags := r.from(protection, &data)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -623,7 +645,7 @@ func NewBranchProtectionResource() resource.Resource {
 }
 
 // Helper function to convert model to CreateBranchProtectionOption.
-func (r *branchProtectionResource) modelToCreateOption(ctx context.Context, data *branchProtectionResourceModel) forgejo.CreateBranchProtectionOption {
+func (r *branchProtectionResource) toCreateOption(ctx context.Context, data *branchProtectionResourceModel) forgejo.CreateBranchProtectionOption {
 	opts := forgejo.CreateBranchProtectionOption{
 		BranchName: data.BranchName.ValueString(),
 	}
@@ -679,7 +701,7 @@ func (r *branchProtectionResource) modelToCreateOption(ctx context.Context, data
 }
 
 // Helper function to convert model to EditBranchProtectionOption.
-func (r *branchProtectionResource) modelToEditOption(ctx context.Context, data *branchProtectionResourceModel) forgejo.EditBranchProtectionOption {
+func (r *branchProtectionResource) toEditOption(ctx context.Context, data *branchProtectionResourceModel) forgejo.EditBranchProtectionOption {
 	opts := forgejo.EditBranchProtectionOption{}
 
 	opts.EnablePush = data.EnablePush.ValueBoolPointer()
@@ -744,7 +766,7 @@ func (r *branchProtectionResource) modelToEditOption(ctx context.Context, data *
 	return opts
 }
 
-func (r *branchProtectionResource) mapResponseToModel(protection *forgejo.BranchProtection, data *branchProtectionResourceModel) diag.Diagnostics {
+func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, data *branchProtectionResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	data.EnablePush = types.BoolValue(protection.EnablePush)
