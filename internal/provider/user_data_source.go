@@ -253,3 +253,35 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 func NewUserDataSource() datasource.DataSource {
 	return &userDataSource{}
 }
+
+func getUserByID(ctx context.Context, client *forgejo.Client, userID int64) (user *forgejo.User, err error) {
+	tflog.Info(ctx, "Getting user by ID", map[string]any{
+		"user_id": userID,
+	})
+
+	user, resp, err := client.GetUserByID(userID)
+	if err == nil {
+		return user, nil
+	}
+
+	if resp == nil {
+		err = fmt.Errorf("unknown error with nil response: %s", err)
+		return nil, err
+	}
+
+	tflog.Error(ctx, "Error", map[string]any{
+		"status": resp.Status,
+	})
+
+	switch resp.StatusCode {
+	case 404:
+		err = fmt.Errorf(
+			"the User with ID '%d' was not found: %s",
+			userID,
+			err,
+		)
+	default:
+		err = fmt.Errorf("unknown error: %s", err)
+	}
+	return nil, err
+}
