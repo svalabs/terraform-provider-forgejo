@@ -76,6 +76,8 @@ data "forgejo_gpg_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_certify"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("expires_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("email"), knownvalue.StringExact(forgejoEmail)),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("verified"), knownvalue.Bool(true)),
 				},
 			},
 			// Read testing (explicit user)

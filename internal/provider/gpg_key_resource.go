@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -20,6 +23,17 @@ import (
 var (
 	_ resource.Resource              = &gpgKeyResource{}
 	_ resource.ResourceWithConfigure = &gpgKeyResource{}
+)
+
+// Nested resource types.
+var (
+	gpgKeyEmailAttrTypes = map[string]attr.Type{
+		"email":    types.StringType,
+		"verified": types.BoolType,
+	}
+	gpgKeyEmailType = types.ObjectType{
+		AttrTypes: gpgKeyEmailAttrTypes,
+	}
 )
 
 // gpgKeyResource is the resource implementation.
@@ -41,10 +55,11 @@ type gpgKeyResourceModel struct {
 	CanCertify        types.Bool   `tfsdk:"can_certify"`
 	Created           types.String `tfsdk:"created_at"`
 	Expires           types.String `tfsdk:"expires_at"`
+	Emails            types.List   `tfsdk:"emails"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
-func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) {
+func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) diag.Diagnostics {
 	m.ID = types.Int64Value(k.ID)
 	m.KeyID = types.StringValue(k.KeyID)
 	m.PrimaryKeyID = types.StringValue(k.PrimaryKeyID)
@@ -55,6 +70,14 @@ func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) {
 	m.CanCertify = types.BoolValue(k.CanCertify)
 	m.Created = types.StringValue(k.Created.String())
 	m.Expires = types.StringValue(k.Expires.String())
+
+	emails, diags := getEmails(k)
+	if diags.HasError() {
+		return diags
+	}
+	m.Emails = emails
+
+	return nil
 }
 
 // to is a helper function to save Terraform data model into an API struct.
@@ -64,6 +87,31 @@ func (m *gpgKeyResourceModel) to(o *forgejo.CreateGPGKeyOption) {
 	}
 
 	o.ArmoredKey = m.ArmoredPublicKey.ValueString()
+}
+
+func getEmails(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
+	emailElements := make([]attr.Value, 0, len(k.Emails))
+
+	for _, e := range k.Emails {
+		values := map[string]attr.Value{
+			"email":    types.StringValue(e.Email),
+			"verified": types.BoolValue(e.Verified),
+		}
+		elem, diags := types.ObjectValue(gpgKeyEmailAttrTypes, values)
+
+		if diags.HasError() {
+			return types.List{}, diags
+		}
+
+		emailElements = append(emailElements, elem)
+	}
+
+	emails, diags := types.ListValue(gpgKeyEmailType, emailElements)
+	if diags.HasError() {
+		return types.List{}, diags
+	}
+
+	return emails, nil
 }
 
 // Metadata returns the resource type name.
@@ -154,6 +202,14 @@ func (r *gpgKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"emails": schema.ListAttribute{
+				Description: "Emails associated with the GPG key.",
+				Computed:    true,
+				ElementType: gpgKeyEmailType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 	}
 }
@@ -232,7 +288,8 @@ func (r *gpgKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// Map response body to model
-	data.from(key)
+	diags = data.from(key)
+	resp.Diagnostics.Append(diags...)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)

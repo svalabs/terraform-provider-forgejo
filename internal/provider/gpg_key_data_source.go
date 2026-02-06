@@ -39,6 +39,7 @@ type gpgKeyDataSourceModel struct {
 	CanCertify        types.Bool   `tfsdk:"can_certify"`
 	Created           types.String `tfsdk:"created_at"`
 	Expires           types.String `tfsdk:"expires_at"`
+	Emails            types.List   `tfsdk:"emails"`
 }
 
 // Metadata returns the data source type name.
@@ -95,6 +96,11 @@ func (d *gpgKeyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"expires_at": schema.StringAttribute{
 				Description: "Time at which the GPG key expires.",
 				Computed:    true,
+			},
+			"emails": schema.ListAttribute{
+				Description: "Emails associated with the GPG key.",
+				Computed:    true,
+				ElementType: gpgKeyEmailType,
 			},
 		},
 	}
@@ -212,6 +218,9 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.CanCertify = types.BoolValue(keys[idx].CanCertify)
 	data.Created = types.StringValue(keys[idx].Created.String())
 	data.Expires = types.StringValue(keys[idx].Expires.String())
+
+	data.Emails, diags = getEmails(keys[idx])
+	resp.Diagnostics.Append(diags...)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
