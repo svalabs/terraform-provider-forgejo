@@ -1,0 +1,37 @@
+terraform {
+  required_providers {
+    forgejo = {
+      source = "svalabs/forgejo"
+    }
+  }
+}
+
+variable "test_password" { sensitive = true }
+
+provider "forgejo" {
+  host = "http://localhost:3000"
+}
+
+# Organization
+resource "forgejo_organization" "owner" {
+  name = "test_org"
+}
+
+# Team
+resource "forgejo_team" "team" {
+  organization_id = forgejo_organization.owner.id
+  name            = "org_test_team"
+}
+
+# User
+resource "forgejo_user" "test" {
+  login    = "test_user"
+  email    = "test_user@localhost.localdomain"
+  password = var.test_password
+}
+
+# Team member
+resource "forgejo_team_member" "membership" {
+  team_id = forgejo_team.team.id
+  user    = forgejo_user.test.login
+}
