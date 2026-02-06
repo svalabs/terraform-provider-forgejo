@@ -50,7 +50,34 @@ data "forgejo_gpg_key" "this" {
 - `can_encrypt_storage` (Boolean) Can this key encrypt storage.
 - `can_sign` (Boolean) Can this key sign.
 - `created_at` (String) Time at which the GPG key was created.
+- `emails` (List of Object) Emails associated with the GPG key. (see [below for nested schema](#nestedatt--emails))
 - `expires_at` (String) Time at which the GPG key expires.
 - `id` (Number) Numeric identifier of the GPG key.
 - `primary_key_id` (String) Primary ID of the GPG key.
 - `public_key` (String) The public key.
+- `subkeys` (List of Object) Subkeys of the GPG key. (see [below for nested schema](#nestedatt--subkeys))
+
+<a id="nestedatt--emails"></a>
+### Nested Schema for `emails`
+
+Read-Only:
+
+- `email` (String)
+- `verified` (Boolean)
+
+
+<a id="nestedatt--subkeys"></a>
+### Nested Schema for `subkeys`
+
+Read-Only:
+
+- `can_certify` (Boolean)
+- `can_encrypt_comms` (Boolean)
+- `can_encrypt_storage` (Boolean)
+- `can_sign` (Boolean)
+- `created_at` (String)
+- `expires_at` (String)
+- `id` (Number)
+- `key_id` (String)
+- `primary_key_id` (String)
+- `public_key` (String)
