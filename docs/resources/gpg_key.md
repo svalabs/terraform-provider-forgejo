@@ -41,6 +41,7 @@ resource "gpg_key_pair" "test" {
 
 # Forgejo GPG key
 resource "forgejo_gpg_key" "this" {
+  # There is no user for this resource, GPG keys can only be managed for the authenticated user.
   armored_public_key = gpg_key_pair.test.public_key
 }
 ```

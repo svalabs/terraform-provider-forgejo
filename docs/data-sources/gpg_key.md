@@ -27,7 +27,7 @@ provider "forgejo" {
 
 # Existing GPG key
 data "forgejo_gpg_key" "this" {
-  user   = "test_user" # Optional, uses api key's user if not provided
+  user   = "test_user" # Optional, uses authenticated user if not provided
   key_id = "test_key"
 }
 ```
