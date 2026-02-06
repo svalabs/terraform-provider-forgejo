@@ -40,6 +40,7 @@ type gpgKeyDataSourceModel struct {
 	Created           types.String `tfsdk:"created_at"`
 	Expires           types.String `tfsdk:"expires_at"`
 	Emails            types.List   `tfsdk:"emails"`
+	Subkeys           types.List   `tfsdk:"subkeys"`
 }
 
 // Metadata returns the data source type name.
@@ -101,6 +102,11 @@ func (d *gpgKeyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Description: "Emails associated with the GPG key.",
 				Computed:    true,
 				ElementType: gpgKeyEmailType,
+			},
+			"subkeys": schema.ListAttribute{
+				Description: "Subkeys of the GPG key.",
+				Computed:    true,
+				ElementType: gpgKeySubkeyType,
 			},
 		},
 	}
@@ -220,6 +226,9 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Expires = types.StringValue(keys[idx].Expires.String())
 
 	data.Emails, diags = getEmails(keys[idx])
+	resp.Diagnostics.Append(diags...)
+
+	data.Subkeys, diags = getSubkeys(keys[idx])
 	resp.Diagnostics.Append(diags...)
 
 	// Save data into Terraform state

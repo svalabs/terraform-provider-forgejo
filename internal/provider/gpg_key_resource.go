@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -34,6 +35,22 @@ var (
 	gpgKeyEmailType = types.ObjectType{
 		AttrTypes: gpgKeyEmailAttrTypes,
 	}
+
+	gpgKeySubkeyAttrTypes = map[string]attr.Type{
+		"id":                  types.Int64Type,
+		"primary_key_id":      types.StringType,
+		"key_id":              types.StringType,
+		"public_key":          types.StringType,
+		"can_sign":            types.BoolType,
+		"can_encrypt_comms":   types.BoolType,
+		"can_encrypt_storage": types.BoolType,
+		"can_certify":         types.BoolType,
+		"created_at":          types.StringType,
+		"expires_at":          types.StringType,
+	}
+	gpgKeySubkeyType = types.ObjectType{
+		AttrTypes: gpgKeySubkeyAttrTypes,
+	}
 )
 
 // gpgKeyResource is the resource implementation.
@@ -56,6 +73,7 @@ type gpgKeyResourceModel struct {
 	Created           types.String `tfsdk:"created_at"`
 	Expires           types.String `tfsdk:"expires_at"`
 	Emails            types.List   `tfsdk:"emails"`
+	SubKeys           types.List   `tfsdk:"subkeys"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -68,14 +86,20 @@ func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) diag.Diagnostics {
 	m.CanEncryptComms = types.BoolValue(k.CanEncryptComms)
 	m.CanEncryptStorage = types.BoolValue(k.CanEncryptStorage)
 	m.CanCertify = types.BoolValue(k.CanCertify)
-	m.Created = types.StringValue(k.Created.String())
-	m.Expires = types.StringValue(k.Expires.String())
+	m.Created = types.StringValue(k.Created.Format(time.RFC3339))
+	m.Expires = types.StringValue(k.Expires.Format(time.RFC3339))
 
 	emails, diags := getEmails(k)
 	if diags.HasError() {
 		return diags
 	}
 	m.Emails = emails
+
+	subkeys, diags := getSubkeys(k)
+	if diags.HasError() {
+		return diags
+	}
+	m.SubKeys = subkeys
 
 	return nil
 }
@@ -112,6 +136,39 @@ func getEmails(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 	}
 
 	return emails, nil
+}
+
+func getSubkeys(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
+	subkeyElements := make([]attr.Value, 0, len(k.SubsKey))
+
+	for _, e := range k.SubsKey {
+		values := map[string]attr.Value{
+			"id":                  types.Int64Value(e.ID),
+			"primary_key_id":      types.StringValue(e.PrimaryKeyID),
+			"key_id":              types.StringValue(e.KeyID),
+			"public_key":          types.StringValue(e.PublicKey),
+			"can_sign":            types.BoolValue(e.CanSign),
+			"can_encrypt_comms":   types.BoolValue(e.CanEncryptComms),
+			"can_encrypt_storage": types.BoolValue(e.CanEncryptStorage),
+			"can_certify":         types.BoolValue(e.CanCertify),
+			"created_at":          types.StringValue(e.Created.Format(time.RFC3339)),
+			"expires_at":          types.StringValue(e.Expires.Format(time.RFC3339)),
+		}
+		elem, diags := types.ObjectValue(gpgKeySubkeyAttrTypes, values)
+
+		if diags.HasError() {
+			return types.List{}, diags
+		}
+
+		subkeyElements = append(subkeyElements, elem)
+	}
+
+	subkeys, diags := types.ListValue(gpgKeySubkeyType, subkeyElements)
+	if diags.HasError() {
+		return types.List{}, diags
+	}
+
+	return subkeys, nil
 }
 
 // Metadata returns the resource type name.
@@ -206,6 +263,14 @@ func (r *gpgKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Description: "Emails associated with the GPG key.",
 				Computed:    true,
 				ElementType: gpgKeyEmailType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"subkeys": schema.ListAttribute{
+				Description: "Subkeys of the GPG key.",
+				Computed:    true,
+				ElementType: gpgKeySubkeyType,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
