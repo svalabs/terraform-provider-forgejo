@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -253,4 +254,35 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 // NewUserDataSource is a helper function to simplify the provider implementation.
 func NewUserDataSource() datasource.DataSource {
 	return &userDataSource{}
+}
+
+// getUserByID gets a user by ID.
+func getUserByID(ctx context.Context, client *forgejo.Client, userID int64) (*forgejo.User, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Getting user by ID", map[string]any{
+		"user_id": userID,
+	})
+
+	// Use the Forgejo client to get a user by ID
+	user, resp, err := client.GetUserByID(userID)
+	if err == nil {
+		return user, diags
+	}
+
+	var msg string
+	if resp == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": resp.Status,
+		})
+
+		switch resp.StatusCode {
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+	}
+	diags.AddError("Unable to get user by ID", msg)
+	return nil, diags
 }
