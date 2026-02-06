@@ -12,10 +12,8 @@ provider "forgejo" {
 
 # Existing repository
 data "forgejo_repository" "user" {
-  owner = {
-    login = "test_user"
-  }
-  name = "user_test_repo"
+  owner = "test_user"
+  name  = "user_test_repo"
 }
 
 # Existing deploy key
