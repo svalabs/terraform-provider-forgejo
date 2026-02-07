@@ -148,19 +148,20 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	user := data.User.ValueString()
-
 	tflog.Info(ctx, "List GPG keys", map[string]any{
-		"user": user,
+		"user": data.User.ValueString(),
 	})
 
+	var (
+		keys []*forgejo.GPGKey
+		res  *forgejo.Response
+		err  error
+	)
+
 	// Use Forgejo client to list GPG keys
-	var keys []*forgejo.GPGKey
-	var res *forgejo.Response
-	var err error
-	if user != "" {
+	if data.User.ValueString() != "" {
 		keys, res, err = d.client.ListGPGKeys(
-			user,
+			data.User.ValueString(),
 			forgejo.ListGPGKeysOptions{},
 		)
 	} else {
@@ -169,21 +170,25 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		)
 	}
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			// If the user was not provided, we should never get a 404, so the message here should always have a user.
-			msg = fmt.Sprintf(
-				`GPG keys for user "%s" not found: %s`,
-				user,
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				// If the user was not provided, we should never get a 404, so the message here should always have a user.
+				msg = fmt.Sprintf(
+					`GPG keys for user %s not found: %s`,
+					data.User.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to list GPG keys", msg)
 
@@ -196,10 +201,10 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	})
 	if idx == -1 {
 		var msg string
-		if user != "" {
+		if data.User.ValueString() != "" {
 			msg = fmt.Sprintf(
-				`GPG key with user "%s" and key_id %s not found.`,
-				user,
+				`GPG key with user %s and key_id %s not found.`,
+				data.User.String(),
 				data.KeyID.String(),
 			)
 		} else {
@@ -208,7 +213,7 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 				data.KeyID.String(),
 			)
 		}
-		resp.Diagnostics.AddError("Unable to get GPG key by key_id", msg)
+		resp.Diagnostics.AddError("Unable to find GPG key by key_id", msg)
 
 		return
 	}

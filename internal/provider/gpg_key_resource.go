@@ -326,26 +326,30 @@ func (r *gpgKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	// Use Forgejo client to create new GPG key
 	key, res, err := r.client.CreateGPGKey(opts)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"GPG key creation forbidden: %s",
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"GPG key creation not found: %s",
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"GPG key creation forbidden: %s",
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"GPG key creation not found: %s",
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to create GPG key", msg)
 
@@ -355,6 +359,9 @@ func (r *gpgKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	// Map response body to model
 	diags = data.from(key)
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -381,26 +388,30 @@ func (r *gpgKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Use Forgejo client to get GPG key
 	key, res, err := r.client.GetGPGKey(data.ID.ValueInt64())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"GPG key with id %d forbidden: %s",
-				data.ID.ValueInt64(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"GPG key with id %d not found: %s",
-				data.ID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"GPG key with id %s forbidden: %s",
+					data.ID.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"GPG key with id %s not found: %s",
+					data.ID.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to get GPG key by id", msg)
 
@@ -408,7 +419,11 @@ func (r *gpgKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Map response body to model
-	data.from(key)
+	diags = data.from(key)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -445,26 +460,30 @@ func (r *gpgKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	// Use Forgejo client to delete existing GPG key
 	res, err := r.client.DeleteGPGKey(data.ID.ValueInt64())
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"GPG key with id %d forbidden: %s",
-				data.ID.ValueInt64(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"GPG key with id %d not found: %s",
-				data.ID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"GPG key with id %s forbidden: %s",
+					data.ID.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"GPG key with id %s not found: %s",
+					data.ID.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to delete GPG key", msg)
 
