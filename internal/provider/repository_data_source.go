@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -424,7 +425,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	tflog.Info(ctx, "Get repository by name", map[string]any{
+	tflog.Info(ctx, "Read repository", map[string]any{
 		"owner": data.Owner.ValueString(),
 		"name":  data.Name.ValueString(),
 	})
@@ -435,23 +436,27 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		data.Name.ValueString(),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				data.Owner.String(),
-				data.Name.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner %s and name %s not found: %s",
+					data.Owner.String(),
+					data.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		resp.Diagnostics.AddError("Unable to get repository by name", msg)
+		resp.Diagnostics.AddError("Unable to read repository", msg)
 
 		return
 	}
@@ -489,8 +494,8 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.Releases = types.Int64Value(int64(rep.Releases))
 	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
 	data.Archived = types.BoolValue(rep.Archived)
-	data.Created = types.StringValue(rep.Created.String())
-	data.Updated = types.StringValue(rep.Updated.String())
+	data.Created = types.StringValue(rep.Created.Format(time.RFC3339))
+	data.Updated = types.StringValue(rep.Updated.Format(time.RFC3339))
 	data.HasIssues = types.BoolValue(rep.HasIssues)
 	data.HasWiki = types.BoolValue(rep.HasWiki)
 	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
@@ -506,7 +511,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.AvatarURL = types.StringValue(rep.AvatarURL)
 	data.Internal = types.BoolValue(rep.Internal)
 	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
-	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
+	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.Format(time.RFC3339))
 	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
 
 	// Repository permissions

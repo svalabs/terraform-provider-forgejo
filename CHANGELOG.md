@@ -1,3 +1,18 @@
+## 1.1.0 (January 18, 2026)
+
+FEATURES:
+
+- **New Resource**: `forgejo_branch_protection` ([documentation](docs/resources/branch_protection.md))
+
+ENHANCEMENTS:
+
+- Add nil-safety checks and standardize error messages across resources
+- Extract helper functions to reduce code duplication
+
+NEW CONTRIBUTORS 🎉:
+
+- [@qaiser42](https://github.com/qaiser42) — [#74: Add repository_branch_protection resource](https://github.com/svalabs/terraform-provider-forgejo/pull/74)
+
 ## 1.0.0 (December 30, 2025)
 
 BREAKING CHANGES:

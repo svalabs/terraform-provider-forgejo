@@ -110,7 +110,7 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "Get collaborator by username", map[string]any{
+	tflog.Info(ctx, "Read collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),
 		"repo":         repo.Name.ValueString(),
 		"collaborator": data.User.ValueString(),
@@ -123,32 +123,36 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 		data.User.ValueString(),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s forbidden: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Collaborator with user %s repo %s and name %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.User.String(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Collaborator with user %s repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.User.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		resp.Diagnostics.AddError("Unable to get collaborator permission", msg)
+		resp.Diagnostics.AddError("Unable to read collaborator", msg)
 
 		return
 	}

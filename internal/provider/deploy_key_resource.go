@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -47,7 +48,7 @@ func (m *deployKeyResourceModel) from(k *forgejo.DeployKey) {
 	m.URL = types.StringValue(k.URL)
 	m.Title = types.StringValue(k.Title)
 	m.Fingerprint = types.StringValue(k.Fingerprint)
-	m.Created = types.StringValue(k.Created.String())
+	m.Created = types.StringValue(k.Created.Format(time.RFC3339))
 	m.ReadOnly = types.BoolValue(k.ReadOnly)
 }
 
@@ -210,23 +211,27 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 		opts,
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to create deploy key", msg)
 
@@ -271,7 +276,7 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "Get deploy key by id", map[string]any{
+	tflog.Info(ctx, "Read deploy key", map[string]any{
 		"user":   repo.Owner.ValueString(),
 		"repo":   repo.Name.ValueString(),
 		"key_id": data.KeyID.ValueInt64(),
@@ -284,24 +289,28 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 		data.KeyID.ValueInt64(),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 404:
-			msg = fmt.Sprintf(
-				"Deploy key with user %s repo %s and id %d not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Deploy key with user %s repo %s and id %d not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.KeyID.ValueInt64(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		resp.Diagnostics.AddError("Unable to get deploy key by id", msg)
+		resp.Diagnostics.AddError("Unable to read deploy key", msg)
 
 		return
 	}
@@ -367,30 +376,34 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 		data.KeyID.ValueInt64(),
 	)
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
 		var msg string
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Deploy key with owner %s repo %s and id %d forbidden: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Deploy key with owner %s repo %s and id %d not found: %s",
-				repo.Owner.String(),
-				repo.Name.String(),
-				data.KeyID.ValueInt64(),
-				err,
-			)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Deploy key with owner %s repo %s and id %d forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.KeyID.ValueInt64(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Deploy key with owner %s repo %s and id %d not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.KeyID.ValueInt64(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
 		resp.Diagnostics.AddError("Unable to delete deploy key", msg)
 

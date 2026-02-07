@@ -4,7 +4,7 @@
 ![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
 
 This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu](https://opentofu.org/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
-The project is based on the awsome [Forgejo SDK for Go](https://codeberg.org/mvdkleijn/forgejo-sdk) by [Martijn van der Kleijn](https://vanderkleijn.net/).
+The project is based on the awesome [Forgejo SDK for Go](https://codeberg.org/mvdkleijn/forgejo-sdk) by [Martijn van der Kleijn](https://vanderkleijn.net/).
 Thanks, Martijn, for the heavy lifting!
 
 ## Contents
@@ -14,6 +14,7 @@ It currently provides the following...
 
 Resources:
 
+- `forgejo_branch_protection` ([documentation](docs/resources/branch_protection.md))
 - `forgejo_collaborator` ([documentation](docs/resources/collaborator.md))
 - `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
@@ -41,7 +42,7 @@ terraform {
   required_providers {
     forgejo = {
       source  = "svalabs/forgejo"
-      version = "~> 1.0.0"
+      version = "~> 1.1.0"
     }
   }
 }
@@ -178,9 +179,11 @@ Some resources support import into Terraform state.
 Importing is useful for bringing existing, manually created resources under Terraform management.
 Each resource defines its own import identifier, which uniquely identifies the resource to be imported:
 
-| Resource             | Import Identifier                  |
-| -------------------- | ---------------------------------- |
-| `forgejo_repository` | `<<<repo_owner>>>/<<<repo_name>>>` |
+| Resource                    | Import Identifier                               |
+| --------------------------- | ----------------------------------------------- |
+| `forgejo_repository`        | `<<<repo_owner>>>/<<<repo_name>>>`              |
+| `forgejo_branch_protection` | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>` |
+| `forgejo_user`              | `<<<login>>>`                                    |
 
 Refer to the `examples/` directory for more import examples.
 
