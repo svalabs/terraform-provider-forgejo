@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -493,8 +494,8 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.Releases = types.Int64Value(int64(rep.Releases))
 	data.DefaultBranch = types.StringValue(rep.DefaultBranch)
 	data.Archived = types.BoolValue(rep.Archived)
-	data.Created = types.StringValue(rep.Created.String())
-	data.Updated = types.StringValue(rep.Updated.String())
+	data.Created = types.StringValue(rep.Created.Format(time.RFC3339))
+	data.Updated = types.StringValue(rep.Updated.Format(time.RFC3339))
 	data.HasIssues = types.BoolValue(rep.HasIssues)
 	data.HasWiki = types.BoolValue(rep.HasWiki)
 	data.HasPullRequests = types.BoolValue(rep.HasPullRequests)
@@ -510,7 +511,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.AvatarURL = types.StringValue(rep.AvatarURL)
 	data.Internal = types.BoolValue(rep.Internal)
 	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
-	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.String())
+	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.Format(time.RFC3339))
 	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
 
 	// Repository permissions

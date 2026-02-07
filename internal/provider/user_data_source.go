@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -231,8 +232,8 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.AvatarURL = types.StringValue(usr.AvatarURL)
 	data.Language = types.StringValue(usr.Language)
 	data.IsAdmin = types.BoolValue(usr.IsAdmin)
-	data.LastLogin = types.StringValue(usr.LastLogin.String())
-	data.Created = types.StringValue(usr.Created.String())
+	data.LastLogin = types.StringValue(usr.LastLogin.Format(time.RFC3339))
+	data.Created = types.StringValue(usr.Created.Format(time.RFC3339))
 	data.Restricted = types.BoolValue(usr.Restricted)
 	data.IsActive = types.BoolValue(usr.IsActive)
 	data.ProhibitLogin = types.BoolValue(usr.ProhibitLogin)

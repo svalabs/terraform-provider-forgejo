@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -77,8 +78,8 @@ func (m *userResourceModel) from(u *forgejo.User) {
 	m.AvatarURL = types.StringValue(u.AvatarURL)
 	m.Language = types.StringValue(u.Language)
 	m.IsAdmin = types.BoolValue(u.IsAdmin)
-	m.LastLogin = types.StringValue(u.LastLogin.String())
-	m.Created = types.StringValue(u.Created.String())
+	m.LastLogin = types.StringValue(u.LastLogin.Format(time.RFC3339))
+	m.Created = types.StringValue(u.Created.Format(time.RFC3339))
 	m.Restricted = types.BoolValue(u.Restricted)
 	m.IsActive = types.BoolValue(u.IsActive)
 	m.ProhibitLogin = types.BoolValue(u.ProhibitLogin)

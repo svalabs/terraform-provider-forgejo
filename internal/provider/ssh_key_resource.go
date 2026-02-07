@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -48,7 +49,7 @@ func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
 	m.URL = types.StringValue(k.URL)
 	m.Title = types.StringValue(k.Title)
 	m.Fingerprint = types.StringValue(k.Fingerprint)
-	m.Created = types.StringValue(k.Created.String())
+	m.Created = types.StringValue(k.Created.Format(time.RFC3339))
 	m.ReadOnly = types.BoolValue(k.ReadOnly)
 	m.KeyType = types.StringValue(k.KeyType)
 }

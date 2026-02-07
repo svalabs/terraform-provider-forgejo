@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -227,8 +228,8 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.CanEncryptComms = types.BoolValue(keys[idx].CanEncryptComms)
 	data.CanEncryptStorage = types.BoolValue(keys[idx].CanEncryptStorage)
 	data.CanCertify = types.BoolValue(keys[idx].CanCertify)
-	data.Created = types.StringValue(keys[idx].Created.String())
-	data.Expires = types.StringValue(keys[idx].Expires.String())
+	data.Created = types.StringValue(keys[idx].Created.Format(time.RFC3339))
+	data.Expires = types.StringValue(keys[idx].Expires.Format(time.RFC3339))
 
 	data.Emails, diags = getEmails(keys[idx])
 	resp.Diagnostics.Append(diags...)
