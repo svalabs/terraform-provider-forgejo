@@ -1,3 +1,29 @@
+## 1.2.0 (February 8, 2026)
+
+FEATURES:
+
+- **New Resource**: `forgejo_gpg_key` ([documentation](docs/resources/gpg_key.md))
+- **New Data Source**: `forgejo_gpg_key` ([documentation](docs/data-sources/gpg_key.md))
+- `forgejo_user`: implement resource import
+
+ENHANCEMENTS:
+
+- `forgejo_repository`: add `fast-forward-only` to allowed attribute values for `default_merge_style`
+- `forgejo_repository`: allow archiving on destroy
+- Standardize on formatting temporal data in RFC3339 format
+
+DEPENDENCIES:
+
+- Update to Go 1.24.12
+- Bump actions/checkout from 6.0.1 to 6.0.2
+- Bump actions/setup-go from 6.1.0 to 6.2.0
+
+NEW CONTRIBUTORS 🎉:
+
+- [@mathieu-lemay](https://github.com/mathieu-lemay) — [#85: Add GPG Key resource and data source](https://github.com/svalabs/terraform-provider-forgejo/pull/85)
+- [@kad-hollac1](https://github.com/kad-hollac1) — [#89: Allow archiving on destroy](https://github.com/svalabs/terraform-provider-forgejo/pull/89)
+- [@Kernald](https://github.com/Kernald) — [#93: Add 'fast-forward-only' option to default merge style validator](https://github.com/svalabs/terraform-provider-forgejo/pull/93)
+
 ## 1.1.0 (January 18, 2026)
 
 FEATURES:
@@ -42,7 +68,7 @@ FEATURES:
 
 - **New Resource**: `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - **New Data Source**: `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))
-- `forgejo_repository`: Implement resource import
+- `forgejo_repository`: implement resource import
 
 ENHANCEMENTS:
 
