@@ -17,6 +17,7 @@ Resources:
 - `forgejo_branch_protection` ([documentation](docs/resources/branch_protection.md))
 - `forgejo_collaborator` ([documentation](docs/resources/collaborator.md))
 - `forgejo_deploy_key` ([documentation](docs/resources/deploy_key.md))
+- `forgejo_gpg_key` ([documentation](docs/resources/gpg_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
@@ -28,6 +29,7 @@ Data Sources:
 
 - `forgejo_collaborator` ([documentation](docs/data-sources/collaborator.md))
 - `forgejo_deploy_key` ([documentation](docs/data-sources/deploy_key.md))
+- `forgejo_gpg_key` ([documentation](docs/data-sources/gpg_key.md))
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
 - `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))
