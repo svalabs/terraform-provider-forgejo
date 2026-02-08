@@ -1528,6 +1528,7 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 			Archived: &archive,
 		}
 
+		// Use Forgejo client to archive existing repository
 		_, res, err = r.client.EditRepo(
 			data.Owner.ValueString(),
 			data.Name.ValueString(),
@@ -1546,40 +1547,40 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 		)
 	}
 
-	if err == nil {
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Repository with owner %s and name %s forbidden: %s",
+					data.Owner.String(),
+					data.Name.String(),
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner %s and name %s not found: %s",
+					data.Owner.String(),
+					data.Name.String(),
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		resp.Diagnostics.AddError("Unable to delete repository", msg)
+
 		return
 	}
-
-	var msg string
-	if res == nil {
-		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-	} else {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
-
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s forbidden: %s",
-				data.Owner.String(),
-				data.Name.String(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Repository with owner %s and name %s not found: %s",
-				data.Owner.String(),
-				data.Name.String(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
-		}
-	}
-	resp.Diagnostics.AddError("Unable to delete repository", msg)
 }
 
 // ImportState reads an existing resource and adds it to Terraform state on success.
