@@ -592,9 +592,10 @@ Note: Managing user repositories requires administrative privileges!`,
 			"created_at": schema.StringAttribute{
 				Description: "Time at which the repository was created.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				// 6b66d9e: standardize on formatting temporal data in RFC3339 format
+				// PlanModifiers: []planmodifier.String{
+				// 	stringplanmodifier.UseStateForUnknown(),
+				// },
 			},
 			"updated_at": schema.StringAttribute{
 				Description: "Time at which the repository was updated.",

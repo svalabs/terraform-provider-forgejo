@@ -121,9 +121,10 @@ Note: Managing user SSH keys requires administrative privileges!`,
 			"created_at": schema.StringAttribute{
 				Description: "Time at which the SSH key was created.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				// 6b66d9e: standardize on formatting temporal data in RFC3339 format
+				// PlanModifiers: []planmodifier.String{
+				// 	stringplanmodifier.UseStateForUnknown(),
+				// },
 			},
 			"read_only": schema.BoolAttribute{
 				Description: "Does the key have only read access?",
