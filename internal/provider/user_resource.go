@@ -384,7 +384,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Use Forgejo client to create new user
-	_, res, err := r.client.AdminCreateUser(copts)
+	usr, res, err := r.client.AdminCreateUser(copts)
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -411,6 +411,16 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		}
 		resp.Diagnostics.AddError("Unable to create user", msg)
 
+		return
+	}
+
+	// Map response body to model
+	data.ID = types.Int64Value(usr.ID)
+
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -492,7 +502,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	})
 
 	// Use Forgejo client to fetch updated user
-	usr, res, err := r.client.GetUserInfo(data.Name.ValueString())
+	usr, res, err = r.client.GetUserInfo(data.Name.ValueString())
 	if err != nil {
 		var msg string
 		if res == nil {
