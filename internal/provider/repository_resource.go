@@ -1156,7 +1156,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 				}
 				if res.StatusCode == 404 {
 					resp.Diagnostics.AddError(
-						"Owner not found",
+						"Unable to find owner",
 						fmt.Sprintf(
 							"Neither organization nor user with name %s exists.",
 							data.Owner.String(),
