@@ -1134,10 +1134,26 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			ownerType = "personal"
 		} else {
 			// Use Forgejo client to check if owner is org
-			_, res, _ := r.client.GetOrg(data.Owner.ValueString())
+			_, res, err := r.client.GetOrg(data.Owner.ValueString())
+			if res == nil {
+				resp.Diagnostics.AddError(
+					"Unable to check if owner is organization",
+					fmt.Sprintf("Unknown error with nil response: %s", err),
+				)
+
+				return
+			}
 			if res.StatusCode == 404 {
 				// Use Forgejo client to check if owner is user
-				_, res, _ = r.client.GetUserInfo(data.Owner.ValueString())
+				_, res, err = r.client.GetUserInfo(data.Owner.ValueString())
+				if res == nil {
+					resp.Diagnostics.AddError(
+						"Unable to check if owner is user",
+						fmt.Sprintf("Unknown error with nil response: %s", err),
+					)
+
+					return
+				}
 				if res.StatusCode == 404 {
 					resp.Diagnostics.AddError(
 						"Owner not found",
@@ -1215,6 +1231,22 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 		resp.Diagnostics.AddError("Unable to create repository", msg)
 
+		return
+	}
+
+	// Map response body to model
+	data.ID = types.Int64Value(rep.ID)
+
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Prevent panic if owner is nil
+	if rep.Owner == nil {
+		resp.Diagnostics.AddError("Unable to create repository", "Owner is nil")
 		return
 	}
 
