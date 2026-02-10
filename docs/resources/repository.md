@@ -242,12 +242,12 @@ import {
 
 Required:
 
-- `external_tracker_format` (String) External Issue Tracker URL Format. Use the placeholders `{user}`, `{repo}` and `{index}` for the username, repository name and issue index.
+- `external_tracker_format` (String) External issue tracker URL format. Use the placeholders `{user}`, `{repo}` and `{index}` for the username, repository name and issue index.
 - `external_tracker_url` (String) URL of external issue tracker.
 
 Optional:
 
-- `external_tracker_style` (String) External Issue Tracker Number Format.
+- `external_tracker_style` (String) External issue tracker number format.
 
 
 <a id="nestedatt--external_wiki"></a>

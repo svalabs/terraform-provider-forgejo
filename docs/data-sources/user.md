@@ -41,6 +41,7 @@ data "forgejo_user" "this" {
 ### Read-Only
 
 - `active` (Boolean) Is the user active?
+- `admin` (Boolean) Is the user an administrator?
 - `avatar_url` (String) Avatar URL of the user.
 - `created_at` (String) Time at which the user was created.
 - `description` (String) Description of the user.
@@ -50,7 +51,6 @@ data "forgejo_user" "this" {
 - `full_name` (String) Full name of the user.
 - `html_url` (String) URL to the user's profile page.
 - `id` (Number) Numeric identifier of the user.
-- `is_admin` (Boolean) Is the user an administrator?
 - `language` (String) Locale of the user.
 - `last_login` (String) Time at which the user last logged in.
 - `location` (String) Location of the user.

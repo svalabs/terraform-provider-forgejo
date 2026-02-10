@@ -118,9 +118,9 @@ Read-Only:
 
 Read-Only:
 
-- `allow_only_contributors_to_track_time` (Boolean) Let only contributors track time.
-- `enable_issue_dependencies` (Boolean) Enable dependencies for issues and pull requests.
-- `enable_time_tracker` (Boolean) Enable time tracking.
+- `allow_only_contributors_to_track_time` (Boolean) Let only contributors track time?
+- `enable_issue_dependencies` (Boolean) Enable dependencies for issues and pull requests?
+- `enable_time_tracker` (Boolean) Enable time tracking?
 
 
 <a id="nestedatt--permissions"></a>

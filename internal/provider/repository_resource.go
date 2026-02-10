@@ -663,11 +663,11 @@ Note: Managing user repositories requires administrative privileges!`,
 						Required:    true,
 					},
 					"external_tracker_format": schema.StringAttribute{
-						Description: "External Issue Tracker URL Format. Use the placeholders `{user}`, `{repo}` and `{index}` for the username, repository name and issue index.",
+						Description: "External issue tracker URL format. Use the placeholders `{user}`, `{repo}` and `{index}` for the username, repository name and issue index.",
 						Required:    true,
 					},
 					"external_tracker_style": schema.StringAttribute{
-						Description: "External Issue Tracker Number Format.",
+						Description: "External issue tracker number format.",
 						Optional:    true,
 						Computed:    true,
 						Default:     stringdefault.StaticString("numeric"),

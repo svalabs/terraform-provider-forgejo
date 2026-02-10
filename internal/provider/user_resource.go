@@ -44,11 +44,11 @@ type userResourceModel struct {
 	HTMLURL                 types.String `tfsdk:"html_url"`
 	AvatarURL               types.String `tfsdk:"avatar_url"`
 	Language                types.String `tfsdk:"language"`
-	IsAdmin                 types.Bool   `tfsdk:"admin"`
+	Admin                   types.Bool   `tfsdk:"admin"`
 	LastLogin               types.String `tfsdk:"last_login"`
 	Created                 types.String `tfsdk:"created_at"`
 	Restricted              types.Bool   `tfsdk:"restricted"`
-	IsActive                types.Bool   `tfsdk:"active"`
+	Active                  types.Bool   `tfsdk:"active"`
 	ProhibitLogin           types.Bool   `tfsdk:"prohibit_login"`
 	Location                types.String `tfsdk:"location"`
 	Website                 types.String `tfsdk:"website"`
@@ -77,11 +77,11 @@ func (m *userResourceModel) from(u *forgejo.User) {
 	m.HTMLURL = types.StringValue(u.HTMLURL)
 	m.AvatarURL = types.StringValue(u.AvatarURL)
 	m.Language = types.StringValue(u.Language)
-	m.IsAdmin = types.BoolValue(u.IsAdmin)
+	m.Admin = types.BoolValue(u.IsAdmin)
 	m.LastLogin = types.StringValue(u.LastLogin.Format(time.RFC3339))
 	m.Created = types.StringValue(u.Created.Format(time.RFC3339))
 	m.Restricted = types.BoolValue(u.Restricted)
-	m.IsActive = types.BoolValue(u.IsActive)
+	m.Active = types.BoolValue(u.IsActive)
 	m.ProhibitLogin = types.BoolValue(u.ProhibitLogin)
 	m.Location = types.StringValue(u.Location)
 	m.Website = types.StringValue(u.Website)
@@ -112,8 +112,8 @@ func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) 
 	o.MustChangePassword = m.MustChangePassword.ValueBoolPointer()
 	o.Website = m.Website.ValueStringPointer()
 	o.Location = m.Location.ValueStringPointer()
-	o.Active = m.IsActive.ValueBoolPointer()
-	o.Admin = m.IsAdmin.ValueBoolPointer()
+	o.Active = m.Active.ValueBoolPointer()
+	o.Admin = m.Admin.ValueBoolPointer()
 	o.AllowGitHook = m.AllowGitHook.ValueBoolPointer()
 	o.AllowImportLocal = m.AllowImportLocal.ValueBoolPointer()
 	o.ProhibitLogin = m.ProhibitLogin.ValueBoolPointer()
@@ -176,7 +176,7 @@ Note: Managing users requires administrative privileges!`,
 				Required:    true,
 			},
 			"avatar_url": schema.StringAttribute{
-				Description: "URL to the user's avatar.",
+				Description: "Avatar URL of the user.",
 				Computed:    true,
 			},
 			"html_url": schema.StringAttribute{
@@ -434,8 +434,8 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		"must_change_password":      data.MustChangePassword.ValueBool(),
 		"website":                   data.Website.ValueString(),
 		"location":                  data.Location.ValueString(),
-		"active":                    data.IsActive.ValueBool(),
-		"admin":                     data.IsAdmin.ValueBool(),
+		"active":                    data.Active.ValueBool(),
+		"admin":                     data.Admin.ValueBool(),
 		"allow_git_hook":            data.AllowGitHook.ValueBool(),
 		"allow_import_local":        data.AllowImportLocal.ValueBool(),
 		"max_repo_creation":         data.MaxRepoCreation.ValueInt64(),
@@ -621,8 +621,8 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		"must_change_password":      plan.MustChangePassword.ValueBool(),
 		"website":                   plan.Website.ValueString(),
 		"location":                  plan.Location.ValueString(),
-		"active":                    plan.IsActive.ValueBool(),
-		"admin":                     plan.IsAdmin.ValueBool(),
+		"active":                    plan.Active.ValueBool(),
+		"admin":                     plan.Admin.ValueBool(),
 		"allow_git_hook":            plan.AllowGitHook.ValueBool(),
 		"allow_import_local":        plan.AllowImportLocal.ValueBool(),
 		"max_repo_creation":         plan.MaxRepoCreation.ValueInt64(),

@@ -80,7 +80,7 @@ resource "forgejo_user" "non_defaults" {
 
 ### Read-Only
 
-- `avatar_url` (String) URL to the user's avatar.
+- `avatar_url` (String) Avatar URL of the user.
 - `created_at` (String) Time at which the user was created.
 - `followers_count` (Number) Number of following users.
 - `following_count` (Number) Number of users followed.

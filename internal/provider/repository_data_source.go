@@ -278,15 +278,15 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			"internal_tracker": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"enable_time_tracker": schema.BoolAttribute{
-						Description: "Enable time tracking.",
+						Description: "Enable time tracking?",
 						Computed:    true,
 					},
 					"allow_only_contributors_to_track_time": schema.BoolAttribute{
-						Description: "Let only contributors track time.",
+						Description: "Let only contributors track time?",
 						Computed:    true,
 					},
 					"enable_issue_dependencies": schema.BoolAttribute{
-						Description: "Enable dependencies for issues and pull requests.",
+						Description: "Enable dependencies for issues and pull requests?",
 						Computed:    true,
 					},
 				},

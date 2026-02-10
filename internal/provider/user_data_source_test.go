@@ -44,7 +44,7 @@ data "forgejo_user" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("following_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("full_name"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("is_admin"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("admin"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("language"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("last_login"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("location"), knownvalue.NotNull()),

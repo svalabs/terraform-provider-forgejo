@@ -36,11 +36,11 @@ type userDataSourceModel struct {
 	HTMLURL          types.String `tfsdk:"html_url"`
 	AvatarURL        types.String `tfsdk:"avatar_url"`
 	Language         types.String `tfsdk:"language"`
-	IsAdmin          types.Bool   `tfsdk:"is_admin"`
+	Admin            types.Bool   `tfsdk:"admin"`
 	LastLogin        types.String `tfsdk:"last_login"`
 	Created          types.String `tfsdk:"created_at"`
 	Restricted       types.Bool   `tfsdk:"restricted"`
-	IsActive         types.Bool   `tfsdk:"active"`
+	Active           types.Bool   `tfsdk:"active"`
 	ProhibitLogin    types.Bool   `tfsdk:"prohibit_login"`
 	Location         types.String `tfsdk:"location"`
 	Website          types.String `tfsdk:"website"`
@@ -98,7 +98,7 @@ func (d *userDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 				Description: "Locale of the user.",
 				Computed:    true,
 			},
-			"is_admin": schema.BoolAttribute{
+			"admin": schema.BoolAttribute{
 				Description: "Is the user an administrator?",
 				Computed:    true,
 			},
@@ -231,11 +231,11 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.HTMLURL = types.StringValue(usr.HTMLURL)
 	data.AvatarURL = types.StringValue(usr.AvatarURL)
 	data.Language = types.StringValue(usr.Language)
-	data.IsAdmin = types.BoolValue(usr.IsAdmin)
+	data.Admin = types.BoolValue(usr.IsAdmin)
 	data.LastLogin = types.StringValue(usr.LastLogin.Format(time.RFC3339))
 	data.Created = types.StringValue(usr.Created.Format(time.RFC3339))
 	data.Restricted = types.BoolValue(usr.Restricted)
-	data.IsActive = types.BoolValue(usr.IsActive)
+	data.Active = types.BoolValue(usr.IsActive)
 	data.ProhibitLogin = types.BoolValue(usr.ProhibitLogin)
 	data.Location = types.StringValue(usr.Location)
 	data.Website = types.StringValue(usr.Website)
