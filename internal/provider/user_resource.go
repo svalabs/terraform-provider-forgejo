@@ -68,6 +68,10 @@ type userResourceModel struct {
 
 // from is a helper function to load an API struct into Terraform data model.
 func (m *userResourceModel) from(u *forgejo.User) {
+	if u == nil {
+		return
+	}
+
 	m.ID = types.Int64Value(u.ID)
 	m.Name = types.StringValue(u.UserName)
 	m.LoginName = types.StringValue(u.LoginName)

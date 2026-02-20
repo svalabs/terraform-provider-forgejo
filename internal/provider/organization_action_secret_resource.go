@@ -42,6 +42,10 @@ type organizationActionSecretResourceModel struct {
 
 // from is a helper function to load an API struct into Terraform data model.
 func (m *organizationActionSecretResourceModel) from(s *forgejo.Secret) {
+	if s == nil {
+		return
+	}
+
 	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
 }
 

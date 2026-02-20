@@ -111,6 +111,10 @@ type repositoryResourceModel struct {
 
 // from is a helper function to load an API struct into Terraform data model.
 func (m *repositoryResourceModel) from(r *forgejo.Repository) {
+	if r == nil {
+		return
+	}
+
 	m.ID = types.Int64Value(r.ID)
 
 	if r.Owner != nil {

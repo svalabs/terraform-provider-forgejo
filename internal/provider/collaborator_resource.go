@@ -35,8 +35,12 @@ type collaboratorResourceModel struct {
 	Permission   types.String `tfsdk:"permission"`
 }
 
-// from is a helper function to populate Terraform data model from an API struct.
+// from is a helper function to load an API struct into Terraform data model.
 func (m *collaboratorResourceModel) from(perms *forgejo.CollaboratorPermissionResult) {
+	if perms == nil {
+		return
+	}
+
 	m.Permission = types.StringValue(string(perms.Permission))
 }
 

@@ -766,8 +766,11 @@ func (r *branchProtectionResource) toEditOption(ctx context.Context, data *branc
 	return opts
 }
 
-func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, data *branchProtectionResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
+// from is a helper function to load an API struct into Terraform data model.
+func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, data *branchProtectionResourceModel) (diags diag.Diagnostics) {
+	if protection == nil || data == nil {
+		return diags
+	}
 
 	data.EnablePush = types.BoolValue(protection.EnablePush)
 	data.EnablePushWhitelist = types.BoolValue(protection.EnablePushWhitelist)

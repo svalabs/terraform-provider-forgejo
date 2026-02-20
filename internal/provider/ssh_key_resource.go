@@ -44,6 +44,10 @@ type sshKeyResourceModel struct {
 
 // from is a helper function to load an API struct into Terraform data model.
 func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
+	if k == nil {
+		return
+	}
+
 	m.KeyID = types.Int64Value(k.ID)
 	m.Key = types.StringValue(k.Key)
 	m.URL = types.StringValue(k.URL)

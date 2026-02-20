@@ -77,7 +77,11 @@ type gpgKeyResourceModel struct {
 }
 
 // from is a helper function to load an API struct into Terraform data model.
-func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) diag.Diagnostics {
+func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) (diags diag.Diagnostics) {
+	if k == nil {
+		return diags
+	}
+
 	m.ID = types.Int64Value(k.ID)
 	m.KeyID = types.StringValue(k.KeyID)
 	m.PrimaryKeyID = types.StringValue(k.PrimaryKeyID)
@@ -101,7 +105,7 @@ func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) diag.Diagnostics {
 	}
 	m.SubKeys = subkeys
 
-	return nil
+	return diags
 }
 
 // to is a helper function to save Terraform data model into an API struct.

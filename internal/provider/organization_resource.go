@@ -47,6 +47,10 @@ type organizationResourceModel struct {
 
 // from is a helper function to load an API struct into Terraform data model.
 func (m *organizationResourceModel) from(o *forgejo.Organization) {
+	if o == nil {
+		return
+	}
+
 	m.ID = types.Int64Value(o.ID)
 	m.Name = types.StringValue(o.UserName)
 	m.FullName = types.StringValue(o.FullName)

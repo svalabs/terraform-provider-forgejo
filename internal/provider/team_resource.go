@@ -47,6 +47,10 @@ type teamResourceModel struct {
 
 // from is a helper function to populate Terraform data model from an API struct.
 func (m *teamResourceModel) from(t *forgejo.Team, ctx context.Context) (diags diag.Diagnostics) {
+	if t == nil {
+		return diags
+	}
+
 	m.ID = types.Int64Value(t.ID)
 	m.Name = types.StringValue(t.Name)
 	m.Description = types.StringValue(t.Description)
