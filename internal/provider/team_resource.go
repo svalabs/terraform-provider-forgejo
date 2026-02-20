@@ -85,7 +85,9 @@ func (r *teamResource) Metadata(_ context.Context, req resource.MetadataRequest,
 // Schema defines the schema for the resource.
 func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo team resource.",
+		Description: `Forgejo team resource.
+Note: Managing teams requires administrative privileges!`,
+
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				Description: "Numeric identifier of the team.",
@@ -191,6 +193,7 @@ func (r *teamResource) Configure(_ context.Context, req resource.ConfigureReques
 				req.ProviderData,
 			),
 		)
+
 		return
 	}
 
@@ -203,19 +206,36 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	var data teamResourceModel
 
-	// Read Terraform plan data into model.
+	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	team, err := createTeam(ctx, r.client, data.OrganizationID, data.Name.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Team creation error", err.Error())
+	// Use Forgejo client to create new team
+	team, diags := createTeam(
+		ctx,
+		r.client,
+		data.OrganizationID,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Map response body to model
+	data.ID = types.Int64Value(team.ID)
+
+	// Save data into Terraform state
+	diags = resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Generate API request body from plan
 	opts := forgejo.EditTeamOption{}
 	diags = data.to(&opts, ctx)
 	resp.Diagnostics.Append(diags...)
@@ -223,18 +243,26 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	team, err = editTeam(ctx, r.client, team.ID, opts)
-	if err != nil {
-		resp.Diagnostics.AddError("Unable to edit team", err.Error())
+	// Use Forgejo client to update existing team
+	team, diags = editTeam(
+		ctx,
+		r.client,
+		team.ID,
+		opts,
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Map response body to model
 	diags = data.from(team, ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -252,28 +280,31 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	tflog.Info(ctx, "Get team from org", map[string]any{
-		"team":            data.Name,
-		"organization_id": data.OrganizationID,
+	tflog.Info(ctx, "Read team", map[string]any{
+		"name":            data.Name.ValueString(),
+		"organization_id": data.OrganizationID.ValueInt64(),
 	})
 
-	team, err := getOrgTeamByName(ctx, r.client, data.OrganizationID, data.Name)
-	if err != nil {
-		resp.Diagnostics.AddError("Unable to get team by name", err.Error())
+	// Use Forgejo client to read existing team
+	team, diags := getOrgTeamByName(
+		ctx,
+		r.client,
+		data.OrganizationID,
+		data.Name,
+	)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
 		return
 	}
 
-	if team == nil {
-		resp.Diagnostics.AddError("Unable to get team by name", fmt.Sprintf("No team found called %s within organisation ID %s.", data.Name, data.OrganizationID))
-		return
-	}
-
+	// Map response body to model
 	diags = data.from(team, ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -284,18 +315,14 @@ func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	var data teamResourceModel
 
-	// Read Terraform plan data into the model.
+	// Read Terraform plan data into the model
 	diags := req.Plan.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Info(ctx, "Update team from org", map[string]any{
-		"team":            data.Name.ValueString(),
-		"organization_id": data.OrganizationID.ValueInt64(),
-	})
-
+	// Generate API request body from plan
 	opts := forgejo.EditTeamOption{}
 	diags = data.to(&opts, ctx)
 	resp.Diagnostics.Append(diags...)
@@ -303,24 +330,26 @@ func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	team, err := editTeam(ctx, r.client, data.ID.ValueInt64(), opts)
-	if err != nil {
-		resp.Diagnostics.AddError("Unable to edit team", err.Error())
+	// Use Forgejo client to update existing team
+	team, diags := editTeam(
+		ctx,
+		r.client,
+		data.ID.ValueInt64(),
+		opts,
+	)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
 		return
 	}
 
-	if team == nil {
-		resp.Diagnostics.AddError("Unable edit team", fmt.Sprintf("No team found called %s within organisation ID %d.", data.Name.ValueString(), data.OrganizationID.ValueInt64()))
-		return
-	}
-
+	// Map response body to model
 	diags = data.from(team, ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Save data into Terraform state.
+	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -331,38 +360,44 @@ func (r *teamResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	var data teamResourceModel
 
-	// Read Terraform prior state data into the model.
+	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Info(ctx, "Delete team from org", map[string]any{
-		"team":            data.Name.ValueString(),
+	tflog.Info(ctx, "Delete team", map[string]any{
+		"name":            data.Name.ValueString(),
 		"organization_id": data.OrganizationID.ValueInt64(),
 	})
 
-	// Use Forgejo client to delete existing team.
+	// Use Forgejo client to delete existing team
 	res, err := r.client.DeleteTeam(data.ID.ValueInt64())
-	if err == nil {
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Team with name %s not found: %s",
+					data.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		resp.Diagnostics.AddError("Unable to delete team", msg)
+
 		return
 	}
-	tflog.Error(ctx, "Error", map[string]any{
-		"status": res.Status,
-	})
-
-	switch res.StatusCode {
-	case 404:
-		err = fmt.Errorf(
-			"the Team with name '%s' was not found: %s",
-			data.Name.String(),
-			err,
-		)
-	default:
-		err = fmt.Errorf("unknown error: %s", err)
-	}
-	resp.Diagnostics.AddError("Unable to delete team", err.Error())
 }
 
 // NewTeamResource is a helper function to simplify the provider implementation.
@@ -370,100 +405,146 @@ func NewTeamResource() resource.Resource {
 	return &teamResource{}
 }
 
-func createTeam(ctx context.Context, client *forgejo.Client, organizationID types.Int64, teamName string) (team *forgejo.Team, err error) {
-	tflog.Info(ctx, "Add team to org", map[string]any{
-		"team":            teamName,
+func createTeam(ctx context.Context, client *forgejo.Client, organizationID types.Int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Create team", map[string]any{
+		"name":            teamName,
 		"organization_id": organizationID,
 	})
 
+	// Generate API request body
 	opts := forgejo.CreateTeamOption{
 		Name:       teamName,
 		Permission: forgejo.AccessMode("read"),
 		Units:      []forgejo.RepoUnitType{forgejo.RepoUnitType("repo.code")},
 	}
 
-	err = opts.Validate()
+	// Validate API request body
+	err := opts.Validate()
 	if err != nil {
-		err = fmt.Errorf("input validation error: %s", err.Error())
-		return
+		diags.AddError("Input validation error", err.Error())
+
+		return nil, diags
 	}
 
-	organization, err := getOrganizationByID(ctx, client, organizationID)
+	// Use Forgejo client to get organization
+	organization, diags := getOrganizationByID(
+		ctx,
+		client,
+		organizationID,
+	)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Use Forgejo client to create new team
+	team, res, err := client.CreateTeam(organization.UserName, opts)
 	if err != nil {
-		return nil, err
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Team with owner '%s' and name '%s' forbidden: %s",
+					organization.UserName,
+					teamName,
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Organization with name '%s' not found: %s",
+					organization.UserName,
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		diags.AddError("Unable to create team", msg)
+
+		return nil, diags
 	}
 
-	if organization == nil {
-		err = fmt.Errorf(
-			"no Organization with id '%d' was found",
-			organizationID.ValueInt64(),
-		)
-		return nil, err
-	}
-
-	team, resp, err := client.CreateTeam(organization.UserName, opts)
-	if err == nil {
-		return team, nil
-	}
-
-	tflog.Error(ctx, "Error", map[string]any{
-		"status": resp.Status,
-	})
-
-	switch resp.StatusCode {
-	case 403:
-		err = fmt.Errorf(
-			"the Team with owner '%s' and name '%s' is forbidden: %s",
-			organization.UserName,
-			teamName,
-			err,
-		)
-	case 404:
-		err = fmt.Errorf(
-			"the Organization with name '%s' was not found: %s",
-			organization.UserName,
-			err,
-		)
-	case 422:
-		err = fmt.Errorf("input validation error: %s", err)
-	default:
-		err = fmt.Errorf("unknown error: %s", err)
-	}
-	return team, err
+	return team, diags
 }
 
-func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts forgejo.EditTeamOption) (team *forgejo.Team, err error) {
-	tflog.Info(ctx, "Edit team", map[string]any{
-		"team_id": teamID,
+func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts forgejo.EditTeamOption) (*forgejo.Team, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Update team", map[string]any{
+		"id": teamID,
 	})
 
-	err = opts.Validate()
+	// Validate API request body
+	err := opts.Validate()
 	if err != nil {
-		err = fmt.Errorf("input validation error: %s", err)
-		return nil, err
+		diags.AddError("Input validation error", err.Error())
+
+		return nil, diags
 	}
 
-	resp, err := client.EditTeam(teamID, opts)
-	if err == nil {
-		team, resp, err = client.GetTeam(teamID)
-		if err == nil {
-			return team, nil
+	// Use Forgejo client to update existing team
+	res, err := client.EditTeam(teamID, opts)
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Team with ID %d not found: %s",
+					teamID,
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
+		diags.AddError("Unable to update team", msg)
+
+		return nil, diags
 	}
 
-	tflog.Error(ctx, "Error", map[string]any{
-		"status": resp.Status,
-	})
+	// Use Forgejo client to fetch updated team
+	team, res, err := client.GetTeam(teamID)
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
 
-	switch resp.StatusCode {
-	case 404:
-		err = fmt.Errorf(
-			"the Team with ID '%d' was not found: %s",
-			teamID,
-			err,
-		)
-	default:
-		err = fmt.Errorf("unknown error: %s", err)
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Team with ID %d not found: %s",
+					teamID,
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		diags.AddError("Unable to read team", msg)
+
+		return nil, diags
 	}
-	return nil, err
+
+	return team, diags
 }

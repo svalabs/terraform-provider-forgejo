@@ -24,7 +24,7 @@ resource "forgejo_team" "test" {
 	name            = "tftest"
 	organization_id = 1011
 }`,
-				ExpectError: regexp.MustCompile("no Organization with id '1011' was found"),
+				ExpectError: regexp.MustCompile("Organization with ID 1011 not found"),
 			},
 			// Create and Read testing
 			{

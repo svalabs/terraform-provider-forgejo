@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -113,35 +114,31 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	var data teamDataSourceModel
 
-	// Read Terraform configuration data into model.
+	// Read Terraform configuration data into model
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Info(ctx, "Get team by name", map[string]any{
+	tflog.Info(ctx, "Read team", map[string]any{
 		"name":            data.Name.ValueString(),
 		"organization_id": data.OrganizationID.ValueInt64(),
 	})
 
-	// Use Forgejo client to get team by name.
-	team, err := getOrgTeamByName(ctx, d.client, data.OrganizationID, data.Name)
-	if err != nil {
-		resp.Diagnostics.AddError("Unable to get team by name", err.Error())
+	// Use Forgejo client to get team by name
+	team, diags := getOrgTeamByName(
+		ctx,
+		d.client,
+		data.OrganizationID,
+		data.Name,
+	)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
 		return
 	}
 
-	if team == nil {
-		err = fmt.Errorf(
-			"no Team with name '%s' was found",
-			data.Name.String(),
-		)
-		resp.Diagnostics.AddError("Unable to get team by name", err.Error())
-		return
-	}
-
-	// Map response body to model.
+	// Map response body to model
 	data.ID = types.Int64Value(team.ID)
 	data.Name = types.StringValue(team.Name)
 	data.Description = types.StringValue(team.Description)
@@ -152,10 +149,12 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.CanCreateOrgRepo = types.BoolValue(team.CanCreateOrgRepo)
 	data.IncludesAllRepositories = types.BoolValue(team.IncludesAllRepositories)
 	data.Units, diags = types.SetValueFrom(ctx, types.StringType, team.Units)
-
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// Save data into Terraform state.
+	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -165,45 +164,54 @@ func NewTeamDataSource() datasource.DataSource {
 	return &teamDataSource{}
 }
 
-// Use Forgejo client to get team by name.
-func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.Int64, teamName types.String) (team *forgejo.Team, err error) {
-	tflog.Info(ctx, "Getting team in org", map[string]any{
-		"team":            teamName,
+// getOrgTeamByName fetches a team by its name and handles errors consistently.
+func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.Int64, teamName types.String) (*forgejo.Team, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Use Forgejo client to get organization by ID
+	organization, diags := getOrganizationByID(
+		ctx,
+		client,
+		orgID,
+	)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	tflog.Info(ctx, "List teams", map[string]any{
+		"name":            teamName,
 		"organization_id": orgID,
 	})
 
-	organization, err := getOrganizationByID(ctx, client, orgID)
+	// Use Forgejo client to list teams in organization
+	teams, res, err := client.ListOrgTeams(organization.UserName, forgejo.ListTeamsOptions{})
 	if err != nil {
-		return nil, err
-	}
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
 
-	if organization == nil {
-		err = fmt.Errorf(
-			"no Organization with id '%d' was found",
-			orgID.ValueInt64(),
-		)
-		return nil, err
-	}
-
-	teams, resp, err := client.ListOrgTeams(organization.UserName, forgejo.ListTeamsOptions{})
-	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": resp.Status,
-		})
-
-		switch resp.StatusCode {
-		case 404:
-			err = fmt.Errorf(
-				"the Organization with name '%s' was not found: %s",
-				organization.UserName,
-				err,
-			)
-		default:
-			err = fmt.Errorf("unknown error: %s", err)
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Organization with name '%s' not found: %s",
+					organization.UserName,
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		return nil, err
+		diags.AddError("Unable to list teams", msg)
+
+		return nil, diags
 	}
 
+	// Find team by name
+	var team *forgejo.Team
 	for _, potentialTeam := range teams {
 		if teamName.Equal(types.StringValue(potentialTeam.Name)) {
 			team = potentialTeam
@@ -211,5 +219,14 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 		}
 	}
 
-	return team, nil
+	if team == nil {
+		diags.AddError(
+			"Unable to find team",
+			fmt.Sprintf("Team with name %s not found", teamName.String()),
+		)
+
+		return nil, diags
+	}
+
+	return team, diags
 }

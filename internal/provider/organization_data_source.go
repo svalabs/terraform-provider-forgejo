@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -170,30 +171,42 @@ func NewOrganizationDataSource() datasource.DataSource {
 	return &organizationDataSource{}
 }
 
-// Use Forgejo client to get an organization by ID.
-func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID types.Int64) (organization *forgejo.Organization, err error) {
-	tflog.Info(ctx, "Getting organization by its ID", map[string]any{
-		"organization_id": orgID,
+// getOrganizationByID fetches an organization by its ID and handles errors consistently.
+func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID types.Int64) (*forgejo.Organization, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "List organizations", map[string]any{
+		"id": orgID,
 	})
 
-	organizations, resp, err := client.AdminListOrgs(forgejo.AdminListOrgsOptions{})
+	// Use Forgejo client to list organizations
+	organizations, res, err := client.AdminListOrgs(forgejo.AdminListOrgsOptions{})
 	if err != nil {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": resp.Status,
-		})
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
 
-		switch resp.StatusCode {
-		case 403:
-			err = fmt.Errorf(
-				"not allowed to list organizations: %s",
-				err,
-			)
-		default:
-			err = fmt.Errorf("unknown error: %s", err)
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Listing organizations forbidden: %s",
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
 		}
-		return nil, err
+		diags.AddError("Unable to list organizations", msg)
+
+		return nil, diags
 	}
 
+	// Find organization by ID
+	var organization *forgejo.Organization
 	for _, potentialOrganization := range organizations {
 		if orgID.Equal(types.Int64Value(potentialOrganization.ID)) {
 			organization = potentialOrganization
@@ -201,5 +214,14 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 		}
 	}
 
-	return organization, nil
+	if organization == nil {
+		diags.AddError(
+			"Unable to find organization",
+			fmt.Sprintf("Organization with ID %d not found", orgID.ValueInt64()),
+		)
+
+		return nil, diags
+	}
+
+	return organization, diags
 }

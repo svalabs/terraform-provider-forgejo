@@ -23,7 +23,7 @@ data "forgejo_team" "test" {
 	name            = "tftest"
 	organization_id = 1011
 }`,
-				ExpectError: regexp.MustCompile("no Organization with id '1011' was found"),
+				ExpectError: regexp.MustCompile("Organization with ID 1011 not found"),
 			},
 			// Read testing (non-existent team)
 			{
@@ -35,7 +35,7 @@ data "forgejo_team" "test" {
 	name            = "test_team"
 	organization_id = forgejo_organization.test.id
 }`,
-				ExpectError: regexp.MustCompile("no Team with name '\"test_team\"' was found"),
+				ExpectError: regexp.MustCompile("Team with name \"test_team\" not found"),
 			},
 			// Read testing
 			{
