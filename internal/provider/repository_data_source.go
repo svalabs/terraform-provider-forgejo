@@ -206,7 +206,7 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Computed:    true,
 			},
 			"clone_addr": schema.StringAttribute{
-				Description: "Migrate / Clone from URL.",
+				Description: "Migrate / clone from URL.",
 				Computed:    true,
 			},
 			"website": schema.StringAttribute{

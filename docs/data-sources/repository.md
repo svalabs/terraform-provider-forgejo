@@ -54,7 +54,7 @@ data "forgejo_repository" "org" {
 - `allow_squash_merge` (Boolean) Allowed to create squash commit?
 - `archived` (Boolean) Is the repository archived?
 - `avatar_url` (String) Avatar URL of the repository.
-- `clone_addr` (String) Migrate / Clone from URL.
+- `clone_addr` (String) Migrate / clone from URL.
 - `clone_url` (String) Clone URL of the repository.
 - `created_at` (String) Time at which the repository was created.
 - `default_branch` (String) Default branch of the repository.
