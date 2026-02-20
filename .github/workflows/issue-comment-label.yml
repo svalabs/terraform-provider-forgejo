@@ -1,0 +1,27 @@
+name: Issue and PR Labeling
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+  pull_request:
+    types:
+      - opened
+      - reopened
+
+jobs:
+  triage_label:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    env:
+      # For issues events, github.event.issue.pull_request is absent (null/empty → falsy).
+      # For pull_request events, github.event.pull_request exists → truthy.
+      COMMAND: ${{ github.event.pull_request && 'pr' || 'issue' }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: 'Add triage label on open or reopen'
+        run: gh ${{ env.COMMAND }} edit ${{ github.event.issue.html_url || github.event.pull_request.html_url }} --add-label waiting-response
+        continue-on-error: true

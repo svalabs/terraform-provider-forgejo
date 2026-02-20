@@ -19,3 +19,4 @@ jobs:
     steps:
       - name: "Remove waiting-response on comment"
         run: gh ${{ env.COMMAND }} edit ${{ github.event.issue.html_url }} --remove-label waiting-response
+        continue-on-error: true
