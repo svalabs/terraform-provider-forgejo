@@ -127,8 +127,10 @@ func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) 
 	o.AllowCreateOrganization = m.AllowCreateOrganization.ValueBoolPointer()
 	o.Restricted = m.Restricted.ValueBoolPointer()
 
-	vt := forgejo.VisibleType(m.Visibility.ValueString())
-	o.Visibility = &vt
+	if !m.Visibility.IsNull() && !m.Visibility.IsUnknown() {
+		vt := forgejo.VisibleType(m.Visibility.ValueString())
+		o.Visibility = &vt
+	}
 
 	mrc := int(m.MaxRepoCreation.ValueInt64())
 	o.MaxRepoCreation = &mrc
@@ -373,7 +375,6 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	})
 
 	// Generate API request body from plan
-	vt := forgejo.VisibleType(data.Visibility.ValueString())
 	copts := forgejo.CreateUserOption{
 		SourceID:           data.SourceID.ValueInt64(),
 		LoginName:          data.LoginName.ValueString(),
@@ -383,7 +384,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		Password:           data.Password.ValueString(),
 		MustChangePassword: data.MustChangePassword.ValueBoolPointer(),
 		SendNotify:         data.SendNotify.ValueBool(),
-		Visibility:         &vt,
+	}
+
+	if !data.Visibility.IsNull() && !data.Visibility.IsUnknown() {
+		vt := forgejo.VisibleType(data.Visibility.ValueString())
+		copts.Visibility = &vt
 	}
 
 	// Validate API request body
