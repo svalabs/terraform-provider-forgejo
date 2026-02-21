@@ -23,6 +23,8 @@ import (
 
 const (
 	networkName        = "forgejo"
+	mariaDBImage       = "mariadb:lts"
+	forgejoImage       = "codeberg.org/forgejo/forgejo:11"
 	forgejoUserName    = "tfadmin"
 	forgejoUserEmail   = "tfadmin@localhost"
 	forgejoTokenScopes = "write:organization,write:repository,write:user,write:admin"
@@ -80,7 +82,7 @@ func getDBContainer(ctx context.Context) (*DBContainer, error) {
 
 	c, err := mariadb.Run(
 		ctx,
-		"mariadb:lts",
+		mariaDBImage,
 		mariadb.WithDatabase("forgejo"),
 		mariadb.WithUsername("forgejo"),
 		mariadb.WithPassword("password"),
@@ -240,7 +242,7 @@ func getForgejoContainer(ctx context.Context) (*ForgejoContainer, error) {
 
 	c, err := testcontainers.Run(
 		ctx,
-		"codeberg.org/forgejo/forgejo:11",
+		forgejoImage,
 		testcontainers.CustomizeRequest(containerRequest),
 		testcontainers.WithFiles(testcontainers.ContainerFile{
 			HostFilePath:      appIniFile,
