@@ -66,14 +66,14 @@ func (r *collaboratorResource) Schema(_ context.Context, _ resource.SchemaReques
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the repository.",
+				Description: "Numeric identifier of the repository. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 			},
 			"user": schema.StringAttribute{
-				Description: "Username of the collaborator.",
+				Description: "Username of the collaborator. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

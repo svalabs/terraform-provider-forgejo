@@ -70,14 +70,14 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the repository.",
+				Description: "Numeric identifier of the repository. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 			},
 			"branch_name": schema.StringAttribute{
-				Description: "Name of the branch to protect (can be a pattern).",
+				Description: "Name of the branch to protect (can be a pattern). Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

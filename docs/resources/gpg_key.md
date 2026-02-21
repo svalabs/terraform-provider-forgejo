@@ -51,7 +51,7 @@ resource "forgejo_gpg_key" "this" {
 
 ### Required
 
-- `armored_public_key` (String) Armored GPG Public key.
+- `armored_public_key` (String) Armored GPG public key. Changing this forces a new resource to be created.
 
 ### Read-Only
 

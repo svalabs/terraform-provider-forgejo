@@ -44,8 +44,8 @@ resource "forgejo_organization_action_secret" "this" {
 ### Required
 
 - `data` (String, Sensitive) Data of the secret.
-- `name` (String) Name of the secret.
-- `organization` (String) Name of the organization.
+- `name` (String) Name of the secret. Changing this forces a new resource to be created.
+- `organization` (String) Name of the organization. Changing this forces a new resource to be created.
 
 ### Read-Only
 

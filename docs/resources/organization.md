@@ -46,14 +46,14 @@ resource "forgejo_organization" "non_defaults" {
 
 ### Required
 
-- `name` (String) Name of the organization.
+- `name` (String) Name of the organization. Changing this forces a new resource to be created.
 
 ### Optional
 
 - `description` (String) Description of the organization.
 - `full_name` (String) Full name of the organization.
 - `location` (String) Location of the organization.
-- `repo_admin_change_team_access` (Boolean) Whether repository admin can add and remove access for teams.
+- `repo_admin_change_team_access` (Boolean) Whether repository admin can add and remove access for teams. Changing this forces a new resource to be created.
 - `visibility` (String) Visibility of the organization. Possible values are 'public' (default), 'limited', or 'private'.
 - `website` (String) Website of the organization.
 

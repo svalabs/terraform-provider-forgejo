@@ -21,7 +21,7 @@ Forgejo team resource.
 ### Required
 
 - `name` (String) Name of the team.
-- `organization_id` (Number) ID of the owning organization.
+- `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created.
 
 ### Optional
 

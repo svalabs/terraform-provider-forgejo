@@ -56,7 +56,7 @@ resource "forgejo_user" "non_defaults" {
 ### Required
 
 - `email` (String) Email address of the user.
-- `login` (String) Name of the user.
+- `login` (String) Name of the user. Changing this forces a new resource to be created.
 - `password` (String, Sensitive) Password of the user.
 
 ### Optional
@@ -74,7 +74,7 @@ resource "forgejo_user" "non_defaults" {
 - `must_change_password` (Boolean) Require user to change password?
 - `prohibit_login` (Boolean) Are user logins prohibited?
 - `restricted` (Boolean) Is the user restricted?
-- `send_notify` (Boolean) Send notification to administrators?
+- `send_notify` (Boolean) Send notification to administrators? Changing this forces a new resource to be created.
 - `source_id` (Number) Numeric identifier of the user's authentication source.
 - `visibility` (String) Visibility of the user.
 - `website` (String) Website of the user.

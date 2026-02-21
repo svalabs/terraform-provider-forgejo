@@ -93,7 +93,7 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name of the organization.",
+				Description: "Name of the organization. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -143,7 +143,7 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"repo_admin_change_team_access": schema.BoolAttribute{
-				Description: "Whether repository admin can add and remove access for teams.",
+				Description: "Whether repository admin can add and remove access for teams. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),

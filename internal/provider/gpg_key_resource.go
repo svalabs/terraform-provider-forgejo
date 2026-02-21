@@ -189,7 +189,7 @@ func (r *gpgKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 
 		Attributes: map[string]schema.Attribute{
 			"armored_public_key": schema.StringAttribute{
-				Description: "Armored GPG Public key.",
+				Description: "Armored GPG public key. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

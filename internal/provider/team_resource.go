@@ -106,7 +106,7 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Required:    true,
 			},
 			"organization_id": schema.Int64Attribute{
-				Description: "ID of the owning organization.",
+				Description: "Numeric identifier of the owning organization. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),

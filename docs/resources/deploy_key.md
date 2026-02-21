@@ -52,10 +52,10 @@ resource "forgejo_deploy_key" "this" {
 
 ### Required
 
-- `key` (String) Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function).
-- `read_only` (Boolean) Does the key have only read access?
-- `repository_id` (Number) Numeric identifier of the repository.
-- `title` (String) Title of the deploy key.
+- `key` (String) Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function). Changing this forces a new resource to be created.
+- `read_only` (Boolean) Does the key have only read access? Changing this forces a new resource to be created.
+- `repository_id` (Number) Numeric identifier of the repository. Changing this forces a new resource to be created.
+- `title` (String) Title of the deploy key. Changing this forces a new resource to be created.
 
 ### Read-Only
 

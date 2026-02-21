@@ -180,15 +180,15 @@ import {
 - `archive_on_destroy` (Boolean) Archive the repo instead of delete?
 - `archived` (Boolean) Is the repository archived?
 - `auth_token` (String, Sensitive) API token for authenticating with migrate / clone URL. **Note**: This setting is only effective if `clone_addr` is set.
-- `auto_init` (Boolean) Whether the repository should be auto-intialized?
+- `auto_init` (Boolean) Whether the repository should be auto-intialized? Changing this forces a new resource to be created.
 - `autodetect_manual_merge` (Boolean) Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.
-- `clone_addr` (String) Migrate / clone from URL.
+- `clone_addr` (String) Migrate / clone from URL. Changing this forces a new resource to be created.
 - `default_branch` (String) Default branch of the repository.
 - `default_merge_style` (String) Default merge style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `description` (String) Description of the repository.
 - `external_tracker` (Attributes) Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--external_tracker))
 - `external_wiki` (Attributes) Settings for external wiki. **Note**: This setting is only effective if `has_wiki` is `true`. (see [below for nested schema](#nestedatt--external_wiki))
-- `gitignores` (String) Gitignores to use.
+- `gitignores` (String) Gitignores to use. Changing this forces a new resource to be created.
 - `has_actions` (Boolean) Are integrated CI/CD pipelines enabled?
 - `has_issues` (Boolean) Is the repository issue tracker enabled?
 - `has_packages` (Boolean) Is the repository package registry enabled?
@@ -199,19 +199,19 @@ import {
 - `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `internal_tracker` (Attributes) Settings for built-in issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--internal_tracker))
 - `issue_labels` (String) Issue Label set to use.
-- `labels` (Boolean) Whether to migrate labels. **Note**: This setting is only effective if `clone_addr` is set.
-- `lfs` (Boolean) Whether to migrate LFS files. **Note**: This setting is only effective if `clone_addr` is set.
-- `lfs_endpoint` (String) LFS endpoint to use. **Note**: This setting is only effective if `lfs` is `true`.
-- `license` (String) License to use.
-- `milestones` (Boolean) Whether to migrate milestones. **Note**: This setting is only effective if `clone_addr` is set.
-- `mirror` (Boolean) Is the repository a mirror? **Note**: This setting is only effective if `clone_addr` is set.
+- `labels` (Boolean) Whether to migrate labels. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
+- `lfs` (Boolean) Whether to migrate LFS files. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
+- `lfs_endpoint` (String) LFS endpoint to use. Changing this forces a new resource to be created. **Note**: This setting is only effective if `lfs` is `true`.
+- `license` (String) License to use. Changing this forces a new resource to be created.
+- `milestones` (Boolean) Whether to migrate milestones. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
+- `mirror` (Boolean) Is the repository a mirror? Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
 - `mirror_interval` (String) Mirror interval of the repository. **Note**: This setting is only effective if `mirror` is `true`.
-- `owner` (String) Owner of the repository (user or organization).
+- `owner` (String) Owner of the repository (user or organization). Changing this forces a new resource to be created.
 - `private` (Boolean) Is the repository private?
-- `readme` (String) Readme of the repository to create.
-- `service` (String) Service to migrate from. **Note**: This setting is only effective if `clone_addr` is set.
+- `readme` (String) Readme of the repository to create. Changing this forces a new resource to be created.
+- `service` (String) Service to migrate from. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
 - `template` (Boolean) Is the repository a template?
-- `trust_model` (String) TrustModel of the repository.
+- `trust_model` (String) TrustModel of the repository. Changing this forces a new resource to be created.
 - `website` (String) Website of the repository.
 
 ### Read-Only

@@ -59,8 +59,8 @@ resource "forgejo_branch_protection" "main" {
 
 ### Required
 
-- `branch_name` (String) Name of the branch to protect (can be a pattern).
-- `repository_id` (Number) Numeric identifier of the repository.
+- `branch_name` (String) Name of the branch to protect (can be a pattern). Changing this forces a new resource to be created.
+- `repository_id` (Number) Numeric identifier of the repository. Changing this forces a new resource to be created.
 
 ### Optional
 

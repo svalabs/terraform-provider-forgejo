@@ -82,7 +82,7 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{
-				Description: "Name of the user.",
+				Description: "Name of the user. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -96,7 +96,7 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"key": schema.StringAttribute{
-				Description: "Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function).",
+				Description: "Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function). Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -110,7 +110,7 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"title": schema.StringAttribute{
-				Description: "Title of the SSH key.",
+				Description: "Title of the SSH key. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

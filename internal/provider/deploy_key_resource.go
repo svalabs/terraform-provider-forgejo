@@ -79,7 +79,7 @@ func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the repository.",
+				Description: "Numeric identifier of the repository. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -93,7 +93,7 @@ func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				},
 			},
 			"key": schema.StringAttribute{
-				Description: "Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function).",
+				Description: "Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function). Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -104,7 +104,7 @@ func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Computed:    true,
 			},
 			"title": schema.StringAttribute{
-				Description: "Title of the deploy key.",
+				Description: "Title of the deploy key. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -126,7 +126,7 @@ func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				// },
 			},
 			"read_only": schema.BoolAttribute{
-				Description: "Does the key have only read access?",
+				Description: "Does the key have only read access? Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),

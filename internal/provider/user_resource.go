@@ -157,7 +157,7 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				},
 			},
 			"login": schema.StringAttribute{
-				Description: "Name of the user.",
+				Description: "Name of the user. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -290,7 +290,7 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Default:     booldefault.StaticBool(true),
 			},
 			"send_notify": schema.BoolAttribute{
-				Description: "Send notification to administrators?",
+				Description: "Send notification to administrators? Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),

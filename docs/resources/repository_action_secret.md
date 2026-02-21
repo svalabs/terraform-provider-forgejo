@@ -44,8 +44,8 @@ resource "forgejo_repository_action_secret" "this" {
 ### Required
 
 - `data` (String, Sensitive) Data of the secret.
-- `name` (String) Name of the secret.
-- `repository_id` (Number) Numeric identifier of the repository.
+- `name` (String) Name of the secret. Changing this forces a new resource to be created.
+- `repository_id` (Number) Numeric identifier of the repository. Changing this forces a new resource to be created.
 
 ### Read-Only
 

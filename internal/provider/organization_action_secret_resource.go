@@ -70,15 +70,15 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 		Description: "Forgejo organization action secret resource.",
 
 		Attributes: map[string]schema.Attribute{
-			"organization": schema.StringAttribute{
-				Description: "Name of the organization.",
+			"organization": schema.StringAttribute{ // TODO: change this to organization_id
+				Description: "Name of the organization. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name of the secret.",
+				Description: "Name of the secret. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
