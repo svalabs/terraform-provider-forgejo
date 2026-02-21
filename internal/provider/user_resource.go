@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,8 +25,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &userResource{}
-	_ resource.ResourceWithConfigure = &userResource{}
+	_ resource.Resource                = &userResource{}
+	_ resource.ResourceWithConfigure   = &userResource{}
+	_ resource.ResourceWithImportState = &userResource{}
 )
 
 // userResource is the resource implementation.
@@ -290,6 +292,9 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplaceIfConfigured(),
+				},
 			},
 			"allow_git_hook": schema.BoolAttribute{
 				Description: "Allow user to create Git hooks?",
@@ -821,6 +826,15 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 
 	// Map response body to model
 	state.from(usr)
+
+	// Initialize write-only fields to their default values
+	state.Password = types.StringValue("")
+	state.MustChangePassword = types.BoolValue(true)
+	state.SendNotify = types.BoolValue(true)
+	state.AllowGitHook = types.BoolValue(false)
+	state.AllowImportLocal = types.BoolValue(false)
+	state.AllowCreateOrganization = types.BoolValue(true)
+	state.MaxRepoCreation = types.Int64Value(-1)
 
 	// Save data into Terraform state
 	diags := resp.State.Set(ctx, &state)
