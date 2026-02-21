@@ -246,6 +246,7 @@ func (p *forgejoProvider) DataSources(_ context.Context) []func() datasource.Dat
 		NewRepositoryDataSource,
 		NewSSHKeyDataSource,
 		NewTeamDataSource,
+		NewTeamMembershipDataSource,
 		NewUserDataSource,
 	}
 }
@@ -263,6 +264,7 @@ func (p *forgejoProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewSSHKeyResource,
 		NewBranchProtectionResource,
 		NewTeamResource,
+		NewTeamMembershipResource,
 		NewUserResource,
 	}
 }
