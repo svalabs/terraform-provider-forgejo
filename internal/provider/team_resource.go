@@ -89,8 +89,9 @@ func (r *teamResource) Metadata(_ context.Context, req resource.MetadataRequest,
 // Schema defines the schema for the resource.
 func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Forgejo team resource.
-Note: Managing teams requires administrative privileges!`,
+		MarkdownDescription: `Forgejo team resource.
+
+**Note**: Managing teams requires administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{

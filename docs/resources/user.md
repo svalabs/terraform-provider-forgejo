@@ -10,7 +10,8 @@ description: |-
 # forgejo_user (Resource)
 
 Forgejo user resource.
-Note: Managing users requires administrative privileges!
+
+**Note**: Managing users requires administrative privileges!
 
 ## Example Usage
 

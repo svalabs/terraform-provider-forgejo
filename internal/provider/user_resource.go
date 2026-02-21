@@ -139,8 +139,9 @@ func (r *userResource) Metadata(_ context.Context, req resource.MetadataRequest,
 // Schema defines the schema for the resource.
 func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Forgejo user resource.
-Note: Managing users requires administrative privileges!`,
+		MarkdownDescription: `Forgejo user resource.
+
+**Note**: Managing users requires administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{

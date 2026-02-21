@@ -10,7 +10,8 @@ description: |-
 # forgejo_repository (Resource)
 
 Forgejo repository resource.
-Note: Managing user repositories requires administrative privileges!
+
+**Note**: Managing user repositories requires administrative privileges!
 
 ## Example Usage
 

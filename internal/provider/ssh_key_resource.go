@@ -76,8 +76,9 @@ func (r *sshKeyResource) Metadata(_ context.Context, req resource.MetadataReques
 // Schema defines the schema for the resource.
 func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Forgejo user SSH key resource.
-Note: Managing user SSH keys requires administrative privileges!`,
+		MarkdownDescription: `Forgejo user SSH key resource.
+
+**Note**: Managing user SSH keys requires administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{

@@ -10,7 +10,8 @@ description: |-
 # forgejo_ssh_key (Resource)
 
 Forgejo user SSH key resource.
-Note: Managing user SSH keys requires administrative privileges!
+
+**Note**: Managing user SSH keys requires administrative privileges!
 
 ## Example Usage
 

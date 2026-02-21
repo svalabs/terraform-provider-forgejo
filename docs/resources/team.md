@@ -10,7 +10,8 @@ description: |-
 # forgejo_team (Resource)
 
 Forgejo team resource.
-Note: Managing teams requires administrative privileges!
+
+**Note**: Managing teams requires administrative privileges!
 
 
 

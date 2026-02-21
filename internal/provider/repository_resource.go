@@ -456,8 +456,9 @@ func (r *repositoryResource) Metadata(_ context.Context, req resource.MetadataRe
 // Schema defines the schema for the resource.
 func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Forgejo repository resource.
-Note: Managing user repositories requires administrative privileges!`,
+		MarkdownDescription: `Forgejo repository resource.
+
+**Note**: Managing user repositories requires administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
