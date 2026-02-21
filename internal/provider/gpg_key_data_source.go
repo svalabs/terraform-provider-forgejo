@@ -183,7 +183,7 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 			case 404:
 				// If the user was not provided, we should never get a 404, so the message here should always have a user.
 				msg = fmt.Sprintf(
-					`GPG keys for user %s not found: %s`,
+					"GPG keys for user %s not found: %s",
 					data.User.String(),
 					err,
 				)
@@ -204,17 +204,17 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		var msg string
 		if data.User.ValueString() != "" {
 			msg = fmt.Sprintf(
-				`GPG key with user %s and key_id %s not found.`,
+				"GPG key with user %s and key_id %s not found",
 				data.User.String(),
 				data.KeyID.String(),
 			)
 		} else {
 			msg = fmt.Sprintf(
-				"GPG key with key_id %s not found.",
+				"GPG key with key_id %s not found",
 				data.KeyID.String(),
 			)
 		}
-		resp.Diagnostics.AddError("Unable to find GPG key by key_id", msg)
+		resp.Diagnostics.AddError("Unable to find GPG key by ID", msg)
 
 		return
 	}

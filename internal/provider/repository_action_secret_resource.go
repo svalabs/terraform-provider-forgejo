@@ -475,7 +475,7 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 		diags.AddError(
 			"Unable to find repository action secret by name",
 			fmt.Sprintf(
-				"Repository action secret with user '%s' repo '%s' and name %s not found.",
+				"Repository action secret with user '%s' repo '%s' and name %s not found",
 				owner,
 				repoName,
 				data.Name.String(),

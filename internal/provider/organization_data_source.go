@@ -216,7 +216,7 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 
 	if organization == nil {
 		diags.AddError(
-			"Unable to find organization",
+			"Unable to find organization by ID",
 			fmt.Sprintf("Organization with ID %d not found", orgID.ValueInt64()),
 		)
 

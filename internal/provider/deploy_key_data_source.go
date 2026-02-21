@@ -183,7 +183,7 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		resp.Diagnostics.AddError(
 			"Unable to find deploy key by title",
 			fmt.Sprintf(
-				"Deploy key with user %s repo %s and title %s not found.",
+				"Deploy key with user %s repo %s and title %s not found",
 				repo.Owner.String(),
 				repo.Name.String(),
 				data.Title.String(),

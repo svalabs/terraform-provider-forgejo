@@ -385,7 +385,7 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 		diags.AddError(
 			"Unable to find organization action secret by name",
 			fmt.Sprintf(
-				"Organization action secret with org %s and name %s not found.",
+				"Organization action secret with org %s and name %s not found",
 				data.Organization.String(),
 				data.Name.String(),
 			),

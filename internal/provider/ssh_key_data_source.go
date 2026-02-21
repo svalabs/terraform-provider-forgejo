@@ -168,7 +168,7 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		resp.Diagnostics.AddError(
 			"Unable to find SSH key by title",
 			fmt.Sprintf(
-				"SSH key with user %s and title %s not found.",
+				"SSH key with user %s and title %s not found",
 				data.User.String(),
 				data.Title.String(),
 			),

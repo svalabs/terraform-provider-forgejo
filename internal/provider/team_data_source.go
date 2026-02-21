@@ -221,7 +221,7 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 
 	if team == nil {
 		diags.AddError(
-			"Unable to find team",
+			"Unable to find team by name",
 			fmt.Sprintf("Team with name %s not found", teamName.String()),
 		)
 
