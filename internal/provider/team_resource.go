@@ -409,6 +409,7 @@ func NewTeamResource() resource.Resource {
 	return &teamResource{}
 }
 
+// createTeam is a helper function to create a team.
 func createTeam(ctx context.Context, client *forgejo.Client, organizationID types.Int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -444,43 +445,45 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID type
 
 	// Use Forgejo client to create new team
 	team, res, err := client.CreateTeam(organization.UserName, opts)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 403:
-				msg = fmt.Sprintf(
-					"Team with owner '%s' and name '%s' forbidden: %s",
-					organization.UserName,
-					teamName,
-					err,
-				)
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name '%s' not found: %s",
-					organization.UserName,
-					err,
-				)
-			case 422:
-				msg = fmt.Sprintf("Input validation error: %s", err)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		diags.AddError("Unable to create team", msg)
-
-		return nil, diags
+	if err == nil {
+		return team, diags
 	}
 
-	return team, diags
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"Team with owner '%s' and name '%s' forbidden: %s",
+				organization.UserName,
+				teamName,
+				err,
+			)
+		case 404:
+			msg = fmt.Sprintf(
+				"Organization with name '%s' not found: %s",
+				organization.UserName,
+				err,
+			)
+		case 422:
+			msg = fmt.Sprintf("Input validation error: %s", err)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+	}
+	diags.AddError("Unable to create team", msg)
+
+	return nil, diags
 }
 
+// editTeam is a helper function to update an existing team.
 func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts forgejo.EditTeamOption) (*forgejo.Team, diag.Diagnostics) {
 	var diags diag.Diagnostics
 

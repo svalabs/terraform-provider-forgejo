@@ -832,11 +832,12 @@ func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, da
 
 func (r *branchProtectionResource) stringSliceToList(slice []string) (types.List, diag.Diagnostics) {
 	if len(slice) == 0 {
-		return types.ListNull(types.StringType), nil
+		return types.ListNull(types.StringType), diag.Diagnostics{}
 	}
 	elements := make([]attr.Value, len(slice))
 	for i, v := range slice {
 		elements[i] = types.StringValue(v)
 	}
+
 	return types.ListValue(types.StringType, elements)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -596,4 +597,43 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 // NewRepositoryDataSource is a helper function to simplify the provider implementation.
 func NewRepositoryDataSource() datasource.DataSource {
 	return &repositoryDataSource{}
+}
+
+// getRepositoryByID fetches a repository by its ID and handles errors consistently.
+func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.Repository, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read repository", map[string]any{
+		"id": id,
+	})
+
+	// Use Forgejo client to get repository by id
+	rep, res, err := client.GetRepoByID(id)
+	if err == nil {
+		return rep, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with id %d not found: %s",
+				id,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf("Unknown error: %s", err)
+		}
+	}
+	diags.AddError("Unable to read repository", msg)
+
+	return nil, diags
 }

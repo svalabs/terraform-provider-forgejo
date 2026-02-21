@@ -237,12 +237,12 @@ func (m repositoryResourcePermissions) attributeTypes() map[string]attr.Type {
 }
 
 // permissionsFrom is a helper function to load an API struct into Terraform data model.
-func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, p *forgejo.Permission) diag.Diagnostics {
+func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, p *forgejo.Permission) (diags diag.Diagnostics) {
 	if p == nil {
 		m.Permissions = types.ObjectNull(
 			repositoryResourcePermissions{}.attributeTypes(),
 		)
-		return nil
+		return diags
 	}
 
 	permsElement := repositoryResourcePermissions{
@@ -280,12 +280,12 @@ func (m repositoryResourceInternalTracker) attributeTypes() map[string]attr.Type
 }
 
 // internalTrackerFrom is a helper function to load an API struct into Terraform data model.
-func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, it *forgejo.InternalTracker) diag.Diagnostics {
+func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, it *forgejo.InternalTracker) (diags diag.Diagnostics) {
 	if it == nil {
 		m.InternalTracker = types.ObjectNull(
 			repositoryResourceInternalTracker{}.attributeTypes(),
 		)
-		return nil
+		return diags
 	}
 
 	intTrackerElement := repositoryResourceInternalTracker{
@@ -308,13 +308,13 @@ func (m *repositoryResourceModel) internalTrackerFrom(ctx context.Context, it *f
 }
 
 // internalTrackerTo is a helper function to save Terraform data model into an API struct.
-func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, o *forgejo.EditRepoOption) diag.Diagnostics {
+func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, o *forgejo.EditRepoOption) (diags diag.Diagnostics) {
 	if m.InternalTracker.IsNull() || m.InternalTracker.IsUnknown() {
-		return nil
+		return diags
 	}
 
 	var intTracker repositoryResourceInternalTracker
-	diags := m.InternalTracker.As(ctx, &intTracker, basetypes.ObjectAsOptions{})
+	diags = m.InternalTracker.As(ctx, &intTracker, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
 		if o.InternalTracker == nil {
@@ -344,12 +344,12 @@ func (m repositoryResourceExternalTracker) attributeTypes() map[string]attr.Type
 }
 
 // externalTrackerFrom is a helper function to load an API struct into Terraform data model.
-func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, et *forgejo.ExternalTracker) diag.Diagnostics {
+func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, et *forgejo.ExternalTracker) (diags diag.Diagnostics) {
 	if et == nil {
 		m.ExternalTracker = types.ObjectNull(
 			repositoryResourceExternalTracker{}.attributeTypes(),
 		)
-		return nil
+		return diags
 	}
 
 	extTrackerElement := repositoryResourceExternalTracker{
@@ -372,13 +372,13 @@ func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, et *f
 }
 
 // externalTrackerTo is a helper function to save Terraform data model into an API struct.
-func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, o *forgejo.EditRepoOption) diag.Diagnostics {
+func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, o *forgejo.EditRepoOption) (diags diag.Diagnostics) {
 	if m.ExternalTracker.IsNull() || m.ExternalTracker.IsUnknown() {
-		return nil
+		return diags
 	}
 
 	var extTracker repositoryResourceExternalTracker
-	diags := m.ExternalTracker.As(ctx, &extTracker, basetypes.ObjectAsOptions{})
+	diags = m.ExternalTracker.As(ctx, &extTracker, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
 		if o.ExternalTracker == nil {
@@ -404,12 +404,12 @@ func (m repositoryResourceExternalWiki) attributeTypes() map[string]attr.Type {
 }
 
 // externalWikiFrom is a helper function to load an API struct into Terraform data model.
-func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, ew *forgejo.ExternalWiki) diag.Diagnostics {
+func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, ew *forgejo.ExternalWiki) (diags diag.Diagnostics) {
 	if ew == nil {
 		m.ExternalWiki = types.ObjectNull(
 			repositoryResourceExternalWiki{}.attributeTypes(),
 		)
-		return nil
+		return diags
 	}
 
 	wikiElement := repositoryResourceExternalWiki{
@@ -430,13 +430,13 @@ func (m *repositoryResourceModel) externalWikiFrom(ctx context.Context, ew *forg
 }
 
 // externalWikiTo is a helper function to save Terraform data model into an API struct.
-func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, o *forgejo.EditRepoOption) diag.Diagnostics {
+func (m *repositoryResourceModel) externalWikiTo(ctx context.Context, o *forgejo.EditRepoOption) (diags diag.Diagnostics) {
 	if m.ExternalWiki.IsNull() || m.ExternalWiki.IsUnknown() {
-		return nil
+		return diags
 	}
 
 	var extWiki repositoryResourceExternalWiki
-	diags := m.ExternalWiki.As(ctx, &extWiki, basetypes.ObjectAsOptions{})
+	diags = m.ExternalWiki.As(ctx, &extWiki, basetypes.ObjectAsOptions{})
 
 	if !diags.HasError() {
 		if o.ExternalWiki == nil {
@@ -1686,42 +1686,4 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 // NewRepositoryResource is a helper function to simplify the provider implementation.
 func NewRepositoryResource() resource.Resource {
 	return &repositoryResource{}
-}
-
-// getRepositoryByID fetches a repository by its ID and handles errors consistently.
-func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.Repository, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	tflog.Info(ctx, "Read repository", map[string]any{
-		"id": id,
-	})
-
-	// Use Forgejo client to get repository by id
-	rep, res, err := client.GetRepoByID(id)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository with id %d not found: %s",
-					id,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		diags.AddError("Unable to read repository", msg)
-
-		return nil, diags
-	}
-
-	return rep, diags
 }

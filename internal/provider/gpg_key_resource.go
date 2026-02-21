@@ -117,6 +117,7 @@ func (m *gpgKeyResourceModel) to(o *forgejo.CreateGPGKeyOption) {
 	o.ArmoredKey = m.ArmoredPublicKey.ValueString()
 }
 
+// getEmails is a helper function to convert a list of emails into a Terraform list.
 func getEmails(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 	emailElements := make([]attr.Value, 0, len(k.Emails))
 
@@ -139,9 +140,10 @@ func getEmails(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 		return types.List{}, diags
 	}
 
-	return emails, nil
+	return emails, diags
 }
 
+// getSubkeys is a helper function to convert a list of subkeys into a Terraform list.
 func getSubkeys(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 	subkeyElements := make([]attr.Value, 0, len(k.SubsKey))
 
@@ -172,7 +174,7 @@ func getSubkeys(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 		return types.List{}, diags
 	}
 
-	return subkeys, nil
+	return subkeys, diags
 }
 
 // Metadata returns the resource type name.
