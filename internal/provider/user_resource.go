@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -360,7 +361,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		"login":                data.Name.ValueString(),
 		"full_name":            data.FullName.ValueString(),
 		"email":                data.Email.ValueString(),
-		"password":             data.Password.ValueString(),
+		"password":             strings.Repeat("*", len(data.Password.ValueString())),
 		"must_change_password": data.MustChangePassword.ValueBool(),
 		"send_notify":          data.SendNotify.ValueBool(),
 		"visibility":           data.Visibility.ValueString(),
@@ -434,7 +435,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		"login_name":                data.LoginName.ValueString(),
 		"email":                     data.Email.ValueString(),
 		"full_name":                 data.FullName.ValueString(),
-		"password":                  data.Password.ValueString(),
+		"password":                  strings.Repeat("*", len(data.Password.ValueString())),
 		"description":               data.Description.ValueString(),
 		"must_change_password":      data.MustChangePassword.ValueBool(),
 		"website":                   data.Website.ValueString(),
@@ -621,7 +622,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		"login_name":                plan.LoginName.ValueString(),
 		"email":                     plan.Email.ValueString(),
 		"full_name":                 plan.FullName.ValueString(),
-		"password":                  plan.Password.ValueString(),
+		"password":                  strings.Repeat("*", len(plan.Password.ValueString())),
 		"description":               plan.Description.ValueString(),
 		"must_change_password":      plan.MustChangePassword.ValueBool(),
 		"website":                   plan.Website.ValueString(),
