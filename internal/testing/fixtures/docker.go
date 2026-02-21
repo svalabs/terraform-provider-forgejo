@@ -11,7 +11,6 @@ import (
 
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -64,7 +63,7 @@ func getDBContainer(ctx context.Context) (*DBContainer, error) {
 
 	err := ensureDockerTestNetwork(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting docker network: %w", err)
 	}
 	containerName := "forgejo_db"
 
@@ -225,9 +224,6 @@ func getForgejoContainer(ctx context.Context) (*ForgejoContainer, error) {
 
 	containerName := "forgejo"
 
-	_, f, _, _ := runtime.Caller(0)
-	appIniFile := filepath.Join(filepath.Dir(f), "app.ini")
-
 	containerRequest := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Name:     containerName,
@@ -235,28 +231,28 @@ func getForgejoContainer(ctx context.Context) (*ForgejoContainer, error) {
 			ConfigModifier: func(config *container.Config) {
 				config.Hostname = containerName
 			},
-			HostConfigModifier: func(hostConfig *container.HostConfig) {
-				hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
-					Type:     mount.TypeBind,
-					Source:   appIniFile,
-					Target:   "/data/gitea/conf/app.ini",
-					ReadOnly: true,
-				})
-			},
 		},
 		Reuse: true,
 	}
+
+	_, f, _, _ := runtime.Caller(0)
+	appIniFile := filepath.Join(filepath.Dir(f), "app.ini")
 
 	c, err := testcontainers.Run(
 		ctx,
 		"codeberg.org/forgejo/forgejo:11",
 		testcontainers.CustomizeRequest(containerRequest),
+		testcontainers.WithFiles(testcontainers.ContainerFile{
+			HostFilePath:      appIniFile,
+			ContainerFilePath: "/data/gitea/conf/app.ini",
+			FileMode:          0o644,
+		}),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("Starting new Web server"),
 		),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("error starting db container: %w", err)
+		return nil, fmt.Errorf("error starting forgejo container: %w", err)
 	}
 
 	forgejoContainer = &ForgejoContainer{c: c}
@@ -267,7 +263,7 @@ func getForgejoContainer(ctx context.Context) (*ForgejoContainer, error) {
 func ensureDockerTestNetwork(ctx context.Context) error {
 	docker, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating docker client: %w", err)
 	}
 	defer docker.Close()
 
@@ -280,14 +276,14 @@ func ensureDockerTestNetwork(ctx context.Context) error {
 
 	// Anything else than not found is unexpected, return it
 	if !errdefs.IsNotFound(err) {
-		return err
+		return fmt.Errorf("error checking for docker network: %w", err)
 	}
 
 	_, err = docker.NetworkCreate(ctx, networkName, network.CreateOptions{
 		Driver: "bridge",
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating docker network: %w", err)
 	}
 
 	return nil
