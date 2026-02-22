@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -210,16 +211,11 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 		return nil, diags
 	}
 
-	// Find team by name
-	var team *forgejo.Team
-	for _, potentialTeam := range teams {
-		if teamName.Equal(types.StringValue(potentialTeam.Name)) {
-			team = potentialTeam
-			break
-		}
-	}
-
-	if team == nil {
+	// Search for team with given name
+	idx := slices.IndexFunc(teams, func(t *forgejo.Team) bool {
+		return t.Name == teamName.ValueString()
+	})
+	if idx == -1 {
 		diags.AddError(
 			"Unable to find team by name",
 			fmt.Sprintf("Team with name %s not found", teamName.String()),
@@ -228,5 +224,5 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 		return nil, diags
 	}
 
-	return team, diags
+	return teams[idx], diags
 }

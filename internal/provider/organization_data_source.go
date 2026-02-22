@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -205,16 +206,11 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 		return nil, diags
 	}
 
-	// Find organization by ID
-	var organization *forgejo.Organization
-	for _, potentialOrganization := range organizations {
-		if orgID.Equal(types.Int64Value(potentialOrganization.ID)) {
-			organization = potentialOrganization
-			break
-		}
-	}
-
-	if organization == nil {
+	// Search for organization with given ID
+	idx := slices.IndexFunc(organizations, func(o *forgejo.Organization) bool {
+		return o.ID == orgID.ValueInt64()
+	})
+	if idx == -1 {
 		diags.AddError(
 			"Unable to find organization by ID",
 			fmt.Sprintf("Organization with ID %d not found", orgID.ValueInt64()),
@@ -223,5 +219,5 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 		return nil, diags
 	}
 
-	return organization, diags
+	return organizations[idx], diags
 }
