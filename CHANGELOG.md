@@ -1,3 +1,57 @@
+## 1.3.0 (February 22, 2026)
+
+BREAKING CHANGES:
+
+- `forgejo_organization_action_secret`: Correct schema to use ID for referencing organization.
+  Users upgrading to this version will need to update their configurations from:
+
+  ```terraform
+  resource "forgejo_organization_action_secret" "this" {
+    organization = "myorg"
+    ...
+  }
+  ```
+
+  to:
+
+  ```terraform
+  data "forgejo_organization" "this" {
+    name = "myorg"
+  }
+
+  resource "forgejo_organization_action_secret" "this" {
+    organization_id = data.forgejo_organization.this.id
+    ...
+  }
+  ```
+
+FEATURES:
+
+- **New Resource**: `forgejo_team` ([documentation](docs/resources/team.md))
+- **New Data Source**: `forgejo_team` ([documentation](docs/data-sources/team.md))
+
+ENHANCEMENTS:
+
+- Add nil-safety checks and standardize error messages across resources
+- Standardize on using `slice.IndexFunc()` for searching lists
+- Improve documentation
+
+BUG FIXES:
+
+- `forgejo_user`: initialize write-only fields to their default values during import
+- `forgejo_user`: obfuscate password in log output
+- `forgejo_user`: only send 'visibility' to API if present in config
+- `forgejo_organization`, `forgejo_user`: save state immediately after initial creation to prevent "ghost" resources
+- Resource / data source schema consistency
+
+DEPENDENCIES:
+
+- Update to Go 1.24.13
+
+NEW CONTRIBUTORS 🎉:
+
+- [@kad-hollac1](https://github.com/kad-hollac1) — [#88: Add support for managing a team](https://github.com/svalabs/terraform-provider-forgejo/pull/88)
+
 ## 1.2.0 (February 8, 2026)
 
 FEATURES:
