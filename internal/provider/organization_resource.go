@@ -64,7 +64,7 @@ func (m *organizationResourceModel) from(o *forgejo.Organization) {
 // to is a helper function to save Terraform data model into an API struct.
 func (m *organizationResourceModel) to(o *forgejo.EditOrgOption) {
 	if o == nil {
-		o = new(forgejo.EditOrgOption)
+		return
 	}
 
 	o.FullName = m.FullName.ValueString()

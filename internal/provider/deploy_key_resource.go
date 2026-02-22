@@ -59,7 +59,7 @@ func (m *deployKeyResourceModel) from(k *forgejo.DeployKey) {
 // to is a helper function to save Terraform data model into an API struct.
 func (m *deployKeyResourceModel) to(o *forgejo.CreateKeyOption) {
 	if o == nil {
-		o = new(forgejo.CreateKeyOption)
+		return
 	}
 
 	o.Title = m.Title.ValueString()

@@ -102,7 +102,7 @@ func (m *userResourceModel) from(u *forgejo.User) {
 // to is a helper function to save Terraform data model into an API struct.
 func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) {
 	if o == nil {
-		o = new(forgejo.EditUserOption)
+		return
 	}
 
 	o.SourceID = m.SourceID.ValueInt64()

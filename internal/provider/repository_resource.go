@@ -183,7 +183,7 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 // to is a helper function to save Terraform data model into an API struct.
 func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	if o == nil {
-		o = new(forgejo.EditRepoOption)
+		return
 	}
 
 	o.Name = m.Name.ValueStringPointer()

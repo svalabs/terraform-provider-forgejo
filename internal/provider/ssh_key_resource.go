@@ -61,7 +61,7 @@ func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
 // to is a helper function to save Terraform data model into an API struct.
 func (m *sshKeyResourceModel) to(o *forgejo.CreateKeyOption) {
 	if o == nil {
-		o = new(forgejo.CreateKeyOption)
+		return
 	}
 
 	o.Title = m.Title.ValueString()

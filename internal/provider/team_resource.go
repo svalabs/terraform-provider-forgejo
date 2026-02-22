@@ -68,7 +68,7 @@ func (m *teamResourceModel) from(t *forgejo.Team, ctx context.Context) (diags di
 // to is a helper function to save Terraform data model into an API struct.
 func (m *teamResourceModel) to(o *forgejo.EditTeamOption, ctx context.Context) (diags diag.Diagnostics) {
 	if o == nil {
-		o = new(forgejo.EditTeamOption)
+		return
 	}
 
 	o.Name = m.Name.ValueString()

@@ -47,7 +47,7 @@ func (m *collaboratorResourceModel) from(perms *forgejo.CollaboratorPermissionRe
 // to is a helper function to save Terraform data model into an API struct.
 func (m *collaboratorResourceModel) to(o *forgejo.AddCollaboratorOption) {
 	if o == nil {
-		o = new(forgejo.AddCollaboratorOption)
+		return
 	}
 
 	am := forgejo.AccessMode(m.Permission.ValueString())

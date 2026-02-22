@@ -111,7 +111,7 @@ func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) (diags diag.Diagnostics) {
 // to is a helper function to save Terraform data model into an API struct.
 func (m *gpgKeyResourceModel) to(o *forgejo.CreateGPGKeyOption) {
 	if o == nil {
-		o = new(forgejo.CreateGPGKeyOption)
+		return
 	}
 
 	o.ArmoredKey = m.ArmoredPublicKey.ValueString()
