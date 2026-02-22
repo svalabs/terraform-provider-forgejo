@@ -19,11 +19,11 @@ func TestAccOrganizationActionSecretResource(t *testing.T) {
 			{
 				Config: providerConfig + `
 resource "forgejo_organization_action_secret" "test" {
-	organization = "non_existent"
-	name         = "my_secret"
-	data         = "my_secret_value"
+	organization_id = 1011
+	name            = "my_secret"
+	data            = "my_secret_value"
 }`,
-				ExpectError: regexp.MustCompile("Organization with name \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile("Organization with ID 1011 not found"),
 			},
 			// Create and Read testing
 			{
@@ -32,12 +32,12 @@ resource "forgejo_organization" "test" {
 	name = "test_org"
 }
 resource "forgejo_organization_action_secret" "test" {
-	organization = forgejo_organization.test.name
-	name         = "my_secret"
-	data         = "my_secret_value"
+	organization_id = forgejo_organization.test.id
+	name            = "my_secret"
+	data            = "my_secret_value"
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_secret")),
 					statecheck.ExpectSensitiveValue("forgejo_organization_action_secret.test", tfjsonpath.New("data")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
@@ -50,12 +50,12 @@ resource "forgejo_organization" "test" {
 	name = "test_org"
 }
 resource "forgejo_organization_action_secret" "test" {
-	organization = forgejo_organization.test.name
-	name         = "my_new_secret"
-	data         = "my_secret_value"
+	organization_id = forgejo_organization.test.id
+	name            = "my_new_secret"
+	data            = "my_secret_value"
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),
 					statecheck.ExpectSensitiveValue("forgejo_organization_action_secret.test", tfjsonpath.New("data")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
@@ -68,12 +68,12 @@ resource "forgejo_organization" "test" {
 	name = "test_org"
 }
 resource "forgejo_organization_action_secret" "test" {
-	organization = forgejo_organization.test.name
-	name         = "my_new_secret"
-	data         = "my_new_secret_value"
+	organization_id = forgejo_organization.test.id
+	name            = "my_new_secret"
+	data            = "my_new_secret_value"
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret")),
 					statecheck.ExpectSensitiveValue("forgejo_organization_action_secret.test", tfjsonpath.New("data")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),

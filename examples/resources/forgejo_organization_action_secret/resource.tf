@@ -17,7 +17,7 @@ resource "forgejo_organization" "test" {
 
 # Organization action secret
 resource "forgejo_organization_action_secret" "this" {
-  organization = forgejo_organization.test.name
-  name         = "my_secret"
-  data         = "my_secret_value"
+  organization_id = forgejo_organization.test.id
+  name            = "my_secret"
+  data            = "my_secret_value"
 }

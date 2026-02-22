@@ -4,11 +4,14 @@ page_title: "forgejo_organization_action_secret Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo organization action secret resource.
+  Note: Managing organization action secrets requires administrative privileges!
 ---
 
 # forgejo_organization_action_secret (Resource)
 
 Forgejo organization action secret resource.
+
+**Note**: Managing organization action secrets requires administrative privileges!
 
 ## Example Usage
 
@@ -32,9 +35,9 @@ resource "forgejo_organization" "test" {
 
 # Organization action secret
 resource "forgejo_organization_action_secret" "this" {
-  organization = forgejo_organization.test.name
-  name         = "my_secret"
-  data         = "my_secret_value"
+  organization_id = forgejo_organization.test.id
+  name            = "my_secret"
+  data            = "my_secret_value"
 }
 ```
 
@@ -45,7 +48,7 @@ resource "forgejo_organization_action_secret" "this" {
 
 - `data` (String, Sensitive) Data of the secret.
 - `name` (String) Name of the secret. Changing this forces a new resource to be created.
-- `organization` (String) Name of the organization. Changing this forces a new resource to be created.
+- `organization_id` (Number) Numeric identifier of the organization. Changing this forces a new resource to be created.
 
 ### Read-Only
 

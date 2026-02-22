@@ -72,7 +72,7 @@ The following API token permissions are required:
 - `write:repository`
 - `write:user`
 
-Optionally, for administrative privileges (required to manage users, user repositories, user SSH keys, and teams):
+Optionally, for administrative privileges (required to manage users, user repositories, user SSH keys, teams, and organization action secrets):
 
 - `write:admin`
 

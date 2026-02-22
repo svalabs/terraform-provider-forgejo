@@ -176,7 +176,7 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "List organizations", map[string]any{
-		"id": orgID,
+		"id": orgID.ValueInt64(),
 	})
 
 	// Use Forgejo client to list organizations
