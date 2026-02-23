@@ -1,13 +1,13 @@
 package provider_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
 	"terraform-provider-forgejo/internal/provider"
+	"terraform-provider-forgejo/internal/testing/fixtures"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	// test configuration so the Forgejo client is properly configured.
 	// It is also possible to use the FORGEJO_ environment variables instead,
 	// such as updating the Makefile and running the testing through that tool.
-	providerConfig = `provider "forgejo" { host = "http://localhost:3000" }
+	providerConfig = `provider "forgejo" { }
 `
 )
 
@@ -30,10 +30,20 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 }
 
 func testAccPreCheck(t *testing.T) {
-	// You can add code here to run prior to any test case execution, for example assertions
-	// about the appropriate environment variables being set are common to see in a pre-check
-	// function.
-	if v := os.Getenv("FORGEJO_API_TOKEN"); v == "" {
-		t.Fatal("FORGEJO_API_TOKEN must be set for acceptance tests")
+	containers, err := fixtures.GetTestContainers(t.Context())
+	if err != nil {
+		t.Fatalf("Error getting test containers: %s", err)
 	}
+
+	forgejoHost, err := containers.ForgejoContainer.GetHost(t.Context())
+	if err != nil {
+		t.Fatalf("Error getting Forgejo host: %s", err)
+	}
+	t.Setenv("FORGEJO_HOST", forgejoHost)
+
+	forgejoAPIToken, err := containers.ForgejoContainer.GetAPIToken(t.Context())
+	if err != nil {
+		t.Fatalf("Error getting Forgejo API token: %s", err)
+	}
+	t.Setenv("FORGEJO_API_TOKEN", forgejoAPIToken)
 }
