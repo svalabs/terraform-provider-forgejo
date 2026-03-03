@@ -67,6 +67,7 @@ type userResourceModel struct {
 	AllowImportLocal        types.Bool   `tfsdk:"allow_import_local"`
 	AllowCreateOrganization types.Bool   `tfsdk:"allow_create_organization"`
 	MaxRepoCreation         types.Int64  `tfsdk:"max_repo_creation"`
+	DeactivateOnDestroy     types.Bool   `tfsdk:"deactivate_on_destroy"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -321,6 +322,12 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Optional:    true,
 				Computed:    true,
 				Default:     int64default.StaticInt64(-1),
+			},
+			"deactivate_on_destroy": schema.BoolAttribute{
+				Description: "Deactivate the user instead of delete?",
+				Computed:    true,
+				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 		},
 	}
@@ -752,12 +759,35 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	tflog.Info(ctx, "Delete user", map[string]any{
-		"name": data.Name.ValueString(),
-	})
+	var (
+		res *forgejo.Response
+		err error
+	)
 
-	// Use Forgejo client to delete existing user
-	res, err := r.client.AdminDeleteUser(data.Name.ValueString())
+	if data.DeactivateOnDestroy.ValueBool() {
+		tflog.Info(ctx, "Deactivate user", map[string]any{
+			"name": data.Name.ValueString(),
+		})
+
+		active := false
+		opts := forgejo.EditUserOption{
+			Active: &active,
+		}
+
+		// Use Forgejo client to deactivate existing user
+		res, err = r.client.AdminEditUser(
+			data.Name.ValueString(),
+			opts,
+		)
+	} else {
+		tflog.Info(ctx, "Delete user", map[string]any{
+			"name": data.Name.ValueString(),
+		})
+
+		// Use Forgejo client to delete existing user
+		res, err = r.client.AdminDeleteUser(data.Name.ValueString())
+	}
+
 	if err != nil {
 		var msg string
 		if res == nil {

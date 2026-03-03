@@ -66,6 +66,7 @@ resource "forgejo_user" "non_defaults" {
 - `allow_create_organization` (Boolean) Allow user to create organizations?
 - `allow_git_hook` (Boolean) Allow user to create Git hooks?
 - `allow_import_local` (Boolean) Allow user to import local repositories?
+- `deactivate_on_destroy` (Boolean) Deactivate the user instead of delete?
 - `description` (String) Description of the user.
 - `full_name` (String) Full name of the user.
 - `location` (String) Location of the user.
