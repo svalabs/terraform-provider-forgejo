@@ -89,12 +89,10 @@ func (d *teamMemberDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	tflog.Info(ctx, "Read user's team member", map[string]any{
-		"team_id": data.TeamID,
-		"user":    data.User,
-	})
-
-	diags = checkTeamMember(ctx, d.client,
+	// Use Forgejo client to check a team member
+	diags = checkTeamMember(
+		ctx,
+		d.client,
 		data.TeamID.ValueInt64(),
 		data.User.ValueString(),
 	)
@@ -117,7 +115,7 @@ func NewTeamMemberDataSource() datasource.DataSource {
 func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, userName string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	tflog.Info(ctx, "Get team member", map[string]any{
+	tflog.Info(ctx, "Read team member", map[string]any{
 		"team_id": teamID,
 		"user":    userName,
 	})
@@ -128,6 +126,7 @@ func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, 
 		return diags
 	}
 
+	// Handle errors
 	var msg string
 	if res == nil {
 		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
@@ -139,7 +138,7 @@ func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, 
 		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf(
-				"User %s is not a member of team with ID %d: %s",
+				"User '%s' in team with ID %d not found: %s",
 				userName,
 				teamID,
 				err,
@@ -148,6 +147,7 @@ func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, 
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 	}
-	diags.AddError("Unable to get team member", msg)
+	diags.AddError("Unable to read team member", msg)
+
 	return diags
 }

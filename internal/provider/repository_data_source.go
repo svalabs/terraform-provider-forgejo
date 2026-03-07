@@ -625,7 +625,7 @@ func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*
 		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf(
-				"Repository with id %d not found: %s",
+				"Repository with ID %d not found: %s",
 				id,
 				err,
 			)

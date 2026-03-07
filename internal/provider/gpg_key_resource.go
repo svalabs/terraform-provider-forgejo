@@ -407,13 +407,13 @@ func (r *gpgKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"GPG key with id %s forbidden: %s",
+					"GPG key with ID %s forbidden: %s",
 					data.ID.String(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"GPG key with id %s not found: %s",
+					"GPG key with ID %s not found: %s",
 					data.ID.String(),
 					err,
 				)
@@ -479,13 +479,13 @@ func (r *gpgKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"GPG key with id %s forbidden: %s",
+					"GPG key with ID %s forbidden: %s",
 					data.ID.String(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"GPG key with id %s not found: %s",
+					"GPG key with ID %s not found: %s",
 					data.ID.String(),
 					err,
 				)

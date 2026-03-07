@@ -28,7 +28,7 @@ resource "forgejo_team_member" "test" {
 	team_id = 1010
 	user    = forgejo_user.test.login
 }`,
-				ExpectError: regexp.MustCompile("Either User test_user or Team with ID 1010 not found"),
+				ExpectError: regexp.MustCompile("Either user 'test_user' or team with ID 1010 not found"),
 			},
 			// Create testing (non-existent user)
 			{
@@ -48,7 +48,7 @@ resource "forgejo_team_member" "test" {
 	team_id = forgejo_team.test.id
 	user    = "non-existing-user"
 }`,
-				ExpectError: regexp.MustCompile("Either User non-existing-user or Team with ID [0-9]+ not found"),
+				ExpectError: regexp.MustCompile("Either user 'non-existing-user' or team with ID [0-9]+ not found"),
 			},
 			// Create testing
 			{

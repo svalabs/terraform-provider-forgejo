@@ -32,7 +32,7 @@ resource "forgejo_deploy_key" "test" {
 	title         = "tftest"
 	read_only     = false
 }`,
-				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+				ExpectError: regexp.MustCompile("Repository with ID -1 not found"),
 			},
 			// Create and Read testing
 			{

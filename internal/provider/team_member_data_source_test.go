@@ -27,7 +27,7 @@ data "forgejo_team_member" "test" {
 	team_id = 1010
 	user    = forgejo_user.test.login
 }`,
-				ExpectError: regexp.MustCompile("User test_user is not a member of team with ID 1010"),
+				ExpectError: regexp.MustCompile("User 'test_user' in team with ID 1010 not found"),
 			},
 			// Read testing (non-existent user)
 			{
@@ -47,7 +47,7 @@ data "forgejo_team_member" "test" {
 	team_id = forgejo_team.test.id
 	user    = "non-existing-login"
 }`,
-				ExpectError: regexp.MustCompile("User non-existing-login is not a member of team with ID"),
+				ExpectError: regexp.MustCompile("User 'non-existing-login' in team with ID [0-9]+ not found"),
 			},
 			// Read testing (non-existent member)
 			{
@@ -72,7 +72,7 @@ data "forgejo_team_member" "test" {
 	team_id = forgejo_team.test.id
 	user    = forgejo_user.test.login
 }`,
-				ExpectError: regexp.MustCompile("User test_user is not a member of team with ID "),
+				ExpectError: regexp.MustCompile("User 'test_user' in team with ID [0-9]+ not found"),
 			},
 			// Read testing
 			{

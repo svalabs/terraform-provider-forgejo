@@ -23,7 +23,7 @@ resource "forgejo_collaborator" "test" {
 	user          = "tftest"
 	permission    = "read"
 }`,
-				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+				ExpectError: regexp.MustCompile("Repository with ID -1 not found"),
 			},
 			// Create and Read testing (non-existent user)
 			{

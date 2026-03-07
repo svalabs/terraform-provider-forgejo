@@ -99,13 +99,13 @@ func (r *teamMemberResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	tflog.Info(ctx, "Add team member", map[string]any{
-		"team_id": data.TeamID,
-		"user":    data.User,
-	})
-
 	// Use Forgejo client to set a team member
-	diags = setTeamMember(ctx, r.client, data.TeamID.ValueInt64(), data.User.ValueString())
+	diags = setTeamMember(
+		ctx,
+		r.client,
+		data.TeamID.ValueInt64(),
+		data.User.ValueString(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
@@ -129,12 +129,10 @@ func (r *teamMemberResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	tflog.Info(ctx, "Read team member", map[string]any{
-		"team_id": data.TeamID,
-		"user":    data.User,
-	})
-
-	diags = checkTeamMember(ctx, r.client,
+	// Use Forgejo client to check a team member
+	diags = checkTeamMember(
+		ctx,
+		r.client,
 		data.TeamID.ValueInt64(),
 		data.User.ValueString(),
 	)
@@ -171,12 +169,10 @@ func (r *teamMemberResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	tflog.Info(ctx, "Delete team member", map[string]any{
-		"team_id": data.TeamID,
-		"user":    data.User,
-	})
-
-	diags = deleteTeamMember(ctx, r.client,
+	// Use Forgejo client to delete a team member
+	diags = deleteTeamMember(
+		ctx,
+		r.client,
 		data.TeamID.ValueInt64(),
 		data.User.ValueString(),
 	)
@@ -192,7 +188,7 @@ func NewTeamMemberResource() resource.Resource {
 func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, userName string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	tflog.Info(ctx, "Setting team member", map[string]any{
+	tflog.Info(ctx, "Create team member", map[string]any{
 		"team_id": teamID,
 		"user":    userName,
 	})
@@ -203,6 +199,7 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 		return diags
 	}
 
+	// Handle errors
 	var msg string
 	if res == nil {
 		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
@@ -214,7 +211,7 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf(
-				"Either User %s or Team with ID %d not found: %s",
+				"Either user '%s' or team with ID %d not found: %s",
 				userName,
 				teamID,
 				err,
@@ -223,7 +220,8 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 			msg = fmt.Sprintf("Unknown error: %s", err)
 		}
 	}
-	diags.AddError("Unable to add team member", msg)
+	diags.AddError("Unable to create team member", msg)
+
 	return diags
 }
 
@@ -231,7 +229,7 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 func deleteTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, userName string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	tflog.Info(ctx, "Deleting team member", map[string]any{
+	tflog.Info(ctx, "Delete team member", map[string]any{
 		"team_id":   teamID,
 		"user_name": userName,
 	})
@@ -242,6 +240,7 @@ func deleteTeamMember(ctx context.Context, client *forgejo.Client, teamID int64,
 		return diags
 	}
 
+	// Handle errors
 	var msg string
 	if res == nil {
 		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
@@ -253,7 +252,7 @@ func deleteTeamMember(ctx context.Context, client *forgejo.Client, teamID int64,
 		switch res.StatusCode {
 		case 404:
 			msg = fmt.Sprintf(
-				"Either User %s or Team with ID %d not found: %s",
+				"Either user '%s' or team with ID %d not found: %s",
 				userName,
 				teamID,
 				err,
@@ -263,5 +262,6 @@ func deleteTeamMember(ctx context.Context, client *forgejo.Client, teamID int64,
 		}
 	}
 	diags.AddError("Unable to delete team member", msg)
+
 	return diags
 }

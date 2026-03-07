@@ -22,7 +22,7 @@ data "forgejo_collaborator" "test" {
 	repository_id = -1
 	user          = "tftest"
 }`,
-				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+				ExpectError: regexp.MustCompile("Repository with ID -1 not found"),
 			},
 			// Read testing (non-existent user)
 			{

@@ -23,7 +23,7 @@ resource "forgejo_repository_action_secret" "test" {
 	name          = "my_secret"
 	data          = "my_secret_value"
 }`,
-				ExpectError: regexp.MustCompile("Repository with id -1 not found"),
+				ExpectError: regexp.MustCompile("Repository with ID -1 not found"),
 			},
 			// Create and Read testing
 			{
