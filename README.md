@@ -24,6 +24,7 @@ Resources:
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_team` ([documentation](docs/resources/team.md))
+- `forgejo_team_member` ([documentation](docs/resources/team_member.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
 Data Sources:
@@ -35,6 +36,7 @@ Data Sources:
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
 - `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))
 - `forgejo_team` ([documentation](docs/data-sources/team.md))
+- `forgejo_team_member` ([documentation](docs/data-sources/team_member.md))
 - `forgejo_user` ([documentation](docs/data-sources/user.md))
 
 ## Using the Provider
