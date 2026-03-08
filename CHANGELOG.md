@@ -1,3 +1,30 @@
+## 1.3.1 (March 8, 2026)
+
+FEATURES:
+
+- **New Resource**: `forgejo_team_member` ([documentation](docs/resources/team_member.md))
+- **New Data Source**: `forgejo_team_member` ([documentation](docs/data-sources/team_member.md))
+
+ENHANCEMENTS:
+
+- `forgejo_user`: Add `deactivate_on_destroy` attribute to allow deactivating users instead of deleting them on destroy
+
+BUG FIXES:
+
+- Disable pagination in SDK list calls to return all results
+
+DEPENDENCIES:
+
+- Update to Go 1.25.7
+- Bump actions/setup-go from 6.2.0 to 6.3.0
+- Bump crazy-max/ghaction-import-gpg from 6.3.0 to 7.0.0
+- Bump docker/setup-compose-action from 1 to 2
+- Bump github.com/cloudflare/circl from 1.6.1 to 1.6.3
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.17.0 to 1.18.0
+- Bump github.com/hashicorp/terraform-plugin-go from 0.29.0 to 0.30.0
+- Bump goreleaser/goreleaser-action from 6.4.0 to 7.0.0
+- Bump hashicorp/setup-terraform from 3.1.2 to 4.0.0
+
 ## 1.3.0 (February 22, 2026)
 
 BREAKING CHANGES:
