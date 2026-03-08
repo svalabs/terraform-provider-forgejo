@@ -185,7 +185,14 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 	})
 
 	// Use Forgejo client to list teams in organization
-	teams, res, err := client.ListOrgTeams(organization.UserName, forgejo.ListTeamsOptions{})
+	teams, res, err := client.ListOrgTeams(
+		organization.UserName,
+		forgejo.ListTeamsOptions{
+			ListOptions: forgejo.ListOptions{
+				Page: -1,
+			},
+		},
+	)
 	if err != nil {
 		var msg string
 		if res == nil {

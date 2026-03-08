@@ -133,7 +133,11 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	// Use Forgejo client to list SSH keys
 	keys, res, err := d.client.ListPublicKeys(
 		data.User.ValueString(),
-		forgejo.ListPublicKeysOptions{},
+		forgejo.ListPublicKeysOptions{
+			ListOptions: forgejo.ListOptions{
+				Page: -1,
+			},
+		},
 	)
 	if err != nil {
 		var msg string

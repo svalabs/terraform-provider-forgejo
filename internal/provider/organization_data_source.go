@@ -181,7 +181,13 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 	})
 
 	// Use Forgejo client to list organizations
-	organizations, res, err := client.AdminListOrgs(forgejo.AdminListOrgsOptions{})
+	organizations, res, err := client.AdminListOrgs(
+		forgejo.AdminListOrgsOptions{
+			ListOptions: forgejo.ListOptions{
+				Page: -1,
+			},
+		},
+	)
 	if err != nil {
 		var msg string
 		if res == nil {

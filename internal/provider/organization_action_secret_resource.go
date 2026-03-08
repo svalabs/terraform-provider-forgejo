@@ -400,7 +400,11 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 	// Use Forgejo client to list organization action secrets
 	secrets, res, err := r.client.ListOrgActionSecret(
 		organization.UserName,
-		forgejo.ListOrgActionSecretOption{},
+		forgejo.ListOrgActionSecretOption{
+			ListOptions: forgejo.ListOptions{
+				Page: -1,
+			},
+		},
 	)
 	if err != nil {
 		var msg string

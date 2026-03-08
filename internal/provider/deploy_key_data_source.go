@@ -147,7 +147,11 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	keys, res, err := d.client.ListDeployKeys(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
-		forgejo.ListDeployKeysOptions{},
+		forgejo.ListDeployKeysOptions{
+			ListOptions: forgejo.ListOptions{
+				Page: -1,
+			},
+		},
 	)
 	if err != nil {
 		var msg string

@@ -163,11 +163,19 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	if data.User.ValueString() != "" {
 		keys, res, err = d.client.ListGPGKeys(
 			data.User.ValueString(),
-			forgejo.ListGPGKeysOptions{},
+			forgejo.ListGPGKeysOptions{
+				ListOptions: forgejo.ListOptions{
+					Page: -1,
+				},
+			},
 		)
 	} else {
 		keys, res, err = d.client.ListMyGPGKeys(
-			&forgejo.ListGPGKeysOptions{},
+			&forgejo.ListGPGKeysOptions{
+				ListOptions: forgejo.ListOptions{
+					Page: -1,
+				},
+			},
 		)
 	}
 	if err != nil {

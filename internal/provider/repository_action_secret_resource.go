@@ -439,7 +439,11 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 	secrets, res, err := r.client.ListRepoActionSecret(
 		owner,
 		repoName,
-		forgejo.ListRepoActionSecretOption{},
+		forgejo.ListRepoActionSecretOption{
+			ListOptions: forgejo.ListOptions{
+				Page: -1,
+			},
+		},
 	)
 	if err != nil {
 		var msg string
