@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -382,8 +381,6 @@ func (r *branchResource) ImportState(ctx context.Context, req resource.ImportSta
 	})
 
 	rep, res, err := r.client.GetRepoBranch(owner, repositoryName, branchName)
-	log.Println("DUPA")
-	log.Println(res)
 	if err != nil {
 		var msg string
 		if res == nil {
