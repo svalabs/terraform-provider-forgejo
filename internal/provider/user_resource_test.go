@@ -56,11 +56,20 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectSensitiveValue("forgejo_user.test", tfjsonpath.New("password")),
 				},
 			},
-			// Import testing
+			// Import testing (non-existent resource)
 			{
 				ResourceName:  "forgejo_user.test",
 				ImportState:   true,
-				ImportStateId: "tftest",
+				ImportStateId: "non-existent",
+				ExpectError:   regexp.MustCompile("User with name 'non-existent' not found"),
+			},
+			// Import testing
+			{
+				ResourceName:            "forgejo_user.test",
+				ImportState:             true,
+				ImportStateId:           "tftest",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
 			},
 			// Recreate and Read testing
 			{

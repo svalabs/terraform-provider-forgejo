@@ -50,11 +50,32 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-			// ImportState testing
+			// Import testing (invalid identifier)
+			{
+				ResourceName:  "forgejo_branch_protection.test",
+				ImportState:   true,
+				ImportStateId: "invalid",
+				ExpectError:   regexp.MustCompile("Import ID must be in format 'owner/repo/branch'"),
+			},
+			// Import testing (non-existent repo)
+			{
+				ResourceName:  "forgejo_branch_protection.test",
+				ImportState:   true,
+				ImportStateId: "tfadmin/non-existent/main",
+				ExpectError:   regexp.MustCompile("Branch protection not found for 'tfadmin/non-existent/main'"),
+			},
+			// Import testing (non-existent resource)
+			{
+				ResourceName:  "forgejo_branch_protection.test",
+				ImportState:   true,
+				ImportStateId: "tfadmin/test_repo_branch_protection/non-existent",
+				ExpectError:   regexp.MustCompile("Branch protection not found for\n'tfadmin/test_repo_branch_protection/non-existent'"),
+			},
+			// Import testing
 			{
 				ResourceName:                         "forgejo_branch_protection.test",
-				ImportStateId:                        "tfadmin/test_repo_branch_protection/main",
 				ImportState:                          true,
+				ImportStateId:                        "tfadmin/test_repo_branch_protection/main",
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "branch_name",
 			},
@@ -346,7 +367,7 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = 123
 }`,
-				ExpectError: regexp.MustCompile("Error: Unable to read repository"),
+				ExpectError: regexp.MustCompile("Unable to read repository"),
 			},
 		},
 	})
@@ -368,7 +389,7 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 }`,
-				ExpectError: regexp.MustCompile("Error: Unable to create branch protection"),
+				ExpectError: regexp.MustCompile("Unable to create branch protection"),
 			},
 		},
 	})

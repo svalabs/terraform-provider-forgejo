@@ -94,11 +94,33 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
 			},
-			// Import testing
+			// Import testing (invalid identifier)
 			{
 				ResourceName:  "forgejo_repository.test",
 				ImportState:   true,
-				ImportStateId: "tfadmin/tftest",
+				ImportStateId: "invalid",
+				ExpectError:   regexp.MustCompile("Import ID must be in format 'owner/name'"),
+			},
+			// Import testing (non-existent user)
+			{
+				ResourceName:  "forgejo_repository.test",
+				ImportState:   true,
+				ImportStateId: "non-existent/tftest",
+				ExpectError:   regexp.MustCompile("Repository with owner 'non-existent' and name 'tftest' not found"),
+			},
+			// Import testing (non-existent resource)
+			{
+				ResourceName:  "forgejo_repository.test",
+				ImportState:   true,
+				ImportStateId: "tfadmin/non-existent",
+				ExpectError:   regexp.MustCompile("Repository with owner 'tfadmin' and name 'non-existent' not found"),
+			},
+			// Import testing
+			{
+				ResourceName:      "forgejo_repository.test",
+				ImportState:       true,
+				ImportStateId:     "tfadmin/tftest",
+				ImportStateVerify: true,
 			},
 			// Recreate and Read testing (org repo)
 			{
