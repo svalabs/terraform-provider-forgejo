@@ -161,7 +161,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 		"user": repo.Owner.ValueString(),
 		"repo": repo.Name.ValueString(),
 		"name": data.Name.ValueString(),
-		"data": data.Data.ValueString(),
+		"data": strings.Repeat("*", len(data.Data.ValueString())),
 	})
 
 	// Generate API request body from plan
@@ -318,7 +318,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 		"user": repo.Owner.ValueString(),
 		"repo": repo.Name.ValueString(),
 		"name": data.Name.ValueString(),
-		"data": data.Data.ValueString(),
+		"data": strings.Repeat("*", len(data.Data.ValueString())),
 	})
 
 	// Generate API request body from plan

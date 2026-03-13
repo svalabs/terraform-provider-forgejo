@@ -157,7 +157,7 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 		"organization_id": data.OrganizationID.ValueInt64(),
 		"organization":    organization.UserName,
 		"name":            data.Name.ValueString(),
-		"data":            data.Data.ValueString(),
+		"data":            strings.Repeat("*", len(data.Data.ValueString())),
 	})
 
 	// Generate API request body from plan
@@ -279,7 +279,7 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 		"organization_id": data.OrganizationID.ValueInt64(),
 		"organization":    organization.UserName,
 		"name":            data.Name.ValueString(),
-		"data":            data.Data.ValueString(),
+		"data":            strings.Repeat("*", len(data.Data.ValueString())),
 	})
 
 	// Generate API request body from plan
