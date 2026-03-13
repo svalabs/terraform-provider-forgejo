@@ -1679,6 +1679,22 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 		return
 	}
 
+	// Initialize write-only fields to their default values
+	state.AllowManualMerge = types.BoolValue(false)
+	state.ArchiveOnDestroy = types.BoolValue(false)
+	state.AutoInit = types.BoolValue(true)
+	state.AutodetectManualMerge = types.BoolValue(false)
+	state.Gitignores = types.StringValue("")
+	state.IssueLabels = types.StringValue("")
+	state.Labels = types.BoolValue(false)
+	state.LFS = types.BoolValue(false)
+	state.LFSEndpoint = types.StringValue("")
+	state.License = types.StringValue("")
+	state.Milestones = types.BoolValue(false)
+	state.Readme = types.StringValue("")
+	state.Service = types.StringValue("")
+	state.TrustModel = types.StringValue("default")
+
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

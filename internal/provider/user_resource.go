@@ -863,13 +863,14 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 	state.from(usr)
 
 	// Initialize write-only fields to their default values
-	state.Password = types.StringValue("")
-	state.MustChangePassword = types.BoolValue(true)
-	state.SendNotify = types.BoolValue(true)
+	state.AllowCreateOrganization = types.BoolValue(true)
 	state.AllowGitHook = types.BoolValue(false)
 	state.AllowImportLocal = types.BoolValue(false)
-	state.AllowCreateOrganization = types.BoolValue(true)
+	state.DeactivateOnDestroy = types.BoolValue(false)
 	state.MaxRepoCreation = types.Int64Value(-1)
+	state.MustChangePassword = types.BoolValue(true)
+	state.Password = types.StringValue("")
+	state.SendNotify = types.BoolValue(true)
 
 	// Save data into Terraform state
 	diags := resp.State.Set(ctx, &state)
