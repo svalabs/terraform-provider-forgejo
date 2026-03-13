@@ -1,8 +1,8 @@
 name: Vulnerability Check
 
 on:
-  schedule: # daily at 1:23 UTC
-    - cron: "23 1 * * *"
+  schedule: # weekly on Friday at 1:23 UTC
+    - cron: "23 1 * * 5"
 
 permissions:
   contents: read
