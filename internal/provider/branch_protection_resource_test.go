@@ -55,7 +55,7 @@ resource "forgejo_branch_protection" "test" {
 				ResourceName:  "forgejo_branch_protection.test",
 				ImportState:   true,
 				ImportStateId: "invalid",
-				ExpectError:   regexp.MustCompile("Import ID must be in format 'owner/repo/branch'"),
+				ExpectError:   regexp.MustCompile("Expected import identifier with format: 'owner/repo/branch', got: 'invalid'"),
 			},
 			// Import testing (non-existent repo)
 			{

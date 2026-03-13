@@ -547,7 +547,13 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 	// Parse import identifier
 	parts := strings.Split(req.ID, "/")
 	if len(parts) != 3 {
-		response.Diagnostics.AddError(req.ID, "Import ID must be in format 'owner/repo/branch'")
+		response.Diagnostics.AddError(
+			"Unable to parse import identifier",
+			fmt.Sprintf(
+				"Expected import identifier with format: 'owner/repo/branch', got: '%s'",
+				req.ID,
+			),
+		)
 
 		return
 	}
@@ -577,7 +583,7 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Branch protection not found for %s/%s/%s: %s",
+					"Branch protection not found for '%s/%s/%s': %s",
 					owner,
 					repo,
 					branchName,

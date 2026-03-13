@@ -99,7 +99,7 @@ resource "forgejo_repository" "test" {
 				ResourceName:  "forgejo_repository.test",
 				ImportState:   true,
 				ImportStateId: "invalid",
-				ExpectError:   regexp.MustCompile("Import ID must be in format 'owner/name'"),
+				ExpectError:   regexp.MustCompile("Expected import identifier with format: 'owner/name', got: 'invalid'"),
 			},
 			// Import testing (non-existent user)
 			{

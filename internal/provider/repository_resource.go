@@ -1629,7 +1629,13 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	// Parse import identifier
 	cmp := strings.Split(req.ID, "/")
 	if len(cmp) != 2 {
-		resp.Diagnostics.AddError(req.ID, "Import ID must be in format 'owner/name'")
+		resp.Diagnostics.AddError(
+			"Unable to parse import identifier",
+			fmt.Sprintf(
+				"Expected import identifier with format: 'owner/name', got: '%s'",
+				req.ID,
+			),
+		)
 
 		return
 	}
