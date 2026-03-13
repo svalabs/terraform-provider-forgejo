@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -26,7 +26,7 @@ type teamDataSource struct {
 }
 
 // teamDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Team
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Team
 type teamDataSourceModel struct {
 	ID                      types.Int64  `tfsdk:"id"`
 	Name                    types.String `tfsdk:"name"`
