@@ -373,12 +373,9 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// Save plan into Terraform state
-	diags = resp.State.Set(ctx, &data)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	tflog.Info(ctx, "Read organization", map[string]any{
+		"name": data.Name.ValueString(),
+	})
 
 	// Use Forgejo client to fetch updated organization
 	org, res, err := r.client.GetOrg(data.Name.ValueString())

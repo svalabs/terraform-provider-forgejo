@@ -527,6 +527,10 @@ func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts fo
 		return nil, diags
 	}
 
+	tflog.Info(ctx, "Read team", map[string]any{
+		"id": teamID,
+	})
+
 	// Use Forgejo client to fetch updated team
 	team, res, err := client.GetTeam(teamID)
 	if err != nil {
