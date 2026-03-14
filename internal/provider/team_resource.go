@@ -290,6 +290,22 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		"organization_id": data.OrganizationID.ValueInt64(),
 	})
 
+	hasTeam, diags := hasOrgTeamByName(
+		ctx,
+		r.client,
+		data.OrganizationID,
+		data.Name,
+	)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	if !hasTeam {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Use Forgejo client to read existing team
 	team, diags := getOrgTeamByName(
 		ctx,

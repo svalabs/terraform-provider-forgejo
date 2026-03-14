@@ -128,7 +128,7 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	})
 
 	// Use Forgejo client to get team by name
-	team, diags := getOrgTeamByName(
+	team, diags := getOrgTeamByNameOrError(
 		ctx,
 		d.client,
 		data.OrganizationID,
@@ -223,13 +223,30 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 		return t.Name == teamName.ValueString()
 	})
 	if idx == -1 {
-		diags.AddError(
-			"Unable to find team by name",
-			fmt.Sprintf("Team with name %s not found", teamName.String()),
-		)
-
 		return nil, diags
 	}
 
 	return teams[idx], diags
+}
+
+func getOrgTeamByNameOrError(ctx context.Context, client *forgejo.Client, orgID types.Int64, teamName types.String) (*forgejo.Team, diag.Diagnostics) {
+	team, diags := getOrgTeamByName(ctx, client, orgID, teamName)
+	if team == nil && diags == nil {
+		diags.AddError(
+			"Unable to find team by name",
+			fmt.Sprintf("Team with name %s not found", teamName.String()),
+		)
+		return nil, diags
+	}
+	return team, diags
+}
+
+func hasOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.Int64, teamName types.String) (bool, diag.Diagnostics) {
+	var hasTeam bool
+	team, diags := getOrgTeamByName(ctx, client, orgID, teamName)
+	if diags == nil {
+		hasTeam = team != nil
+		return hasTeam, diags
+	}
+	return hasTeam, diags
 }
