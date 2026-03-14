@@ -285,13 +285,28 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 
 			switch res.StatusCode {
 			case 403:
-				msg = fmt.Sprintf("Repository forbidden: %s", err)
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' forbidden: %s",
+					repo.Owner.UserName,
+					repo.Name,
+					err,
+				)
 			case 404:
-				msg = fmt.Sprintf("Repository not found: %s", err)
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' not found: %s",
+					repo.Owner.UserName,
+					repo.Name,
+					err,
+				)
 			case 422:
-				msg = fmt.Sprintf("Validation error: %s", err)
+				msg = fmt.Sprintf("Input validation error: %s", err)
 			case 423:
-				msg = fmt.Sprintf("Repository is already archived: %s", err)
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' is archived: %s",
+					repo.Owner.UserName,
+					repo.Name,
+					err,
+				)
 			default:
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
@@ -451,13 +466,28 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 
 			switch res.StatusCode {
 			case 403:
-				msg = fmt.Sprintf("Repository forbidden: %s", err)
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' forbidden: %s",
+					repo.Owner.UserName,
+					repo.Name,
+					err,
+				)
 			case 404:
-				msg = fmt.Sprintf("Repository not found: %s", err)
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' not found: %s",
+					repo.Owner.UserName,
+					repo.Name,
+					err,
+				)
 			case 422:
-				msg = fmt.Sprintf("Validation error: %s", err)
+				msg = fmt.Sprintf("Input validation error: %s", err)
 			case 423:
-				msg = fmt.Sprintf("Repository is already archived: %s", err)
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' is archived: %s",
+					repo.Owner.UserName,
+					repo.Name,
+					err,
+				)
 			default:
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
@@ -527,7 +557,13 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 
 			switch res.StatusCode {
 			case 404:
-				msg = fmt.Sprintf("Branch protection not found: %s", err)
+				msg = fmt.Sprintf(
+					"Protection for branch %s in repository with owner '%s' and name '%s' not found: %s",
+					data.BranchName.String(),
+					repo.Owner.UserName,
+					repo.Name,
+					err,
+				)
 			default:
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}

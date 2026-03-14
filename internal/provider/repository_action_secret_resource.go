@@ -193,7 +193,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 
 			switch res.StatusCode {
 			case 400:
-				msg = fmt.Sprintf("Generic error: %s", err)
+				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
 					"Repository with owner %s and name %s not found: %s",
@@ -350,7 +350,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 
 			switch res.StatusCode {
 			case 400:
-				msg = fmt.Sprintf("Generic error: %s", err)
+				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
 					"Repository with owner %s and name %s not found: %s",

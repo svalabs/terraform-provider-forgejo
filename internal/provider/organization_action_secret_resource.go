@@ -188,7 +188,7 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 
 			switch res.StatusCode {
 			case 400:
-				msg = fmt.Sprintf("Generic error: %s", err)
+				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
 					"Organization with name '%s' not found: %s",
@@ -310,7 +310,7 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 
 			switch res.StatusCode {
 			case 400:
-				msg = fmt.Sprintf("Generic error: %s", err)
+				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
 					"Organization with name '%s' not found: %s",

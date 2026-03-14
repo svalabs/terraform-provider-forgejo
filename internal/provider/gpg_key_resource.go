@@ -389,7 +389,7 @@ func (r *gpgKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	tflog.Info(ctx, "Get GPG key by id", map[string]any{
+	tflog.Info(ctx, "Read GPG key", map[string]any{
 		"key_id": data.KeyID.ValueString(),
 	})
 
@@ -421,7 +421,7 @@ func (r *gpgKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to get GPG key by id", msg)
+		resp.Diagnostics.AddError("Unable to read GPG key", msg)
 
 		return
 	}

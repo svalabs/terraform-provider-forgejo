@@ -88,7 +88,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if config.Host.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("host"),
-			"Unknown Forgejo Host",
+			"Unknown Forgejo host",
 			"The provider cannot create the Forgejo API client as there is an unknown configuration value for the Forgejo host. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the FORGEJO_HOST environment variable.",
 		)
@@ -97,7 +97,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if config.Username.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
-			"Unknown Forgejo Username",
+			"Unknown Forgejo username",
 			"The provider cannot create the Forgejo API client as there is an unknown configuration value for the Forgejo username. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the FORGEJO_USERNAME environment variable.",
 		)
@@ -106,7 +106,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if config.Password.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("password"),
-			"Unknown Forgejo Password",
+			"Unknown Forgejo password",
 			"The provider cannot create the Forgejo API client as there is an unknown configuration value for the Forgejo password. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the FORGEJO_PASSWORD environment variable.",
 		)
@@ -115,7 +115,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if config.ApiToken.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_token"),
-			"Unknown Forgejo API Token",
+			"Unknown Forgejo API token",
 			"The provider cannot create the Forgejo API client as there is an unknown configuration value for the Forgejo API token. "+
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the FORGEJO_API_TOKEN environment variable.",
 		)
@@ -155,7 +155,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if host == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("host"),
-			"Missing Forgejo Host",
+			"Missing Forgejo host",
 			"The provider cannot create the Forgejo API client as there is a missing or empty value for the Forgejo host. "+
 				"Set the host value in the configuration or use the FORGEJO_HOST environment variable. "+
 				"If either is already set, ensure the value is not empty.",
@@ -165,7 +165,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if username == "" && token == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
-			"Missing Forgejo Username or API Token",
+			"Missing Forgejo username or API token",
 			"The provider cannot create the Forgejo API client as there is a missing or empty value for the Forgejo username and API token. "+
 				"Set the username value in the configuration or use the FORGEJO_USERNAME environment variable. "+
 				"Alternatively, set the api_token value in the configuration or use the FORGEJO_API_TOKEN environment variable. "+
@@ -176,7 +176,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if username != "" && password == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("password"),
-			"Missing Forgejo Password",
+			"Missing Forgejo password",
 			"The provider cannot create the Forgejo API client as there is a missing or empty value for the Forgejo password. "+
 				"Set the password value in the configuration or use the FORGEJO_PASSWORD environment variable. "+
 				"If either is already set, ensure the value is not empty.",
@@ -186,7 +186,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if username != "" && token != "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_token"),
-			"Both Forgejo Username and API Token",
+			"Both Forgejo username and API token",
 			"The provider cannot create the Forgejo API client as both, Forgejo username and API token are set. "+
 				"Set *either* the username value / FORGEJO_USERNAME environment variable, *or* the api_token value / FORGEJO_API_TOKEN environment variable, but not both.",
 		)
@@ -203,7 +203,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 	// Create a new Forgejo client using the configuration values
 	if username != "" {
-		tflog.Info(ctx, "Create Forgejo client", map[string]any{
+		tflog.Info(ctx, "Create Forgejo API client", map[string]any{
 			"forgejo_host":     host,
 			"forgejo_username": username,
 			"forgejo_password": "***",
@@ -212,7 +212,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 		client, err = forgejo.NewClient(host, forgejo.SetBasicAuth(username, password))
 	}
 	if token != "" {
-		tflog.Info(ctx, "Create Forgejo client", map[string]any{
+		tflog.Info(ctx, "Create Forgejo API client", map[string]any{
 			"forgejo_host":      host,
 			"forgejo_api_token": "***",
 		})
@@ -221,7 +221,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Forgejo API Client",
+			"Unable to create Forgejo API client",
 			"An unexpected error occurred when creating the Forgejo API client. "+
 				"If the error is not clear, please contact the provider developers.\n\n"+
 				"Forgejo Client Error: "+err.Error(),

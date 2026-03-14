@@ -419,7 +419,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 			switch res.StatusCode {
 			case 400:
-				msg = fmt.Sprintf("Generic error: %s", err)
+				msg = fmt.Sprintf("Bad request: %s", err)
 			case 403:
 				msg = fmt.Sprintf(
 					"User with name %s forbidden: %s",
@@ -496,7 +496,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 			switch res.StatusCode {
 			case 400:
-				msg = fmt.Sprintf("Generic error: %s", err)
+				msg = fmt.Sprintf("Bad request: %s", err)
 			case 403:
 				msg = fmt.Sprintf(
 					"User with name %s forbidden: %s",
@@ -683,7 +683,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 			switch res.StatusCode {
 			case 400:
-				msg = fmt.Sprintf("Generic error: %s", err)
+				msg = fmt.Sprintf("Bad request: %s", err)
 			case 403:
 				msg = fmt.Sprintf(
 					"User with name %s forbidden: %s",
