@@ -49,7 +49,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 data "forgejo_team" "test" {
 	name            = forgejo_team.test.name
@@ -61,8 +63,8 @@ data "forgejo_team" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_team.test", tfjsonpath.New("can_create_org_repo"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("data.forgejo_team.test", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("data.forgejo_team.test", tfjsonpath.New("permission"), knownvalue.StringExact("read")),
-					statecheck.ExpectKnownValue("data.forgejo_team.test", tfjsonpath.New("units"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("repo.code"),
+					statecheck.ExpectKnownValue("data.forgejo_team.test", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.code": knownvalue.StringExact("read"),
 					})),
 				},
 			},

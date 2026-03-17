@@ -41,7 +41,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 data "forgejo_team_member" "test" {
 	team_id = forgejo_team.test.id
@@ -61,7 +63,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_user" "test" {
 	login    = "test_user"
@@ -86,7 +90,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_user" "test" {
 	login    = "test_user"

@@ -4,16 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -42,7 +40,7 @@ type teamResourceModel struct {
 	Description             types.String `tfsdk:"description"`
 	IncludesAllRepositories types.Bool   `tfsdk:"includes_all_repositories"`
 	Permission              types.String `tfsdk:"permission"`
-	Units                   types.Set    `tfsdk:"units"`
+	UnitsMap                types.Map    `tfsdk:"units_map"`
 }
 
 // from is a helper function to populate Terraform data model from an API struct.
@@ -60,7 +58,7 @@ func (m *teamResourceModel) from(t *forgejo.Team, ctx context.Context) (diags di
 	m.Permission = types.StringValue(string(t.Permission))
 	m.CanCreateOrgRepo = types.BoolValue(t.CanCreateOrgRepo)
 	m.IncludesAllRepositories = types.BoolValue(t.IncludesAllRepositories)
-	m.Units, diags = types.SetValueFrom(ctx, types.StringType, t.Units)
+	m.UnitsMap, diags = types.MapValueFrom(ctx, types.StringType, t.UnitsMap)
 
 	return diags
 }
@@ -76,7 +74,7 @@ func (m *teamResourceModel) to(o *forgejo.EditTeamOption, ctx context.Context) (
 	o.Permission = forgejo.AccessMode(m.Permission.ValueString())
 	o.CanCreateOrgRepo = m.CanCreateOrgRepo.ValueBoolPointer()
 	o.IncludesAllRepositories = m.IncludesAllRepositories.ValueBoolPointer()
-	diags = m.Units.ElementsAs(ctx, &o.Units, false)
+	diags = m.UnitsMap.ElementsAs(ctx, &o.UnitsMap, false)
 
 	return diags
 }
@@ -135,7 +133,7 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				},
 			},
 			"permission": schema.StringAttribute{
-				Description: "Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set all units. This is due to an SDK limitation.",
+				Description: "Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set the correct `units_map`.",
 				Computed:    true,
 				Optional:    true,
 				Default:     stringdefault.StaticString("read"),
@@ -148,21 +146,12 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 					),
 				},
 			},
-			"units": schema.SetAttribute{
-				Description: "Set of units. **Note**: If the permission is `admin` or `owner` this should include all units due to an SDK limitation.",
+			"units_map": schema.MapAttribute{
+				Description: "Map of access units. **Note**: If the `permission` is `admin` or `owner` all units must be set to `admin` as well.",
 				ElementType: types.StringType,
-				Computed:    true,
-				Optional:    true,
-				Default: setdefault.StaticValue(
-					types.SetValueMust(
-						types.StringType,
-						[]attr.Value{
-							types.StringValue("repo.code"),
-						},
-					),
-				),
-				Validators: []validator.Set{
-					setvalidator.ValueStringsAre(
+				Required:    true,
+				Validators: []validator.Map{
+					mapvalidator.KeysAre(
 						stringvalidator.OneOf(
 							"repo.code",
 							"repo.issues",
@@ -174,6 +163,15 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 							"repo.projects",
 							"repo.packages",
 							"repo.actions",
+						),
+					),
+					mapvalidator.ValueStringsAre(
+						stringvalidator.OneOf(
+							"none",
+							"read",
+							"write",
+							"owner",
+							"admin",
 						),
 					),
 				},
@@ -423,7 +421,9 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID type
 	opts := forgejo.CreateTeamOption{
 		Name:       teamName,
 		Permission: forgejo.AccessMode("read"),
-		Units:      []forgejo.RepoUnitType{forgejo.RepoUnitType("repo.code")},
+		UnitsMap: map[string]string{
+			"repo.code": "none",
+		},
 	}
 
 	// Validate API request body

@@ -35,7 +35,7 @@ type teamDataSourceModel struct {
 	Description             types.String `tfsdk:"description"`
 	IncludesAllRepositories types.Bool   `tfsdk:"includes_all_repositories"`
 	Permission              types.String `tfsdk:"permission"`
-	Units                   types.Set    `tfsdk:"units"`
+	UnitsMap                types.Map    `tfsdk:"units_map"`
 }
 
 // Metadata returns the data source type name.
@@ -77,8 +77,8 @@ func (d *teamDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 				Description: "Permissions within the owning organization.",
 				Computed:    true,
 			},
-			"units": schema.SetAttribute{
-				Description: "Set of units.",
+			"units_map": schema.MapAttribute{
+				Description: "Map of access units.",
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -149,7 +149,7 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.Permission = types.StringValue(string(team.Permission))
 	data.CanCreateOrgRepo = types.BoolValue(team.CanCreateOrgRepo)
 	data.IncludesAllRepositories = types.BoolValue(team.IncludesAllRepositories)
-	data.Units, diags = types.SetValueFrom(ctx, types.StringType, team.Units)
+	data.UnitsMap, diags = types.MapValueFrom(ctx, types.StringType, team.UnitsMap)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
