@@ -39,7 +39,9 @@ resource "forgejo_team" "test" {
 	description               = "Test team."
 	includes_all_repositories = false
 	permission                = "read"
-	units                     = ["repo.issues"]
+	units_map                 = {
+		"repo.issues" = "read"
+	]
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("id"), knownvalue.NotNull()),
@@ -49,8 +51,8 @@ resource "forgejo_team" "test" {
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("description"), knownvalue.StringExact("Test team.")),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("permission"), knownvalue.StringExact("read")),
-					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("repo.issues"),
+					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.issues": knownvalue.StringExact("read"),
 					})),
 				},
 			},
@@ -67,14 +69,15 @@ resource "forgejo_team" "test" {
 	description               = "Test team."
 	includes_all_repositories = false
 	permission                = "read"
-	units                     = ["repo.issues"]
+	units_map                 = {
+		"repo.issues" = "read"
+	}
 }
 resource "forgejo_team" "test2" {
 	# Make sure this second team is created later.
 	name            = forgejo_team.test.name
 	organization_id = forgejo_organization.test.id
 	permission      = "write"
-	units           = ["repo.code"]
 }`,
 				ExpectError: regexp.MustCompile("team already exists"),
 			},
@@ -91,7 +94,9 @@ resource "forgejo_team" "test" {
 	description               = "Updated test team."
 	includes_all_repositories = true
 	permission                = "write"
-	units                     = ["repo.issues"]
+	units_map                 = {
+		"repo.issues" = "write"
+	}
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("id"), knownvalue.NotNull()),
@@ -101,8 +106,8 @@ resource "forgejo_team" "test" {
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("description"), knownvalue.StringExact("Updated test team.")),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("permission"), knownvalue.StringExact("write")),
-					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("repo.issues"),
+					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.issues": knownvalue.StringExact("write"),
 					})),
 				},
 			},
@@ -113,11 +118,13 @@ resource "forgejo_organization" "test" {
 	name = "team_test_org"
 }
 resource "forgejo_team" "test" {
-	name                      = "renamed_test_team"
-	organization_id           = forgejo_organization.test.id
-	description               = "Updated test team."
-	permission                = "write"
-	units                     = ["repo.pulls"]
+	name            = "renamed_test_team"
+	organization_id = forgejo_organization.test.id
+	description     = "Updated test team."
+	permission      = "write"
+	units_map       = {
+		"repo.issues" = "write"
+	}
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -132,8 +139,8 @@ resource "forgejo_team" "test" {
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("description"), knownvalue.StringExact("Updated test team.")),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("permission"), knownvalue.StringExact("write")),
-					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("repo.pulls"),
+					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.issues": knownvalue.StringExact("write"),
 					})),
 				},
 			},
@@ -147,10 +154,12 @@ resource "forgejo_organization" "new_test" {
 	name = "new_test"
 }
 resource "forgejo_team" "test" {
-	name                      = "renamed_test_team"
-	organization_id           = forgejo_organization.new_test.id
-	permission                = "write"
-	units                     = ["repo.pulls"]
+	name            = "renamed_test_team"
+	organization_id = forgejo_organization.new_test.id
+	permission      = "write"
+	units_map       = {
+		"repo.issues" = "write"
+	}
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -165,12 +174,12 @@ resource "forgejo_team" "test" {
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("permission"), knownvalue.StringExact("write")),
-					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("repo.pulls"),
+					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.issues": knownvalue.StringExact("write"),
 					})),
 				},
 			},
-			// Admin permission needs all units.
+			// Admin permission gives all units.
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "new_test" {
@@ -180,7 +189,6 @@ resource "forgejo_team" "test" {
 	name            = "renamed_test_team"
 	organization_id = forgejo_organization.new_test.id
 	permission      = "admin"
-	units           = ["repo.code", "repo.issues", "repo.pulls", "repo.ext_issues", "repo.wiki", "repo.ext_wiki", "repo.releases", "repo.projects", "repo.packages", "repo.actions"]
 }`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("id"), knownvalue.NotNull()),
@@ -190,17 +198,17 @@ resource "forgejo_team" "test" {
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("permission"), knownvalue.StringExact("admin")),
-					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.StringExact("repo.code"),
-						knownvalue.StringExact("repo.issues"),
-						knownvalue.StringExact("repo.pulls"),
-						knownvalue.StringExact("repo.ext_issues"),
-						knownvalue.StringExact("repo.wiki"),
-						knownvalue.StringExact("repo.ext_wiki"),
-						knownvalue.StringExact("repo.releases"),
-						knownvalue.StringExact("repo.projects"),
-						knownvalue.StringExact("repo.packages"),
-						knownvalue.StringExact("repo.actions"),
+					statecheck.ExpectKnownValue("forgejo_team.test", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.code":       knownvalue.StringExact("admin"),
+						"repo.issues":     knownvalue.StringExact("admin"),
+						"repo.pulls":      knownvalue.StringExact("admin"),
+						"repo.ext_issues": knownvalue.StringExact("read"),
+						"repo.wiki":       knownvalue.StringExact("admin"),
+						"repo.ext_wiki":   knownvalue.StringExact("read"),
+						"repo.releases":   knownvalue.StringExact("admin"),
+						"repo.projects":   knownvalue.StringExact("admin"),
+						"repo.packages":   knownvalue.StringExact("admin"),
+						"repo.actions":    knownvalue.StringExact("admin"),
 					})),
 				},
 			},
