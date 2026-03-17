@@ -64,8 +64,8 @@ resource "forgejo_team" "custom_team" {
 - `can_create_org_repo` (Boolean) Can create repositories?
 - `description` (String) Description of the team.
 - `includes_all_repositories` (Boolean) Has access to all repositories?
-- `permission` (String) Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set all units. This is due to an SDK limitation.
-- `units` (Set of String) Set of units. **Note**: If the permission is `admin` or `owner` this should include all units due to an SDK limitation.
+- `permission` (String) Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to not set units_map.
+- `units_map` (Map of String) Map of access units. **Note**: If the permission is `admin` or `owner` this must not be set. Else, this must be set.
 
 ### Read-Only
 
