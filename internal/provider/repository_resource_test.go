@@ -523,6 +523,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_url"), knownvalue.StringExact("https://some.tracker")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_format"), knownvalue.StringExact("https://some.tracker/{user}/{repo}/{index}")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_style"), knownvalue.StringExact("alphanumeric")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_regexp_pattern"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki").AtMapKey("external_wiki_url"), knownvalue.StringExact("https://some.wiki")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.Bool(false)),
@@ -596,9 +597,10 @@ resource "forgejo_repository" "test" {
 
 	has_issues = true
 	external_tracker = {
-		external_tracker_url    = "https://another.tracker"
-		external_tracker_format = "https://another.tracker/{user}/{repo}/{index}"
-		external_tracker_style  = "regexp"
+		external_tracker_url            = "https://another.tracker"
+		external_tracker_format         = "https://another.tracker/{user}/{repo}/{index}"
+		external_tracker_style          = "regexp"
+		external_tracker_regexp_pattern = "issue-[0-9]+"
 	}
 
 	has_pull_requests           = true
@@ -637,6 +639,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_url"), knownvalue.StringExact("https://another.tracker")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_format"), knownvalue.StringExact("https://another.tracker/{user}/{repo}/{index}")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_style"), knownvalue.StringExact("regexp")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_regexp_pattern"), knownvalue.StringExact("issue-[0-9]+")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki").AtMapKey("external_wiki_url"), knownvalue.StringExact("https://another.wiki")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.Bool(false)),
@@ -710,9 +713,10 @@ resource "forgejo_repository" "test" {
 
 	has_issues = true
 	external_tracker = {
-		external_tracker_url    = "https://yet.another.tracker"
-		external_tracker_format = "https://yet.another.tracker/{user}/{repo}/{index}"
-		external_tracker_style  = "regexp"
+		external_tracker_url            = "https://yet.another.tracker"
+		external_tracker_format         = "https://yet.another.tracker/{user}/{repo}/{index}"
+		external_tracker_style          = "regexp"
+		external_tracker_regexp_pattern = "issue-[0-9]+"
 	}
 
 	has_pull_requests           = true
@@ -751,6 +755,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_url"), knownvalue.StringExact("https://yet.another.tracker")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_format"), knownvalue.StringExact("https://yet.another.tracker/{user}/{repo}/{index}")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_style"), knownvalue.StringExact("regexp")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_regexp_pattern"), knownvalue.StringExact("issue-[0-9]+")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki").AtMapKey("external_wiki_url"), knownvalue.StringExact("https://yet.another.wiki")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.Bool(false)),

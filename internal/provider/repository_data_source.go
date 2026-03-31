@@ -111,16 +111,18 @@ func (m repositoryDataSourceInternalTracker) attributeTypes() map[string]attr.Ty
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ExternalTracker
 type repositoryDataSourceExternalTracker struct {
-	ExternalTrackerURL    types.String `tfsdk:"external_tracker_url"`
-	ExternalTrackerFormat types.String `tfsdk:"external_tracker_format"`
-	ExternalTrackerStyle  types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerURL          types.String `tfsdk:"external_tracker_url"`
+	ExternalTrackerFormat       types.String `tfsdk:"external_tracker_format"`
+	ExternalTrackerStyle        types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerRegexPattern types.String `tfsdk:"external_tracker_regexp_pattern"`
 }
 
 func (m repositoryDataSourceExternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"external_tracker_url":    types.StringType,
-		"external_tracker_format": types.StringType,
-		"external_tracker_style":  types.StringType,
+		"external_tracker_url":            types.StringType,
+		"external_tracker_format":         types.StringType,
+		"external_tracker_style":          types.StringType,
+		"external_tracker_regexp_pattern": types.StringType,
 	}
 }
 
@@ -306,6 +308,10 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 					},
 					"external_tracker_style": schema.StringAttribute{
 						Description: "External issue tracker number format.",
+						Computed:    true,
+					},
+					"external_tracker_regexp_pattern": schema.StringAttribute{
+						Description: "External issue tracker issue regular expression.",
 						Computed:    true,
 					},
 				},
@@ -556,9 +562,10 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	// External issue tracker
 	if rep.ExternalTracker != nil {
 		extTracker := repositoryDataSourceExternalTracker{
-			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
-			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
-			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
+			ExternalTrackerURL:          types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
+			ExternalTrackerFormat:       types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
+			ExternalTrackerStyle:        types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
+			ExternalTrackerRegexPattern: types.StringValue(rep.ExternalTracker.ExternalTrackerRegexPattern),
 		}
 		extTrackerValue, diags := types.ObjectValueFrom(
 			ctx,

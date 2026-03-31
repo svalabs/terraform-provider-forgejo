@@ -330,16 +330,18 @@ func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, o *forg
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ExternalTracker
 type repositoryResourceExternalTracker struct {
-	ExternalTrackerURL    types.String `tfsdk:"external_tracker_url"`
-	ExternalTrackerFormat types.String `tfsdk:"external_tracker_format"`
-	ExternalTrackerStyle  types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerURL          types.String `tfsdk:"external_tracker_url"`
+	ExternalTrackerFormat       types.String `tfsdk:"external_tracker_format"`
+	ExternalTrackerStyle        types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerRegexPattern types.String `tfsdk:"external_tracker_regexp_pattern"`
 }
 
 func (m repositoryResourceExternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"external_tracker_url":    types.StringType,
-		"external_tracker_format": types.StringType,
-		"external_tracker_style":  types.StringType,
+		"external_tracker_url":            types.StringType,
+		"external_tracker_format":         types.StringType,
+		"external_tracker_style":          types.StringType,
+		"external_tracker_regexp_pattern": types.StringType,
 	}
 }
 
@@ -353,9 +355,10 @@ func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, et *f
 	}
 
 	extTrackerElement := repositoryResourceExternalTracker{
-		ExternalTrackerURL:    types.StringValue(et.ExternalTrackerURL),
-		ExternalTrackerFormat: types.StringValue(et.ExternalTrackerFormat),
-		ExternalTrackerStyle:  types.StringValue(et.ExternalTrackerStyle),
+		ExternalTrackerURL:          types.StringValue(et.ExternalTrackerURL),
+		ExternalTrackerFormat:       types.StringValue(et.ExternalTrackerFormat),
+		ExternalTrackerStyle:        types.StringValue(et.ExternalTrackerStyle),
+		ExternalTrackerRegexPattern: types.StringValue(et.ExternalTrackerRegexPattern),
 	}
 
 	extTrackerValue, diags := types.ObjectValueFrom(
@@ -387,6 +390,7 @@ func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, o *forg
 		o.ExternalTracker.ExternalTrackerURL = extTracker.ExternalTrackerURL.ValueString()
 		o.ExternalTracker.ExternalTrackerFormat = extTracker.ExternalTrackerFormat.ValueString()
 		o.ExternalTracker.ExternalTrackerStyle = extTracker.ExternalTrackerStyle.ValueString()
+		o.ExternalTracker.ExternalTrackerRegexPattern = extTracker.ExternalTrackerRegexPattern.ValueString()
 	}
 
 	return diags
@@ -683,6 +687,12 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 								"regexp",
 							),
 						},
+					},
+					"external_tracker_regexp_pattern": schema.StringAttribute{
+						Description: "External issue tracker issue regular expression.",
+						Optional:    true,
+						Computed:    true,
+						Default:     stringdefault.StaticString(""),
 					},
 				},
 				Description: "Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`.",
