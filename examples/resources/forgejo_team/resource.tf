@@ -29,5 +29,9 @@ resource "forgejo_team" "custom_team" {
   description               = "A team with non-default parameters."
   includes_all_repositories = true
   permission                = "read"
-  units                     = ["repo.code", "repo.issues", "repo.pulls"]
+  units_map = {
+    "repo.code"   = "read"
+    "repo.issues" = "write"
+    "repo.pulls"  = "read"
+  }
 }

@@ -52,4 +52,4 @@ data "forgejo_team" "team" {
 - `id` (Number) Numeric identifier of the team.
 - `includes_all_repositories` (Boolean) Has access to all repositories?
 - `permission` (String) Permissions within the owning organization.
-- `units` (Set of String) Set of units.
+- `units_map` (Map of String) Map of access units.
