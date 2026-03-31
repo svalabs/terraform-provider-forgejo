@@ -85,7 +85,7 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 30),
+					stringvalidator.LengthBetween(1, 255),
 				},
 			},
 			"data": schema.StringAttribute{

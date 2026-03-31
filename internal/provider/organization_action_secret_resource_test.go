@@ -79,6 +79,24 @@ resource "forgejo_organization_action_secret" "test" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 				},
 			},
+			// Update and Read testing
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name = "test_org"
+}
+resource "forgejo_organization_action_secret" "test" {
+	organization_id = forgejo_organization.test.id
+	name            = "my_new_secret_with_a_very_long_name_that_is_over_30_characters_long"
+	data            = "my_new_secret_value"
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_secret_with_a_very_long_name_that_is_over_30_characters_long")),
+					statecheck.ExpectSensitiveValue("forgejo_organization_action_secret.test", tfjsonpath.New("data")),
+					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
+				},
+			},
 			// Delete testing automatically occurs in TestCase
 		},
 	})
