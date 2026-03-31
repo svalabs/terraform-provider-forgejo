@@ -353,9 +353,10 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Repository with owner %s and name %s not found: %s",
+					"Action secret with with owner %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
+					data.Name.String(),
 					err,
 				)
 			default:
@@ -408,16 +409,40 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 		"name": data.Name.ValueString(),
 	})
 
-	resp.Diagnostics.AddWarning(
-		"Resource cannot be deleted from Forgejo",
-		fmt.Sprintf(
-			"The Forgejo SDK does not currently support deleting repository action secrets. "+
-				"Secret with owner %s repo %s and name %s will be removed from Terraform state, but will remain in Forgejo.",
-			repo.Owner.String(),
-			repo.Name.String(),
-			data.Name.String(),
-		),
+	// Use Forgejo client to delete existing repository action secret
+	res, err := r.client.DeleteRepoActionSecret(
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
+		data.Name.ValueString(),
 	)
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 400:
+				msg = fmt.Sprintf("Bad request: %s", err)
+			case 404:
+				msg = fmt.Sprintf(
+					"Action secret with owner %s, repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		resp.Diagnostics.AddError("Unable to delete repository action secret", msg)
+
+		return
+	}
 }
 
 // NewRepositoryActionSecretResource is a helper function to simplify the provider implementation.

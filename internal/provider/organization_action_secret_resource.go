@@ -313,8 +313,9 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Organization with name '%s' not found: %s",
+					"Action secret with org '%s' and name %s not found: %s",
 					organization.UserName,
+					data.Name.String(),
 					err,
 				)
 			default:
@@ -361,15 +362,38 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 		"name":            data.Name.ValueString(),
 	})
 
-	resp.Diagnostics.AddWarning(
-		"Resource cannot be deleted from Forgejo",
-		fmt.Sprintf(
-			"The Forgejo SDK does not currently support deleting organization action secrets. "+
-				"Secret with org '%s' and name %s will be removed from Terraform state, but will remain in Forgejo.",
-			organization.UserName,
-			data.Name.String(),
-		),
+	// Use Forgejo client to delete existing organization action secret
+	res, err := r.client.DeleteOrgActionSecret(
+		organization.UserName,
+		data.Name.ValueString(),
 	)
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 400:
+				msg = fmt.Sprintf("Bad request: %s", err)
+			case 404:
+				msg = fmt.Sprintf(
+					"Action secret with org '%s' and name %s not found: %s",
+					organization.UserName,
+					data.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		resp.Diagnostics.AddError("Unable to delete organization action secret", msg)
+
+		return
+	}
 }
 
 // NewOrganizationActionSecretResource is a helper function to simplify the provider implementation.
