@@ -85,7 +85,10 @@ func (d *organizationActionVariableDataSource) Configure(_ context.Context, req 
 func (d *organizationActionVariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	defer un(trace(ctx, "Read organization action variable data source"))
 
-	var data organizationActionVariableDataSourceModel
+	var (
+		organization organizationResourceModel
+		data         organizationActionVariableDataSourceModel
+	)
 
 	// Read Terraform configuration data into model
 	diags := req.Config.Get(ctx, &data)
@@ -95,7 +98,7 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 	}
 
 	// Use Forgejo client to get organization
-	organization, diags := getOrganizationByID(
+	org, diags := getOrganizationByID(
 		ctx,
 		d.client,
 		data.OrganizationID,
@@ -105,17 +108,18 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Map response body to model)
+	// Map response body to model
+	organization.from(org)
 
 	tflog.Info(ctx, "Read organization action variable", map[string]any{
 		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.UserName,
+		"organization":    organization.Name.ValueString(),
 		"name":            data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to get organization action variable
 	variable, res, err := d.client.GetOrgActionVariable(
-		organization.UserName,
+		organization.Name.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -132,8 +136,8 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action variable with org '%s' and name %s not found: %s",
-					organization.UserName,
+					"Action variable with org %s and name %s not found: %s",
+					organization.Name.String(),
 					data.Name.String(),
 					err,
 				)

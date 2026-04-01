@@ -167,10 +167,13 @@ func NewTeamDataSource() datasource.DataSource {
 
 // getOrgTeamByName fetches a team by its name and handles errors consistently.
 func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.Int64, teamName types.String) (*forgejo.Team, diag.Diagnostics) {
-	var diags diag.Diagnostics
+	var (
+		diags        diag.Diagnostics
+		organization organizationResourceModel
+	)
 
-	// Use Forgejo client to get organization by ID
-	organization, diags := getOrganizationByID(
+	// Use Forgejo client to get organization
+	org, diags := getOrganizationByID(
 		ctx,
 		client,
 		orgID,
@@ -179,6 +182,9 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 		return nil, diags
 	}
 
+	// Map response body to model
+	organization.from(org)
+
 	tflog.Info(ctx, "List teams", map[string]any{
 		"name":            teamName,
 		"organization_id": orgID,
@@ -186,7 +192,7 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 
 	// Use Forgejo client to list teams in organization
 	teams, res, err := client.ListOrgTeams(
-		organization.UserName,
+		organization.Name.ValueString(),
 		forgejo.ListTeamsOptions{
 			ListOptions: forgejo.ListOptions{
 				Page: -1,
@@ -205,8 +211,8 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Organization with name '%s' not found: %s",
-					organization.UserName,
+					"Organization with name %s not found: %s",
+					organization.Name.String(),
 					err,
 				)
 			default:

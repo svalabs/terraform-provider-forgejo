@@ -34,7 +34,7 @@ data "forgejo_organization_action_variable" "test" {
 	organization_id = forgejo_organization.test.id
 	name            = "my_variable"
 }`,
-				ExpectError: regexp.MustCompile("Action variable with org 'test_org' and name \"my_variable\" not found"),
+				ExpectError: regexp.MustCompile("Action variable with org \"test_org\" and name \"my_variable\" not found"),
 			},
 			// Read testing
 			{

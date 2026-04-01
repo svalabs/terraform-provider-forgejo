@@ -410,7 +410,10 @@ func NewTeamResource() resource.Resource {
 
 // createTeam is a helper function to create a team.
 func createTeam(ctx context.Context, client *forgejo.Client, organizationID types.Int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
-	var diags diag.Diagnostics
+	var (
+		diags        diag.Diagnostics
+		organization organizationResourceModel
+	)
 
 	tflog.Info(ctx, "Create team", map[string]any{
 		"name":            teamName,
@@ -435,7 +438,7 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID type
 	}
 
 	// Use Forgejo client to get organization
-	organization, diags := getOrganizationByID(
+	org, diags := getOrganizationByID(
 		ctx,
 		client,
 		organizationID,
@@ -444,8 +447,14 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID type
 		return nil, diags
 	}
 
+	// Map response body to model
+	organization.from(org)
+
 	// Use Forgejo client to create new team
-	team, res, err := client.CreateTeam(organization.UserName, opts)
+	team, res, err := client.CreateTeam(
+		organization.Name.ValueString(),
+		opts,
+	)
 	if err == nil {
 		return team, diags
 	}
@@ -462,15 +471,15 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID type
 		switch res.StatusCode {
 		case 403:
 			msg = fmt.Sprintf(
-				"Team with owner '%s' and name '%s' forbidden: %s",
-				organization.UserName,
+				"Team with org %s and name '%s' forbidden: %s",
+				organization.Name.String(),
 				teamName,
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
-				"Organization with name '%s' not found: %s",
-				organization.UserName,
+				"Organization with name %s not found: %s",
+				organization.Name.String(),
 				err,
 			)
 		case 422:
