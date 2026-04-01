@@ -144,7 +144,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -301,7 +301,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -483,7 +483,7 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Repository action secrets with user '%s' and repo '%s' not found: %s",
+					"Action secrets with user '%s' and repo '%s' not found: %s",
 					owner,
 					repoName,
 					err,
@@ -505,7 +505,7 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 		diags.AddError(
 			"Unable to find repository action secret by name",
 			fmt.Sprintf(
-				"Repository action secret with user '%s' repo '%s' and name %s not found",
+				"Action secret with user '%s' repo '%s' and name %s not found",
 				owner,
 				repoName,
 				data.Name.String(),

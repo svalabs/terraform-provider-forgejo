@@ -79,7 +79,7 @@ resource "forgejo_organization_action_secret" "test" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_secret.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 				},
 			},
-			// Update and Read testing
+			// Update and Read testing (long name)
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {

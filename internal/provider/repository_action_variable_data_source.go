@@ -14,36 +14,36 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ datasource.DataSource              = &organizationActionVariableDataSource{}
-	_ datasource.DataSourceWithConfigure = &organizationActionVariableDataSource{}
+	_ datasource.DataSource              = &repositoryActionVariableDataSource{}
+	_ datasource.DataSourceWithConfigure = &repositoryActionVariableDataSource{}
 )
 
-// organizationActionVariableDataSource is the data source implementation.
-type organizationActionVariableDataSource struct {
+// repositoryActionVariableDataSource is the data source implementation.
+type repositoryActionVariableDataSource struct {
 	client *forgejo.Client
 }
 
-// organizationActionVariableDataSourceModel maps the data source schema data.
+// repositoryActionVariableDataSourceModel maps the data source schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ActionVariable
-type organizationActionVariableDataSourceModel struct {
-	OrganizationID types.Int64  `tfsdk:"organization_id"`
-	Name           types.String `tfsdk:"name"`
-	Data           types.String `tfsdk:"data"`
+type repositoryActionVariableDataSourceModel struct {
+	RepositoryID types.Int64  `tfsdk:"repository_id"`
+	Name         types.String `tfsdk:"name"`
+	Data         types.String `tfsdk:"data"`
 }
 
 // Metadata returns the data source type name.
-func (d *organizationActionVariableDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_organization_action_variable"
+func (d *repositoryActionVariableDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_repository_action_variable"
 }
 
 // Schema defines the schema for the data source.
-func (d *organizationActionVariableDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *repositoryActionVariableDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo organization action variable data source.",
+		Description: "Forgejo repository action variable data source.",
 
 		Attributes: map[string]schema.Attribute{
-			"organization_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the organization.",
+			"repository_id": schema.Int64Attribute{
+				Description: "Numeric identifier of the repository.",
 				Required:    true,
 			},
 			"name": schema.StringAttribute{
@@ -59,7 +59,7 @@ func (d *organizationActionVariableDataSource) Schema(_ context.Context, _ datas
 }
 
 // Configure adds the provider configured client to the data source.
-func (d *organizationActionVariableDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *repositoryActionVariableDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -82,10 +82,13 @@ func (d *organizationActionVariableDataSource) Configure(_ context.Context, req 
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (d *organizationActionVariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	defer un(trace(ctx, "Read organization action variable data source"))
+func (d *repositoryActionVariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	defer un(trace(ctx, "Read repository action variable data source"))
 
-	var data organizationActionVariableDataSourceModel
+	var (
+		repo repositoryResourceModel
+		data repositoryActionVariableDataSourceModel
+	)
 
 	// Read Terraform configuration data into model
 	diags := req.Config.Get(ctx, &data)
@@ -94,28 +97,31 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Use Forgejo client to get organization
-	organization, diags := getOrganizationByID(
+	// Use Forgejo client to get repository by id
+	rep, diags := getRepositoryByID(
 		ctx,
 		d.client,
-		data.OrganizationID,
+		data.RepositoryID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Map response body to model)
+	// Map response body to model
+	repo.from(rep)
 
-	tflog.Info(ctx, "Read organization action variable", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.UserName,
-		"name":            data.Name.ValueString(),
+	tflog.Info(ctx, "Read repository action variable", map[string]any{
+		"repository_id": data.RepositoryID.ValueInt64(),
+		"user":          repo.Owner.ValueString(),
+		"repo":          repo.Name.ValueString(),
+		"name":          data.Name.ValueString(),
 	})
 
-	// Use Forgejo client to get organization action variable
-	variable, res, err := d.client.GetOrgActionVariable(
-		organization.UserName,
+	// Use Forgejo client to get repository action variable
+	variable, res, err := d.client.GetRepoActionVariable(
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -132,8 +138,9 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action variable with org '%s' and name %s not found: %s",
-					organization.UserName,
+					"Action variable with owner %s, repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					data.Name.String(),
 					err,
 				)
@@ -141,7 +148,7 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 				msg = fmt.Sprintf("Unknown error: %s", err)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to read organization action variable", msg)
+		resp.Diagnostics.AddError("Unable to read repository action variable", msg)
 
 		return
 	}
@@ -155,7 +162,7 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 	resp.Diagnostics.Append(diags...)
 }
 
-// NewOrganizationActionVariableDataSource is a helper function to simplify the provider implementation.
-func NewOrganizationActionVariableDataSource() datasource.DataSource {
-	return &organizationActionVariableDataSource{}
+// NewRepositoryActionVariableDataSource is a helper function to simplify the provider implementation.
+func NewRepositoryActionVariableDataSource() datasource.DataSource {
+	return &repositoryActionVariableDataSource{}
 }

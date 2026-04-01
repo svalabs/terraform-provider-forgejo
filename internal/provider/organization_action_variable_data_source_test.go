@@ -24,6 +24,18 @@ data "forgejo_organization_action_variable" "test" {
 }`,
 				ExpectError: regexp.MustCompile("Organization with ID 1011 not found"),
 			},
+			// Read testing (non-existent variable)
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name = "test_org"
+}
+data "forgejo_organization_action_variable" "test" {
+	organization_id = forgejo_organization.test.id
+	name            = "my_variable"
+}`,
+				ExpectError: regexp.MustCompile("Action variable with org 'test_org' and name \"my_variable\" not found"),
+			},
 			// Read testing
 			{
 				Config: providerConfig + `
