@@ -47,6 +47,7 @@ func (m *organizationActionSecretResourceModel) from(s *forgejo.Secret) {
 		return
 	}
 
+	// name is omitted here, to maintain the user's configuration casing
 	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
 }
 
@@ -442,7 +443,7 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Organization action secrets with org '%s' not found: %s",
+					"Action secrets with org '%s' not found: %s",
 					organization.UserName,
 					err,
 				)
@@ -463,7 +464,7 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 		diags.AddError(
 			"Unable to find organization action secret by name",
 			fmt.Sprintf(
-				"Organization action secret with org '%s' and name %s not found",
+				"Action secret with org '%s' and name %s not found",
 				organization.UserName,
 				data.Name.String(),
 			),

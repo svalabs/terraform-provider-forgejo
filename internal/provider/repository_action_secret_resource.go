@@ -47,6 +47,7 @@ func (m *repositoryActionSecretResourceModel) from(s *forgejo.Secret) {
 		return
 	}
 
+	// name is omitted here, to maintain the user's configuration casing
 	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
 }
 
