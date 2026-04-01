@@ -97,7 +97,7 @@ func (d *repositoryActionVariableDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		d.client,

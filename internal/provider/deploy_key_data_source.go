@@ -124,7 +124,7 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		d.client,

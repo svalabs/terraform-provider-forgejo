@@ -254,7 +254,7 @@ func (r *repositoryActionVariableResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -438,7 +438,7 @@ func (r *repositoryActionVariableResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,

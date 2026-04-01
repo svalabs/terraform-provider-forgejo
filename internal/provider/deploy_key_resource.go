@@ -175,7 +175,7 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -267,7 +267,7 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -354,7 +354,7 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,

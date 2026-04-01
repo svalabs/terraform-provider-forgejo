@@ -133,7 +133,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -231,7 +231,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -316,7 +316,7 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -414,7 +414,7 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,

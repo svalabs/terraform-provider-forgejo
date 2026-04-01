@@ -226,7 +226,10 @@ func (r *branchProtectionResource) Configure(_ context.Context, req resource.Con
 func (r *branchProtectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	defer un(trace(ctx, "Create branch protection resource"))
 
-	var data branchProtectionResourceModel
+	var (
+		repo repositoryResourceModel
+		data branchProtectionResourceModel
+	)
 
 	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
@@ -235,8 +238,8 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	// Use Forgejo client to get repository by id
-	repo, diags := getRepositoryByID(
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
 		data.RepositoryId.ValueInt64(),
@@ -246,13 +249,16 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	// Map response body to model
+	repo.from(rep)
+
 	// Generate API request body from plan
 	opts := r.toCreateOption(ctx, &data)
 
 	tflog.Info(ctx, "Create branch protection", map[string]any{
 		"repository_id":                     data.RepositoryId.ValueInt64(),
-		"repository_name":                   repo.Name,
-		"repository_owner":                  repo.Owner.UserName,
+		"repository_name":                   repo.Name.ValueString(),
+		"repository_owner":                  repo.Owner.ValueString(),
 		"branch_name":                       data.BranchName.ValueString(),
 		"enable_push":                       opts.EnablePush,
 		"enable_push_whitelist":             opts.EnablePushWhitelist,
@@ -270,8 +276,8 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 
 	// Use Forgejo client to create branch protection
 	protection, res, err := r.client.CreateBranchProtection(
-		repo.Owner.UserName,
-		repo.Name,
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -286,25 +292,25 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' forbidden: %s",
-					repo.Owner.UserName,
-					repo.Name,
+					"Repository with owner %s and name %s forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' not found: %s",
-					repo.Owner.UserName,
-					repo.Name,
+					"Repository with owner %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			case 423:
 				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' is archived: %s",
-					repo.Owner.UserName,
-					repo.Name,
+					"Repository with owner %s and name %s is archived: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			default:
@@ -332,7 +338,10 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer un(trace(ctx, "Read branch protection resource"))
 
-	var data branchProtectionResourceModel
+	var (
+		repo repositoryResourceModel
+		data branchProtectionResourceModel
+	)
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -341,8 +350,8 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
-	repo, diags := getRepositoryByID(
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
 		data.RepositoryId.ValueInt64(),
@@ -352,17 +361,20 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
+	// Map response body to model
+	repo.from(rep)
+
 	tflog.Info(ctx, "Read branch protection", map[string]any{
 		"repository_id":    data.RepositoryId.ValueInt64(),
-		"repository_name":  repo.Name,
-		"repository_owner": repo.Owner.UserName,
+		"repository_name":  repo.Name.ValueString(),
+		"repository_owner": repo.Owner.ValueString(),
 		"branch_name":      data.BranchName.ValueString(),
 	})
 
 	// Use Forgejo client to get branch protection
 	protection, res, err := r.client.GetBranchProtection(
-		repo.Owner.UserName,
-		repo.Name,
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
 		data.BranchName.ValueString(),
 	)
 	if err != nil {
@@ -406,7 +418,10 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 func (r *branchProtectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer un(trace(ctx, "Update branch protection resource"))
 
-	var data branchProtectionResourceModel
+	var (
+		repo repositoryResourceModel
+		data branchProtectionResourceModel
+	)
 
 	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
@@ -415,8 +430,8 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	// Use Forgejo client to get repository by id
-	repo, diags := getRepositoryByID(
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
 		data.RepositoryId.ValueInt64(),
@@ -426,13 +441,16 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Map response body to model
+	repo.from(rep)
+
 	// Convert model to API request
 	opts := r.toEditOption(ctx, &data)
 
 	tflog.Info(ctx, "Update branch protection", map[string]any{
 		"repository_id":                     data.RepositoryId.ValueInt64(),
-		"repository_name":                   repo.Name,
-		"repository_owner":                  repo.Owner.UserName,
+		"repository_name":                   repo.Name.ValueString(),
+		"repository_owner":                  repo.Owner.ValueString(),
 		"branch_name":                       data.BranchName.ValueString(),
 		"enable_push":                       opts.EnablePush,
 		"enable_push_whitelist":             opts.EnablePushWhitelist,
@@ -450,8 +468,8 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 
 	// Use Forgejo client to update branch protection
 	protection, res, err := r.client.EditBranchProtection(
-		repo.Owner.UserName,
-		repo.Name,
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
 		data.BranchName.ValueString(),
 		opts,
 	)
@@ -467,25 +485,25 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' forbidden: %s",
-					repo.Owner.UserName,
-					repo.Name,
+					"Repository with owner %s and name %s forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' not found: %s",
-					repo.Owner.UserName,
-					repo.Name,
+					"Repository with owner %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			case 423:
 				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' is archived: %s",
-					repo.Owner.UserName,
-					repo.Name,
+					"Repository with owner %s and name %s is archived: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			default:
@@ -513,7 +531,10 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 func (r *branchProtectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	defer un(trace(ctx, "Delete branch protection resource"))
 
-	var data branchProtectionResourceModel
+	var (
+		repo repositoryResourceModel
+		data branchProtectionResourceModel
+	)
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -522,8 +543,8 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	// Use Forgejo client to get repository by id
-	repo, diags := getRepositoryByID(
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
 		data.RepositoryId.ValueInt64(),
@@ -533,17 +554,20 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
+	// Map response body to model
+	repo.from(rep)
+
 	tflog.Info(ctx, "Delete branch protection", map[string]any{
 		"repository_id":    data.RepositoryId.ValueInt64(),
-		"repository_name":  repo.Name,
-		"repository_owner": repo.Owner.UserName,
+		"repository_name":  repo.Name.ValueString(),
+		"repository_owner": repo.Owner.ValueString(),
 		"branch_name":      data.BranchName.ValueString(),
 	})
 
 	// Use Forgejo client to delete branch protection
 	res, err := r.client.DeleteBranchProtection(
-		repo.Owner.UserName,
-		repo.Name,
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
 		data.BranchName.ValueString(),
 	)
 	if err != nil {
@@ -558,10 +582,10 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Protection for branch %s in repository with owner '%s' and name '%s' not found: %s",
+					"Protection for branch %s in repository with owner %s and name %s not found: %s",
 					data.BranchName.String(),
-					repo.Owner.UserName,
-					repo.Name,
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			default:
