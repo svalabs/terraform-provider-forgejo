@@ -10,6 +10,9 @@ on:
       - opened
       - reopened
 
+permissions:
+  issues: write
+
 jobs:
   triage_label:
     runs-on: ubuntu-latest
