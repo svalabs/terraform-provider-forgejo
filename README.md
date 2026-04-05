@@ -78,7 +78,7 @@ The following API token permissions are required:
 - `write:repository`
 - `write:user`
 
-Optionally, for administrative privileges (required to manage users, user repositories, user SSH keys, teams, and organization action secrets):
+Optionally, for administrative privileges (required to manage users, user repositories, user SSH keys, teams, and organization action secrets/variables):
 
 - `write:admin`
 
@@ -193,7 +193,7 @@ Each resource defines its own import identifier, which uniquely identifies the r
 | --------------------------- | ----------------------------------------------- |
 | `forgejo_repository`        | `<<<repo_owner>>>/<<<repo_name>>>`              |
 | `forgejo_branch_protection` | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>` |
-| `forgejo_user`              | `<<<login>>>`                                    |
+| `forgejo_user`              | `<<<login>>>`                                   |
 
 Refer to the `examples/` directory for more import examples.
 
@@ -256,7 +256,7 @@ Re-generate the API token used for authentication, and make sure to select the f
 - `write:organization`
 - `write:repository`
 - `write:user`
-- Optional, for managing users and user repositories: `write:admin`
+- Optional, for managing users, user repositories, user SSH keys, teams, and organization action secrets/variables: `write:admin`
 
 ## Developing & Contributing to the Provider
 

@@ -4,14 +4,11 @@ page_title: "forgejo_team_member Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo team member resource.
-  Note: Managing teams requires administrative privileges!
 ---
 
 # forgejo_team_member (Resource)
 
 Forgejo team member resource.
-
-**Note**: Managing teams requires administrative privileges!
 
 ## Example Usage
 
