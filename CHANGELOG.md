@@ -1,3 +1,15 @@
+## 1.4.1 (April 5, 2026) 🐰
+
+BUG FIXES:
+
+- `forgejo_team`, `forgejo_user`: Standardize on ID-based resource lookups (fixes [#119](https://github.com/svalabs/terraform-provider-forgejo/issues/119))
+- `forgejo_team`, `forgejo_team_member`: Correct examples in the documentation
+
+DEPENDENCIES:
+
+- Update to Go 1.25.8
+- Pin docker/setup-compose-action version
+
 ## 1.4.0 (April 1, 2026)
 
 FEATURES:
@@ -18,7 +30,7 @@ BUG FIXES:
 - `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Add support for deleting action secrets
 - `forgejo_repository`: Add missing `external_tracker_regexp_pattern` attribute (fixes [#65](https://github.com/svalabs/terraform-provider-forgejo/issues/65))
 - `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Allow action secret names with up to 255 characters (fixes [#68](https://github.com/svalabs/terraform-provider-forgejo/issues/68))
-- `forgejo_organization`, `forgejo_team`: Remove intermediate state write to prevent partially-populated state 
+- `forgejo_organization`, `forgejo_team`: Remove intermediate state write to prevent partially-populated state
 - `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Obfuscate action secret data in log output
 - `forgejo_repository`, `forgejo_user`: Initialize write-only fields to their default values during import
 - `forgejo_branch_protection`, `forgejo_repository`, `foregejo_user`: Add additional test cases for import testing
