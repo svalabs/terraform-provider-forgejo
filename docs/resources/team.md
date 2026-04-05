@@ -36,17 +36,22 @@ resource "forgejo_organization" "owner" {
 # Team with default settings
 resource "forgejo_team" "default_team" {
   organization_id = forgejo_organization.owner.id
-  name            = "org_test_team"
+  name            = "org_test_team_defaults"
+
+  units_map = {
+    "repo.code" = "read"
+  }
 }
 
 # Team with custom settings
 resource "forgejo_team" "custom_team" {
   organization_id           = forgejo_organization.owner.id
-  name                      = "org_test_team"
+  name                      = "org_test_team_non_defaults"
   can_create_org_repo       = true
   description               = "A team with non-default parameters."
   includes_all_repositories = true
   permission                = "read"
+
   units_map = {
     "repo.code"   = "read"
     "repo.issues" = "write"

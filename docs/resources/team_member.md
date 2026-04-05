@@ -39,6 +39,10 @@ resource "forgejo_organization" "owner" {
 resource "forgejo_team" "team" {
   organization_id = forgejo_organization.owner.id
   name            = "org_test_team"
+
+  units_map = {
+    "repo.code" = "read"
+  }
 }
 
 # User
