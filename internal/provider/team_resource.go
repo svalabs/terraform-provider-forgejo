@@ -284,19 +284,33 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	tflog.Info(ctx, "Read team", map[string]any{
-		"name":            data.Name.ValueString(),
-		"organization_id": data.OrganizationID.ValueInt64(),
+		"id": data.ID.ValueInt64(),
 	})
 
 	// Use Forgejo client to read existing team
-	team, diags := getOrgTeamByName(
-		ctx,
-		r.client,
-		data.OrganizationID,
-		data.Name,
-	)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	team, res, err := r.client.GetTeam(data.ID.ValueInt64())
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Team with ID %d not found: %s",
+					data.ID.ValueInt64(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf("Unknown error: %s", err)
+			}
+		}
+		resp.Diagnostics.AddError("Unable to read team", msg)
+
 		return
 	}
 
@@ -371,8 +385,7 @@ func (r *teamResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	tflog.Info(ctx, "Delete team", map[string]any{
-		"name":            data.Name.ValueString(),
-		"organization_id": data.OrganizationID.ValueInt64(),
+		"id": data.ID.ValueInt64(),
 	})
 
 	// Use Forgejo client to delete existing team
@@ -389,8 +402,8 @@ func (r *teamResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Team with name %s not found: %s",
-					data.Name.String(),
+					"Team with ID %d not found: %s",
+					data.ID.ValueInt64(),
 					err,
 				)
 			default:

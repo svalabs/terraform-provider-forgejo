@@ -521,11 +521,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	tflog.Info(ctx, "Read user", map[string]any{
-		"name": data.Name.ValueString(),
+		"id": data.ID.ValueInt64(),
 	})
 
 	// Use Forgejo client to fetch updated user
-	usr, res, err = r.client.GetUserInfo(data.Name.ValueString())
+	usr, res, err = r.client.GetUserByID(data.ID.ValueInt64())
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -538,8 +538,8 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"User with name %s not found: %s",
-					data.Name.String(),
+					"User with ID %d not found: %s",
+					data.ID.ValueInt64(),
 					err,
 				)
 			default:
@@ -573,11 +573,11 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	tflog.Info(ctx, "Read user", map[string]any{
-		"name": data.Name.ValueString(),
+		"id": data.ID.ValueInt64(),
 	})
 
-	// Use Forgejo client to get user by name
-	usr, res, err := r.client.GetUserInfo(data.Name.ValueString())
+	// Use Forgejo client to get user by ID
+	usr, res, err := r.client.GetUserByID(data.ID.ValueInt64())
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -590,8 +590,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"User with name %s not found: %s",
-					data.Name.String(),
+					"User with ID %d not found: %s",
+					data.ID.ValueInt64(),
 					err,
 				)
 			default:
@@ -708,11 +708,11 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	tflog.Info(ctx, "Read user", map[string]any{
-		"name": plan.Name.ValueString(),
+		"id": state.ID.ValueInt64(),
 	})
 
 	// Use Forgejo client to fetch updated user
-	usr, res, err := r.client.GetUserInfo(plan.Name.ValueString())
+	usr, res, err := r.client.GetUserByID(state.ID.ValueInt64())
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -725,8 +725,8 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"User with name %s not found: %s",
-					plan.Name.String(),
+					"User with ID %d not found: %s",
+					state.ID.ValueInt64(),
 					err,
 				)
 			default:

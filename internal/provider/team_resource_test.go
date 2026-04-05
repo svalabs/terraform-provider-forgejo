@@ -230,6 +230,35 @@ resource "forgejo_team" "test" {
 					})),
 				},
 			},
+			// Create and Read testing (many teams)
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name = "team_test_org"
+}
+resource "forgejo_team" "test" {
+  count = 100
+
+	organization_id = forgejo_organization.test.id
+	name            = "test_team_${count.index}"
+
+	units_map = {
+		"repo.code" = "read"
+	}
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_team.test[99]", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_team.test[99]", tfjsonpath.New("name"), knownvalue.StringRegexp(regexp.MustCompile("test_team_[0-9]+"))),
+					statecheck.CompareValuePairs("forgejo_team.test[99]", tfjsonpath.New("organization_id"), "forgejo_organization.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_team.test[99]", tfjsonpath.New("can_create_org_repo"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_team.test[99]", tfjsonpath.New("description"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_team.test[99]", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_team.test[99]", tfjsonpath.New("permission"), knownvalue.StringExact("read")),
+					statecheck.ExpectKnownValue("forgejo_team.test[99]", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.code": knownvalue.StringExact("read"),
+					})),
+				},
+			},
 			// Delete testing automatically occurs in TestCase
 		},
 	})
