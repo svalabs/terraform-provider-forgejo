@@ -42,6 +42,24 @@ resource "forgejo_repository_action_variable" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository_action_variable.test", tfjsonpath.New("data"), knownvalue.StringExact("my_variable_value")),
 				},
 			},
+			// Create and Read testing (duplicate name)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo"
+}
+resource "forgejo_repository_action_variable" "test" {
+	repository_id = forgejo_repository.test.id
+	name          = "my_variable"
+	data          = "my_variable_value"
+}
+resource "forgejo_repository_action_variable" "duplicate" {
+	repository_id = forgejo_repository.test.id
+	name          = "my_variable"
+	data          = "my_other_variable_value"
+}`,
+				ExpectError: regexp.MustCompile("Unknown error: variable already exists"),
+			},
 			// Update and Read testing (rename variable)
 			{
 				Config: providerConfig + `

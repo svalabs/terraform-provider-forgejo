@@ -56,6 +56,24 @@ resource "forgejo_ssh_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key_type"), knownvalue.StringExact("user")),
 				},
 			},
+			// Create and Read testing (duplicate key)
+			{
+				Config: providerConfig + `
+resource "tls_private_key" "test" {
+	algorithm = "ED25519"
+}
+resource "forgejo_ssh_key" "test" {
+	user  = "tfadmin"
+	key   = trimspace(tls_private_key.test.public_key_openssh)
+	title = "tftest"
+}
+resource "forgejo_ssh_key" "duplicate" {
+	user  = "tfadmin"
+	key   = trimspace(tls_private_key.test.public_key_openssh)
+	title = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Input validation error: Key content has been used as non-deploy key"),
+			},
 			// Recreate and Read testing
 			{
 				Config: providerConfig + `

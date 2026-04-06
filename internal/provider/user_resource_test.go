@@ -22,8 +22,7 @@ resource "forgejo_user" "test" {
 	login    = "tftest"
 	email    = "tftest@localhost.localdomain"
 	password = "passw0rd"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -56,6 +55,21 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectSensitiveValue("forgejo_user.test", tfjsonpath.New("password")),
 				},
 			},
+			// Create and Read testing (duplicate login)
+			{
+				Config: providerConfig + `
+resource "forgejo_user" "test" {
+	login    = "tftest"
+	email    = "tftest@localhost.localdomain"
+	password = "passw0rd"
+}
+resource "forgejo_user" "duplicate" {
+	login    = "tftest"
+	email    = "tftest@localhost.localdomain"
+	password = "passw0rd"
+}`,
+				ExpectError: regexp.MustCompile("Input validation error: user already exists"),
+			},
 			// Import testing (non-existent resource)
 			{
 				ResourceName:  "forgejo_user.test",
@@ -78,8 +92,7 @@ resource "forgejo_user" "test" {
 	login    = "tftest1"
 	email    = "tftest1@localhost.localdomain"
 	password = "passw1rd"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -121,8 +134,7 @@ resource "forgejo_user" "test" {
 	password    = "passw1rd"
 	description = "Purely for testing... 123"
 	visibility  = "limited"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -172,8 +184,7 @@ resource "forgejo_user" "test" {
 	send_notify          = false
 	visibility           = "private"
 	website              = "http://localhost:3000"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(true)),
@@ -217,8 +228,7 @@ resource "forgejo_user" "test" {
 	allow_import_local        = true
 	allow_create_organization = false
 	max_repo_creation         = 10
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -258,8 +268,7 @@ resource "forgejo_user" "test" {
 	login                     = "tftest1"
 	email                     = "tftest1@localhost.localdomain"
 	password                  = "passw1rd"
-}
-`,
+}`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),

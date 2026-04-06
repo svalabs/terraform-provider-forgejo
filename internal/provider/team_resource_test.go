@@ -85,7 +85,7 @@ resource "forgejo_team" "test2" {
 		"repo.issues" = "read"
 	}
 }`,
-				ExpectError: regexp.MustCompile("team already exists"),
+				ExpectError: regexp.MustCompile("Input validation error: team already exists"),
 			},
 			// Update and Read testing
 			{

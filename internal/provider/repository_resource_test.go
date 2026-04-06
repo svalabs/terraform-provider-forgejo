@@ -94,6 +94,17 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
 			},
+			// Create and Read testing (duplicate name)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "tftest"
+}
+resource "forgejo_repository" "duplicate" {
+	name = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Repository with name \"tftest\" already exists"),
+			},
 			// Import testing (invalid identifier)
 			{
 				ResourceName:  "forgejo_repository.test",

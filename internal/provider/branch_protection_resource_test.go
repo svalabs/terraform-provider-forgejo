@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func TestAccBranchProtectionResource(t *testing.T) {
+func TestAccBranchProtectionResource1(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Create and Read testing
+			// Create and Read testing (personal repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
@@ -49,6 +49,23 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
+			},
+			// Create and Read testing (duplicate branch_name)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name   = "main"
+	repository_id = forgejo_repository.test.id
+}
+resource "forgejo_branch_protection" "duplicate" {
+	branch_name   = "main"
+	repository_id = forgejo_repository.test.id
+}`,
+				ExpectError: regexp.MustCompile(`Repository with owner "tfadmin" and name "test_repo_branch_protection"
+forbidden: Branch protection already exist`),
 			},
 			// Import testing (invalid identifier)
 			{
@@ -160,16 +177,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_OrgRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read testing with organization
+			// Create and Read testing (organization repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
@@ -208,16 +216,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_UserRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read testing with user
+			// Create and Read testing (user repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
@@ -262,11 +261,12 @@ resource "forgejo_branch_protection" "test" {
 	})
 }
 
-func TestAccBranchProtectionResource_WithOptionalAttributes(t *testing.T) {
+func TestAccBranchProtectionResource2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Create and Read testing (with optional attributes)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
@@ -309,15 +309,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(2)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_BranchPattern(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
+			// Create and Read testing (branch pattern)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
@@ -352,44 +344,27 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_InvalidRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
+			// Create and Read testing (invalid repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = 123
 }`,
-				ExpectError: regexp.MustCompile("Unable to read repository"),
+				ExpectError: regexp.MustCompile("Repository with ID 123 not found"),
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_ArchivedRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
+			// Create and Read testing (archived repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
 	name     = "test_repo_archived"
 	archived = true
 }
-
 resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 }`,
-				ExpectError: regexp.MustCompile("Unable to create branch protection"),
+				ExpectError: regexp.MustCompile("Repository with owner \"tfadmin\" and name \"test_repo_archived\" is archived"),
 			},
 		},
 	})

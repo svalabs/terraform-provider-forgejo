@@ -2,6 +2,7 @@ package provider_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -73,7 +74,7 @@ resource "forgejo_gpg_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("subkeys").AtSliceIndex(0).AtMapKey("expires_at"), knownvalue.NotNull()),
 				},
 			},
-			// Recreate and Read testing
+			// Create and Read testing (duplicate key)
 			{
 				Config: providerConfig + fmt.Sprintf(`
 resource "gpg_key_pair" "test" {
@@ -82,6 +83,24 @@ resource "gpg_key_pair" "test" {
 		email = "%s"
 	}]
 	passphrase = "supersecret"
+}
+resource "forgejo_gpg_key" "test" {
+	armored_public_key = gpg_key_pair.test.public_key
+}
+resource "forgejo_gpg_key" "duplicate" {
+	armored_public_key = gpg_key_pair.test.public_key
+}`, forgejoEmail),
+				ExpectError: regexp.MustCompile("Input validation error: A key with the same id already exists"),
+			},
+			// Recreate and Read testing
+			{
+				Config: providerConfig + fmt.Sprintf(`
+resource "gpg_key_pair" "test" {
+	identities = [{
+		name  = "TF Admin"
+		email = "%s"
+	}]
+	passphrase = "megasecret"
 }
 resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
