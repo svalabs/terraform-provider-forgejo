@@ -241,7 +241,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create organization", msg)
@@ -293,7 +297,11 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read organization", msg)
@@ -365,7 +373,11 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update organization", msg)
@@ -396,7 +408,11 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read organization", msg)
@@ -448,7 +464,11 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete organization", msg)

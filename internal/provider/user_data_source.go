@@ -213,7 +213,11 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read user", msg)

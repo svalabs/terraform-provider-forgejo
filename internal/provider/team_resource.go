@@ -306,7 +306,11 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read team", msg)
@@ -407,7 +411,11 @@ func (r *teamResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete team", msg)
@@ -498,7 +506,11 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID type
 		case 422:
 			msg = fmt.Sprintf("Input validation error: %s", err)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to create team", msg)
@@ -541,7 +553,11 @@ func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts fo
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		diags.AddError("Unable to update team", msg)
@@ -572,7 +588,11 @@ func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts fo
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		diags.AddError("Unable to read team", msg)

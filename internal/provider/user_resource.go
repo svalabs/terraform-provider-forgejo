@@ -429,7 +429,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create user", msg)
@@ -512,7 +516,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update user", msg)
@@ -543,7 +551,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read user", msg)
@@ -595,7 +607,11 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read user", msg)
@@ -699,7 +715,11 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update user", msg)
@@ -730,7 +750,11 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read user", msg)
@@ -813,7 +837,11 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete user", msg)
@@ -851,7 +879,11 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read user", msg)

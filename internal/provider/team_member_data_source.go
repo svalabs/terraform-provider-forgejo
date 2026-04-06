@@ -144,7 +144,11 @@ func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, 
 				err,
 			)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to read team member", msg)

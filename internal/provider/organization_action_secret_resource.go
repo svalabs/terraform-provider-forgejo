@@ -203,7 +203,11 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create organization action secret", msg)
@@ -332,7 +336,11 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update organization action secret", msg)
@@ -406,7 +414,11 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete organization action secret", msg)
@@ -472,7 +484,11 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		diags.AddError("Unable to list organization action secrets", msg)

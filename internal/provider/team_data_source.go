@@ -216,7 +216,11 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		diags.AddError("Unable to list teams", msg)

@@ -460,7 +460,11 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read repository", msg)
@@ -637,7 +641,11 @@ func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*
 				err,
 			)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to read repository", msg)

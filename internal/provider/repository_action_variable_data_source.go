@@ -145,7 +145,11 @@ func (d *repositoryActionVariableDataSource) Read(ctx context.Context, req datas
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read repository action variable", msg)

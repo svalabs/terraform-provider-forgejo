@@ -186,7 +186,11 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create organization action variable", msg)
@@ -219,7 +223,11 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read organization action variable", msg)
@@ -296,7 +304,11 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read organization action variable", msg)
@@ -400,7 +412,11 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update organization action variable", msg)
@@ -474,7 +490,11 @@ func (r *organizationActionVariableResource) Delete(ctx context.Context, req res
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete organization action variable", msg)

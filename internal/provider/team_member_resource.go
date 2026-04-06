@@ -216,7 +216,11 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 				err,
 			)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to create team member", msg)
@@ -257,7 +261,11 @@ func deleteTeamMember(ctx context.Context, client *forgejo.Client, teamID int64,
 				err,
 			)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to delete team member", msg)

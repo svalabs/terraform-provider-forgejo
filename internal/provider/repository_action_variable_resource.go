@@ -187,7 +187,11 @@ func (r *repositoryActionVariableResource) Create(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create repository action variable", msg)
@@ -222,7 +226,11 @@ func (r *repositoryActionVariableResource) Create(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read repository action variable", msg)
@@ -302,7 +310,11 @@ func (r *repositoryActionVariableResource) Read(ctx context.Context, req resourc
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read repository action variable", msg)
@@ -409,7 +421,11 @@ func (r *repositoryActionVariableResource) Update(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository action variable", msg)
@@ -486,7 +502,11 @@ func (r *repositoryActionVariableResource) Delete(ctx context.Context, req resou
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete repository action variable", msg)

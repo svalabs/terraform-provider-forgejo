@@ -203,7 +203,11 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create repository action secret", msg)
@@ -361,7 +365,11 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository action secret", msg)
@@ -437,7 +445,11 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete repository action secret", msg)
@@ -489,7 +501,11 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		diags.AddError("Unable to list repository action secrets", msg)

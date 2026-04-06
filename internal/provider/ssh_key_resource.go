@@ -233,7 +233,11 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create SSH key", msg)
@@ -294,7 +298,11 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read SSH key", msg)
@@ -368,7 +376,11 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete SSH key", msg)

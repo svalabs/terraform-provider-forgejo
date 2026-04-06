@@ -314,7 +314,11 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create branch protection", msg)
@@ -394,7 +398,11 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read branch protection", msg)
@@ -507,7 +515,11 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update branch protection", msg)
@@ -589,7 +601,11 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete branch protection", msg)
@@ -650,7 +666,11 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		response.Diagnostics.AddError("Unable to read branch protection", msg)
@@ -683,7 +703,11 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		response.Diagnostics.AddError("Unable to read repository", msg)

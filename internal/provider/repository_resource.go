@@ -1241,7 +1241,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create repository", msg)
@@ -1347,7 +1351,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository", msg)
@@ -1522,7 +1530,11 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository", msg)
@@ -1621,7 +1633,11 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete repository", msg)
@@ -1676,7 +1692,11 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read repository", msg)

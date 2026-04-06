@@ -171,7 +171,11 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to list deploy keys", msg)

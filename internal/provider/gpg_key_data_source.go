@@ -196,7 +196,11 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to list GPG keys", msg)

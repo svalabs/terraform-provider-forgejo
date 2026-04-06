@@ -235,7 +235,11 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create deploy key", msg)
@@ -312,7 +316,11 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read deploy key", msg)
@@ -407,7 +415,11 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete deploy key", msg)
