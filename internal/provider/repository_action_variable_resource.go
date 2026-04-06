@@ -186,6 +186,14 @@ func (r *repositoryActionVariableResource) Create(ctx context.Context, req resou
 					repo.Name.String(),
 					err,
 				)
+			case 409:
+				msg = fmt.Sprintf(
+					"Action variable with owner %s, repo %s and name %s conflict: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.Name.String(),
+					err,
+				)
 			default:
 				msg = fmt.Sprintf(
 					"Unknown error (status %d): %s",

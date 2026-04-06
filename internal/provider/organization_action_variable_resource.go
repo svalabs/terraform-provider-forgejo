@@ -185,6 +185,13 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 					organization.Name.String(),
 					err,
 				)
+			case 409:
+				msg = fmt.Sprintf(
+					"Action variable with org %s and name %s conflict: %s",
+					organization.Name.String(),
+					data.Name.String(),
+					err,
+				)
 			default:
 				msg = fmt.Sprintf(
 					"Unknown error (status %d): %s",

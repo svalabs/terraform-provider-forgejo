@@ -58,7 +58,8 @@ resource "forgejo_organization_action_variable" "duplicate" {
 	name            = "my_variable"
 	data            = "my_other_variable_value"
 }`,
-				ExpectError: regexp.MustCompile("Unknown error: variable already exists"),
+				ExpectError: regexp.MustCompile(`Action variable with org "test_org" and name "my_variable" conflict: variable
+already exists`),
 			},
 			// Update and Read testing (rename variable)
 			{
