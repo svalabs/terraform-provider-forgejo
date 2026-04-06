@@ -1656,7 +1656,7 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 		"name":  repositoryName,
 	})
 
-	// Use Forgejo client to get repository by owner and name
+	// Use Forgejo client to get repository
 	rep, res, err := r.client.GetRepo(owner, repositoryName)
 	if err != nil {
 		var msg string

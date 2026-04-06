@@ -194,7 +194,7 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		"name": data.Name.ValueString(),
 	})
 
-	// Use Forgejo client to get user by name
+	// Use Forgejo client to get user
 	usr, res, err := d.client.GetUserInfo(data.Name.ValueString())
 	if err != nil {
 		var msg string

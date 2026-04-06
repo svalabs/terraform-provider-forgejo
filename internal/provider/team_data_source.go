@@ -127,7 +127,7 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		"organization_id": data.OrganizationID.ValueInt64(),
 	})
 
-	// Use Forgejo client to get team by name
+	// Use Forgejo client to get team
 	team, diags := getOrgTeamByName(
 		ctx,
 		d.client,

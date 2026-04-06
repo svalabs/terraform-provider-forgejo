@@ -437,7 +437,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		"name":  data.Name.ValueString(),
 	})
 
-	// Use Forgejo client to get repository by owner and name
+	// Use Forgejo client to get repository
 	rep, res, err := d.client.GetRepo(
 		data.Owner.ValueString(),
 		data.Name.ValueString(),
@@ -614,7 +614,7 @@ func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*
 		"id": id,
 	})
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, res, err := client.GetRepoByID(id)
 	if err == nil {
 		return rep, diags

@@ -576,7 +576,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		"id": data.ID.ValueInt64(),
 	})
 
-	// Use Forgejo client to get user by ID
+	// Use Forgejo client to get user
 	usr, res, err := r.client.GetUserByID(data.ID.ValueInt64())
 	if err != nil {
 		var msg string
@@ -832,7 +832,7 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 		"username": req.ID,
 	})
 
-	// Use Forgejo client to get user by name
+	// Use Forgejo client to get user
 	usr, res, err := r.client.GetUserInfo(req.ID)
 	if err != nil {
 		var msg string

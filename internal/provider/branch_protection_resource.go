@@ -33,7 +33,7 @@ type branchProtectionResource struct {
 // branchProtectionResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateBranchProtectionOption
 type branchProtectionResourceModel struct {
-	RepositoryId                  types.Int64  `tfsdk:"repository_id"`
+	RepositoryID                  types.Int64  `tfsdk:"repository_id"`
 	BranchName                    types.String `tfsdk:"branch_name"`
 	EnablePush                    types.Bool   `tfsdk:"enable_push"`
 	EnablePushWhitelist           types.Bool   `tfsdk:"enable_push_whitelist"`
@@ -242,7 +242,7 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
-		data.RepositoryId.ValueInt64(),
+		data.RepositoryID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -256,7 +256,7 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 	opts := r.toCreateOption(ctx, &data)
 
 	tflog.Info(ctx, "Create branch protection", map[string]any{
-		"repository_id":                     data.RepositoryId.ValueInt64(),
+		"repository_id":                     data.RepositoryID.ValueInt64(),
 		"repository_name":                   repo.Name.ValueString(),
 		"repository_owner":                  repo.Owner.ValueString(),
 		"branch_name":                       data.BranchName.ValueString(),
@@ -354,7 +354,7 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
-		data.RepositoryId.ValueInt64(),
+		data.RepositoryID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -365,7 +365,7 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 	repo.from(rep)
 
 	tflog.Info(ctx, "Read branch protection", map[string]any{
-		"repository_id":    data.RepositoryId.ValueInt64(),
+		"repository_id":    data.RepositoryID.ValueInt64(),
 		"repository_name":  repo.Name.ValueString(),
 		"repository_owner": repo.Owner.ValueString(),
 		"branch_name":      data.BranchName.ValueString(),
@@ -434,7 +434,7 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
-		data.RepositoryId.ValueInt64(),
+		data.RepositoryID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -448,7 +448,7 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 	opts := r.toEditOption(ctx, &data)
 
 	tflog.Info(ctx, "Update branch protection", map[string]any{
-		"repository_id":                     data.RepositoryId.ValueInt64(),
+		"repository_id":                     data.RepositoryID.ValueInt64(),
 		"repository_name":                   repo.Name.ValueString(),
 		"repository_owner":                  repo.Owner.ValueString(),
 		"branch_name":                       data.BranchName.ValueString(),
@@ -547,7 +547,7 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
-		data.RepositoryId.ValueInt64(),
+		data.RepositoryID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -558,7 +558,7 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 	repo.from(rep)
 
 	tflog.Info(ctx, "Delete branch protection", map[string]any{
-		"repository_id":    data.RepositoryId.ValueInt64(),
+		"repository_id":    data.RepositoryID.ValueInt64(),
 		"repository_name":  repo.Name.ValueString(),
 		"repository_owner": repo.Owner.ValueString(),
 		"branch_name":      data.BranchName.ValueString(),
@@ -663,7 +663,7 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 		"repo":  repo,
 	})
 
-	// Use Forgejo client to get repository by owner and name
+	// Use Forgejo client to get repository
 	repository, res, err := r.client.GetRepo(owner, repo)
 	if err != nil {
 		var msg string
@@ -693,7 +693,7 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 
 	// Map response to model
 	data.BranchName = types.StringValue(branchName)
-	data.RepositoryId = types.Int64Value(repository.ID)
+	data.RepositoryID = types.Int64Value(repository.ID)
 	diags := r.from(protection, &data)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {

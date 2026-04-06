@@ -125,7 +125,7 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		"name": data.Name.ValueString(),
 	})
 
-	// Use Forgejo client to get organization by name
+	// Use Forgejo client to get organization
 	org, res, err := d.client.GetOrg(data.Name.ValueString())
 	if err != nil {
 		var msg string
