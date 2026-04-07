@@ -2,6 +2,9 @@
 
 ![Tests](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/test.yml/badge.svg)
 ![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
+![Test Coverage](https://img.shields.io/badge/Coverage-71.5%25-brightgreen?logo=go)
+![Version](https://img.shields.io/github/v/release/svalabs/terraform-provider-forgejo?logo=terraform&label=Version)
+![License](https://img.shields.io/github/license/svalabs/terraform-provider-forgejo?logo=github&label=License)
 
 This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu](https://opentofu.org/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
 The project is based on the awesome [Forgejo SDK for Go](https://codeberg.org/mvdkleijn/forgejo-sdk) by [Martijn van der Kleijn](https://vanderkleijn.net/).
