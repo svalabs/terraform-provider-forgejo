@@ -1667,46 +1667,21 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	}
 	owner, repositoryName := cmp[0], cmp[1]
 
-	tflog.Info(ctx, "Read repository", map[string]any{
-		"owner": owner,
-		"name":  repositoryName,
-	})
-
 	// Use Forgejo client to get repository
-	rep, res, err := r.client.GetRepo(owner, repositoryName)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' not found: %s",
-					owner,
-					repositoryName,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read repository", msg)
-
+	rep, diags := getRepositoryByName(
+		ctx,
+		r.client,
+		owner,
+		repositoryName,
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Map response body to model
 	state.from(rep)
-	diags := state.permissionsFrom(ctx, rep.Permissions)
+	diags = state.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(state.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(state.externalTrackerFrom(ctx, rep.ExternalTracker)...)
 	diags.Append(state.externalWikiFrom(ctx, rep.ExternalWiki)...)

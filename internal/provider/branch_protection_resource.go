@@ -678,47 +678,22 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 		return
 	}
 
-	tflog.Info(ctx, "Read repository", map[string]any{
-		"owner": owner,
-		"repo":  repo,
-	})
-
 	// Use Forgejo client to get repository
-	repository, res, err := r.client.GetRepo(owner, repo)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' not found: %s",
-					owner,
-					repo,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		response.Diagnostics.AddError("Unable to read repository", msg)
-
+	repository, diags := getRepositoryByName(
+		ctx,
+		r.client,
+		owner,
+		repo,
+	)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Map response to model
 	data.BranchName = types.StringValue(branchName)
 	data.RepositoryID = types.Int64Value(repository.ID)
-	diags := r.from(protection, &data)
+	diags = r.from(protection, &data)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return

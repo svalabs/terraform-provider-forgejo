@@ -23,7 +23,7 @@ data "forgejo_repository" "test" {
 	owner = "non_existent"
 	name  = "tftest"
 }`,
-				ExpectError: regexp.MustCompile("Repository with owner \"non_existent\" and name \"tftest\" not found"),
+				ExpectError: regexp.MustCompile("Repository with owner 'non_existent' and name 'tftest' not found"),
 			},
 			// Read testing (non-existent resource)
 			{
@@ -32,7 +32,7 @@ data "forgejo_repository" "test" {
 	owner = "tfadmin"
 	name  = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("Repository with owner \"tfadmin\" and name \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile("Repository with owner 'tfadmin' and name 'non_existent' not found"),
 			},
 			// Read testing (personal repo)
 			{

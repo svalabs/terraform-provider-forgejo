@@ -432,43 +432,15 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	tflog.Info(ctx, "Read repository", map[string]any{
-		"owner": data.Owner.ValueString(),
-		"name":  data.Name.ValueString(),
-	})
-
 	// Use Forgejo client to get repository
-	rep, res, err := d.client.GetRepo(
+	rep, diags := getRepositoryByName(
+		ctx,
+		d.client,
 		data.Owner.ValueString(),
 		data.Name.ValueString(),
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository with owner %s and name %s not found: %s",
-					data.Owner.String(),
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read repository", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -638,6 +610,51 @@ func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*
 			msg = fmt.Sprintf(
 				"Repository with ID %d not found: %s",
 				id,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read repository", msg)
+
+	return nil, diags
+}
+
+// getRepositoryByName fetches a repository by its name and handles errors consistently.
+func getRepositoryByName(ctx context.Context, client *forgejo.Client, owner, name string) (*forgejo.Repository, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read repository", map[string]any{
+		"owner": owner,
+		"name":  name,
+	})
+
+	// Use Forgejo client to get repository
+	rep, res, err := client.GetRepo(owner, name)
+	if err == nil {
+		return rep, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with owner '%s' and name '%s' not found: %s",
+				owner,
+				name,
 				err,
 			)
 		default:
