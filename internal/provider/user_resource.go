@@ -528,38 +528,14 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	tflog.Info(ctx, "Read user", map[string]any{
-		"id": data.ID.ValueInt64(),
-	})
-
 	// Use Forgejo client to fetch updated user
-	usr, res, err = r.client.GetUserByID(data.ID.ValueInt64())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"User with ID %d not found: %s",
-					data.ID.ValueInt64(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read user", msg)
-
+	usr, diags = getUserByID(
+		ctx,
+		r.client,
+		data.ID.ValueInt64(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -584,38 +560,14 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	tflog.Info(ctx, "Read user", map[string]any{
-		"id": data.ID.ValueInt64(),
-	})
-
 	// Use Forgejo client to get user
-	usr, res, err := r.client.GetUserByID(data.ID.ValueInt64())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"User with ID %d not found: %s",
-					data.ID.ValueInt64(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read user", msg)
-
+	usr, diags := getUserByID(
+		ctx,
+		r.client,
+		data.ID.ValueInt64(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -727,38 +679,14 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	tflog.Info(ctx, "Read user", map[string]any{
-		"id": state.ID.ValueInt64(),
-	})
-
 	// Use Forgejo client to fetch updated user
-	usr, res, err := r.client.GetUserByID(state.ID.ValueInt64())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"User with ID %d not found: %s",
-					state.ID.ValueInt64(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read user", msg)
-
+	usr, diags := getUserByID(
+		ctx,
+		r.client,
+		state.ID.ValueInt64(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -861,33 +789,13 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 	})
 
 	// Use Forgejo client to get user
-	usr, res, err := r.client.GetUserInfo(req.ID)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"User with name '%s' not found: %s",
-					req.ID,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read user", msg)
-
+	usr, diags := getUserByName(
+		ctx,
+		r.client,
+		req.ID,
+	)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
 		return
 	}
 
@@ -905,7 +813,7 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 	state.SendNotify = types.BoolValue(true)
 
 	// Save data into Terraform state
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }
 

@@ -22,7 +22,7 @@ func TestAccUserDataSource(t *testing.T) {
 data "forgejo_user" "test" {
 	login = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("User with name \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile("User with name 'non_existent' not found: user redirect does not exist"),
 			},
 			// Read testing
 			{
