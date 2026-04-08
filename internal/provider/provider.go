@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -206,7 +207,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 		tflog.Info(ctx, "Create Forgejo API client", map[string]any{
 			"forgejo_host":     host,
 			"forgejo_username": username,
-			"forgejo_password": "***",
+			"forgejo_password": strings.Repeat("*", len(password)),
 		})
 
 		client, err = forgejo.NewClient(host, forgejo.SetBasicAuth(username, password))
@@ -214,7 +215,7 @@ func (p *forgejoProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if token != "" {
 		tflog.Info(ctx, "Create Forgejo API client", map[string]any{
 			"forgejo_host":      host,
-			"forgejo_api_token": "***",
+			"forgejo_api_token": strings.Repeat("*", len(token)),
 		})
 
 		client, err = forgejo.NewClient(host, forgejo.SetToken(token))
