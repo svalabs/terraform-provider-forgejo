@@ -165,6 +165,49 @@ func NewTeamDataSource() datasource.DataSource {
 	return &teamDataSource{}
 }
 
+// getOrgTeamByID fetches a team by its ID and handles errors consistently.
+func getOrgTeamByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.Team, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read team", map[string]any{
+		"id": id,
+	})
+
+	// Use Forgejo client to get team
+	team, res, err := client.GetTeam(id)
+	if err == nil {
+		return team, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Team with ID %d not found: %s",
+				id,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read team", msg)
+
+	return nil, diags
+}
+
 // getOrgTeamByName fetches a team by its name and handles errors consistently.
 func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
 	var (
