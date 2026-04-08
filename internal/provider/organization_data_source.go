@@ -121,38 +121,14 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	tflog.Info(ctx, "Read organization", map[string]any{
-		"name": data.Name.ValueString(),
-	})
-
 	// Use Forgejo client to get organization
-	org, res, err := d.client.GetOrg(data.Name.ValueString())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name %s not found: %s",
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization", msg)
-
+	org, diags := getOrganizationByName(
+		ctx,
+		d.client,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -234,4 +210,47 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, id int64) 
 	}
 
 	return orgs[idx], diags
+}
+
+// getOrganizationByName fetches an organization by its name and handles errors consistently.
+func getOrganizationByName(ctx context.Context, client *forgejo.Client, name string) (*forgejo.Organization, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read organization", map[string]any{
+		"name": name,
+	})
+
+	// Use Forgejo client to get organization
+	org, res, err := client.GetOrg(name)
+	if err == nil {
+		return org, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Organization with name '%s' not found: %s",
+				name,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read organization", msg)
+
+	return nil, diags
 }

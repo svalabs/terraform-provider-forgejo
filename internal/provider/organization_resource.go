@@ -274,38 +274,14 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	tflog.Info(ctx, "Read organization", map[string]any{
-		"name": data.Name.ValueString(),
-	})
-
 	// Use Forgejo client to get organization
-	org, res, err := r.client.GetOrg(data.Name.ValueString())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name %s not found: %s",
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization", msg)
-
+	org, diags := getOrganizationByName(
+		ctx,
+		r.client,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -385,38 +361,14 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	tflog.Info(ctx, "Read organization", map[string]any{
-		"name": data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to fetch updated organization
-	org, res, err := r.client.GetOrg(data.Name.ValueString())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name %s not found: %s",
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization", msg)
-
+	// Use Forgejo client to get organization
+	org, diags := getOrganizationByName(
+		ctx,
+		r.client,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

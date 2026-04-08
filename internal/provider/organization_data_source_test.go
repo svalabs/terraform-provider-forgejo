@@ -22,7 +22,7 @@ func TestAccOrganizationDataSource(t *testing.T) {
 data "forgejo_organization" "test" {
 	name = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("Organization with name \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile("Organization with name 'non_existent' not found"),
 			},
 			// Read testing
 			{
