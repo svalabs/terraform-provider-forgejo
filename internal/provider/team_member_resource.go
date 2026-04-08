@@ -106,7 +106,7 @@ func (r *teamMemberResource) Create(ctx context.Context, req resource.CreateRequ
 		data.User.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -136,7 +136,7 @@ func (r *teamMemberResource) Read(ctx context.Context, req resource.ReadRequest,
 		data.User.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

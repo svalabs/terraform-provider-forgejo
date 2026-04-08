@@ -795,7 +795,7 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 		req.ID,
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

@@ -335,7 +335,7 @@ func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		opts,
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

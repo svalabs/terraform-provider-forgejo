@@ -97,7 +97,7 @@ func (d *teamMemberDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		data.User.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

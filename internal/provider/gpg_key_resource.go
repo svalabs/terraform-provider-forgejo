@@ -127,7 +127,6 @@ func getEmails(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 			"verified": types.BoolValue(e.Verified),
 		}
 		elem, diags := types.ObjectValue(gpgKeyEmailAttrTypes, values)
-
 		if diags.HasError() {
 			return types.List{}, diags
 		}
@@ -161,7 +160,6 @@ func getSubkeys(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 			"expires_at":          types.StringValue(e.Expires.Format(time.RFC3339)),
 		}
 		elem, diags := types.ObjectValue(gpgKeySubkeyAttrTypes, values)
-
 		if diags.HasError() {
 			return types.List{}, diags
 		}
