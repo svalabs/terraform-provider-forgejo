@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -43,6 +44,11 @@ data "forgejo_repository" "test" {
 	owner = "tfadmin"
 	name  = forgejo_repository.test.name
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_repository.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_rebase_explicit"), knownvalue.NotNull()),
@@ -108,6 +114,11 @@ data "forgejo_repository" "test" {
 	owner = forgejo_organization.owner.name
 	name  = forgejo_repository.test.name
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_repository.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_rebase_explicit"), knownvalue.NotNull()),
@@ -171,6 +182,11 @@ data "forgejo_repository" "test" {
 	owner = "tfadmin"
 	name  = forgejo_repository.test.name
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_repository.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_rebase_explicit"), knownvalue.NotNull()),
@@ -234,6 +250,11 @@ data "forgejo_repository" "test" {
 	owner = "tfadmin"
 	name  = forgejo_repository.test.name
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_repository.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("allow_rebase_explicit"), knownvalue.NotNull()),

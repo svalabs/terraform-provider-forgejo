@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -23,6 +24,11 @@ resource "forgejo_user" "test" {
 	email    = "tftest@localhost.localdomain"
 	password = "passw0rd"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -93,6 +99,11 @@ resource "forgejo_user" "test" {
 	email    = "tftest1@localhost.localdomain"
 	password = "passw1rd"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -135,6 +146,11 @@ resource "forgejo_user" "test" {
 	description = "Purely for testing... 123"
 	visibility  = "limited"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -167,7 +183,7 @@ resource "forgejo_user" "test" {
 					statecheck.ExpectSensitiveValue("forgejo_user.test", tfjsonpath.New("password")),
 				},
 			},
-			// Update and Read testing
+			// Recreate and Read testing
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
@@ -185,6 +201,11 @@ resource "forgejo_user" "test" {
 	visibility           = "private"
 	website              = "http://localhost:3000"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(true)),
@@ -229,6 +250,11 @@ resource "forgejo_user" "test" {
 	allow_create_organization = false
 	max_repo_creation         = 10
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -269,6 +295,11 @@ resource "forgejo_user" "test" {
 	email                     = "tftest1@localhost.localdomain"
 	password                  = "passw1rd"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -310,6 +341,11 @@ resource "forgejo_user" "test" {
 	password              = "passw1rd"
 	deactivate_on_destroy = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),
@@ -345,6 +381,11 @@ resource "forgejo_user" "test" {
 			// Deactivate on destroy testing -- destroying
 			{
 				Config: providerConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionDestroy),
+					},
+				},
 			},
 			// Deactivate on destroy testing -- reading after destroy
 			{
@@ -392,6 +433,11 @@ import {
 	id = "tftest1"
 	to = forgejo_user.test
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_user.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("active"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_user.test", tfjsonpath.New("admin"), knownvalue.Bool(false)),

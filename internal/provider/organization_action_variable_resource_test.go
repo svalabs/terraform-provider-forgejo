@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -36,6 +37,11 @@ resource "forgejo_organization_action_variable" "test" {
 	name            = "my_variable"
 	data            = "my_variable_value"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization_action_variable.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("name"), knownvalue.StringExact("my_variable")),
@@ -72,6 +78,11 @@ resource "forgejo_organization_action_variable" "test" {
 	name            = "my_new_variable"
 	data            = "my_variable_value"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization_action_variable.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable")),
@@ -89,6 +100,11 @@ resource "forgejo_organization_action_variable" "test" {
 	name            = "my_new_variable"
 	data            = "my_new_variable_value"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization_action_variable.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable")),
@@ -106,6 +122,11 @@ resource "forgejo_organization_action_variable" "test" {
 	name            = "my_new_variable_with_a_very_long_name_that_is_over_30_characters_long"
 	data            = "my_new_variable_value"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization_action_variable.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("organization_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_with_a_very_long_name_that_is_over_30_characters_long")),

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -25,6 +26,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -110,6 +116,11 @@ resource "forgejo_branch_protection" "test" {
 	require_signed_commits = true
 	required_approvals     = 1
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(true)),
@@ -152,6 +163,11 @@ resource "forgejo_branch_protection" "test" {
 	enable_status_check   = true
 	status_check_contexts = ["ci/on-submit"]
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("dev")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -177,7 +193,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-			// Create and Read testing (organization repo)
+			// Recreate and Read testing (organization repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
@@ -191,6 +207,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name    = "main"
 	repository_id  = forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -216,7 +237,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-			// Create and Read testing (user repo)
+			// Recreate and Read testing (user repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
@@ -232,6 +253,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name		= "main"
 	repository_id	= forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -284,6 +310,11 @@ resource "forgejo_branch_protection" "test" {
 	block_on_official_review_requests = true
 	dismiss_stale_approvals           = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.ListSizeExact(1)),
@@ -309,7 +340,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(2)),
 				},
 			},
-			// Create and Read testing (branch pattern)
+			// Recreate and Read testing (branch pattern)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
@@ -319,6 +350,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "release/*"
 	repository_id = forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("release/*")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -366,6 +402,7 @@ resource "forgejo_branch_protection" "test" {
 }`,
 				ExpectError: regexp.MustCompile("Repository with owner \"tfadmin\" and name \"test_repo_archived\" is archived"),
 			},
+			// Delete testing automatically occurs in TestCase
 		},
 	})
 }

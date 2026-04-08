@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -48,6 +49,11 @@ resource "gpg_key_pair" "test" {
 resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
 }`, forgejoEmail),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_gpg_key.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("armored_public_key"), knownvalue.StringFunc(validateIsArmoredGPGKey)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
@@ -97,7 +103,7 @@ resource "forgejo_gpg_key" "duplicate" {
 				Config: providerConfig + fmt.Sprintf(`
 resource "gpg_key_pair" "test" {
 	identities = [{
-		name  = "TF Admin"
+		name  = "TF Admin 2"
 		email = "%s"
 	}]
 	passphrase = "megasecret"
@@ -105,6 +111,11 @@ resource "gpg_key_pair" "test" {
 resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
 }`, forgejoEmail),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_gpg_key.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("armored_public_key"), knownvalue.StringFunc(validateIsArmoredGPGKey)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),

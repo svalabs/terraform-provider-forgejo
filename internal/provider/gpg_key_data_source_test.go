@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -65,6 +66,11 @@ data "forgejo_gpg_key" "test" {
 
 	depends_on = [forgejo_gpg_key.test]
 }`, forgejoEmail),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_gpg_key.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
@@ -110,16 +116,16 @@ data "forgejo_gpg_key" "test" {
 	depends_on = [forgejo_gpg_key.test]
 }`, forgejoEmail),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("primary_key_id"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("public_key"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_sign"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_encrypt_comms"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_encrypt_storage"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_certify"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("expires_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("primary_key_id"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("public_key"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("can_sign"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("can_encrypt_comms"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("can_encrypt_storage"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("can_certify"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("expires_at"), knownvalue.NotNull()),
 				},
 			},
 		},

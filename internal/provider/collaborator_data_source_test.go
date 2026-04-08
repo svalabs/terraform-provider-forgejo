@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -56,6 +57,11 @@ data "forgejo_collaborator" "test" {
 	repository_id = forgejo_repository.test.id
 	user          = forgejo_user.test.login
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_collaborator.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_collaborator.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_collaborator.test", tfjsonpath.New("user"), knownvalue.StringExact("tftest")),
