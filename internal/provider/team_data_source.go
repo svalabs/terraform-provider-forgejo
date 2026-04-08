@@ -131,8 +131,8 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	team, diags := getOrgTeamByName(
 		ctx,
 		d.client,
-		data.OrganizationID,
-		data.Name,
+		data.OrganizationID.ValueInt64(),
+		data.Name.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
@@ -166,7 +166,7 @@ func NewTeamDataSource() datasource.DataSource {
 }
 
 // getOrgTeamByName fetches a team by its name and handles errors consistently.
-func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.Int64, teamName types.String) (*forgejo.Team, diag.Diagnostics) {
+func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
 	var (
 		diags        diag.Diagnostics
 		organization organizationResourceModel
@@ -188,6 +188,7 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 	tflog.Info(ctx, "List teams", map[string]any{
 		"name":            teamName,
 		"organization_id": orgID,
+		"organization":    organization.Name.ValueString(),
 	})
 
 	// Use Forgejo client to list teams in organization
@@ -230,12 +231,12 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID types.I
 
 	// Search for team with given name
 	idx := slices.IndexFunc(teams, func(t *forgejo.Team) bool {
-		return t.Name == teamName.ValueString()
+		return t.Name == teamName
 	})
 	if idx == -1 {
 		diags.AddError(
 			"Unable to find team by name",
-			fmt.Sprintf("Team with name %s not found", teamName.String()),
+			fmt.Sprintf("Team with name '%s' not found", teamName),
 		)
 
 		return nil, diags

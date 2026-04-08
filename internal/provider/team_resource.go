@@ -220,7 +220,7 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 	team, diags := createTeam(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 		data.Name.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
@@ -430,15 +430,29 @@ func NewTeamResource() resource.Resource {
 }
 
 // createTeam is a helper function to create a team.
-func createTeam(ctx context.Context, client *forgejo.Client, organizationID types.Int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
+func createTeam(ctx context.Context, client *forgejo.Client, organizationID int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
 	var (
 		diags        diag.Diagnostics
 		organization organizationResourceModel
 	)
 
+	// Use Forgejo client to get organization
+	org, diags := getOrganizationByID(
+		ctx,
+		client,
+		organizationID,
+	)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Map response body to model
+	organization.from(org)
+
 	tflog.Info(ctx, "Create team", map[string]any{
 		"name":            teamName,
 		"organization_id": organizationID,
+		"organization":    organization.Name.ValueString(),
 	})
 
 	// Generate API request body
@@ -457,19 +471,6 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID type
 
 		return nil, diags
 	}
-
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		client,
-		organizationID,
-	)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	// Map response body to model
-	organization.from(org)
 
 	// Use Forgejo client to create new team
 	team, res, err := client.CreateTeam(

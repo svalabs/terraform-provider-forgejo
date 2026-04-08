@@ -177,15 +177,15 @@ func NewOrganizationDataSource() datasource.DataSource {
 }
 
 // getOrganizationByID fetches an organization by its ID and handles errors consistently.
-func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID types.Int64) (*forgejo.Organization, diag.Diagnostics) {
+func getOrganizationByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.Organization, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "List organizations", map[string]any{
-		"id": orgID.ValueInt64(),
+		"id": id,
 	})
 
 	// Use Forgejo client to list organizations
-	organizations, res, err := client.AdminListOrgs(
+	orgs, res, err := client.AdminListOrgs(
 		forgejo.AdminListOrgsOptions{
 			ListOptions: forgejo.ListOptions{
 				Page: -1,
@@ -221,17 +221,17 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 	}
 
 	// Search for organization with given ID
-	idx := slices.IndexFunc(organizations, func(o *forgejo.Organization) bool {
-		return o.ID == orgID.ValueInt64()
+	idx := slices.IndexFunc(orgs, func(o *forgejo.Organization) bool {
+		return o.ID == id
 	})
 	if idx == -1 {
 		diags.AddError(
 			"Unable to find organization by ID",
-			fmt.Sprintf("Organization with ID %d not found", orgID.ValueInt64()),
+			fmt.Sprintf("Organization with ID %d not found", id),
 		)
 
 		return nil, diags
 	}
 
-	return organizations[idx], diags
+	return orgs[idx], diags
 }

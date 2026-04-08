@@ -133,7 +133,7 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -270,7 +270,7 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -363,7 +363,7 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		plan.OrganizationID,
+		plan.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -456,7 +456,7 @@ func (r *organizationActionVariableResource) Delete(ctx context.Context, req res
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

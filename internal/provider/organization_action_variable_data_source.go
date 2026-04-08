@@ -101,7 +101,7 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 	org, diags := getOrganizationByID(
 		ctx,
 		d.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

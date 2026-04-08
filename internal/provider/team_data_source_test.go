@@ -36,7 +36,7 @@ data "forgejo_team" "test" {
 	name            = "test_team"
 	organization_id = forgejo_organization.test.id
 }`,
-				ExpectError: regexp.MustCompile("Team with name \"test_team\" not found"),
+				ExpectError: regexp.MustCompile("Team with name 'test_team' not found"),
 			},
 			// Read testing
 			{

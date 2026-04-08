@@ -150,7 +150,7 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -282,7 +282,7 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -373,7 +373,7 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -443,7 +443,7 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 	org, diags := getOrganizationByID(
 		ctx,
 		r.client,
-		data.OrganizationID,
+		data.OrganizationID.ValueInt64(),
 	)
 	if diags.HasError() {
 		return nil, diags
