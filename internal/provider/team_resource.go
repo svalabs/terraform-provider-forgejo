@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -25,8 +26,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &teamResource{}
-	_ resource.ResourceWithConfigure = &teamResource{}
+	_ resource.Resource                = &teamResource{}
+	_ resource.ResourceWithConfigure   = &teamResource{}
+	_ resource.ResourceWithImportState = &teamResource{}
 )
 
 // teamResource is the resource implementation.
@@ -438,6 +440,45 @@ func (r *teamResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 		return
 	}
+}
+
+// ImportState reads an existing resource and adds it to Terraform state on success.
+func (r *teamResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	defer un(trace(ctx, "Import team resource"))
+
+	var state teamResourceModel
+
+	teamID, err := strconv.ParseInt(req.ID, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to parse import identifier",
+			fmt.Sprintf(
+				"Expected numeric team ID, got: '%s'",
+				req.ID,
+			),
+		)
+
+		return
+	}
+
+	team, diags := getOrgTeamByID(
+		ctx,
+		r.client,
+		teamID,
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diags = state.from(team, ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
 
 // NewTeamResource is a helper function to simplify the provider implementation.
