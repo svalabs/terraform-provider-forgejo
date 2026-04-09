@@ -66,7 +66,6 @@ resource "forgejo_team" "custom_team" {
 ### Required
 
 - `name` (String) Name of the team.
-- `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created.
 - `units_map` (Map of String) Map of access units. **Note**: If the `permission` is `admin` or `owner` all units must be set to `admin` as well.
 
 ### Optional
@@ -74,6 +73,8 @@ resource "forgejo_team" "custom_team" {
 - `can_create_org_repo` (Boolean) Can create repositories?
 - `description` (String) Description of the team.
 - `includes_all_repositories` (Boolean) Has access to all repositories?
+- `organization` (String) Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
+- `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
 - `permission` (String) Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set the correct `units_map`.
 
 ### Read-Only

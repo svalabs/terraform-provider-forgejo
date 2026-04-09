@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -35,6 +38,7 @@ type teamResource struct {
 type teamResourceModel struct {
 	ID                      types.Int64  `tfsdk:"id"`
 	Name                    types.String `tfsdk:"name"`
+	Organization            types.String `tfsdk:"organization"`
 	OrganizationID          types.Int64  `tfsdk:"organization_id"`
 	CanCreateOrgRepo        types.Bool   `tfsdk:"can_create_org_repo"`
 	Description             types.String `tfsdk:"description"`
@@ -53,6 +57,7 @@ func (m *teamResourceModel) from(t *forgejo.Team, ctx context.Context) (diags di
 	m.Name = types.StringValue(t.Name)
 	m.Description = types.StringValue(t.Description)
 	if t.Organization != nil {
+		m.Organization = types.StringValue(t.Organization.UserName)
 		m.OrganizationID = types.Int64Value(t.Organization.ID)
 	}
 	m.Permission = types.StringValue(string(t.Permission))
@@ -103,11 +108,30 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Description: "Name of the team.",
 				Required:    true,
 			},
+			"organization": schema.StringAttribute{
+				MarkdownDescription: "Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization_id"),
+					}...),
+				},
+			},
 			"organization_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the owning organization. Changing this forces a new resource to be created.",
-				Required:    true,
+				MarkdownDescription: "Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.Int64{
+					int64validator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization"),
+					}...),
 				},
 			},
 			"can_create_org_repo": schema.BoolAttribute{
@@ -216,11 +240,27 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	// Get organization name from ID if not provided
+	if data.Organization.IsNull() || data.Organization.IsUnknown() {
+		org, diags := getOrganizationByID(
+			ctx,
+			r.client,
+			data.OrganizationID.ValueInt64(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Map response body to model
+		data.Organization = types.StringValue(org.UserName)
+	}
+
 	// Use Forgejo client to create new team
 	team, diags := createTeam(
 		ctx,
 		r.client,
-		data.OrganizationID.ValueInt64(),
+		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
@@ -406,34 +446,17 @@ func NewTeamResource() resource.Resource {
 }
 
 // createTeam is a helper function to create a team.
-func createTeam(ctx context.Context, client *forgejo.Client, organizationID int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
-	var (
-		diags        diag.Diagnostics
-		organization organizationResourceModel
-	)
-
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		client,
-		organizationID,
-	)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	// Map response body to model
-	organization.from(org)
+func createTeam(ctx context.Context, client *forgejo.Client, org, name string) (*forgejo.Team, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "Create team", map[string]any{
-		"name":            teamName,
-		"organization_id": organizationID,
-		"organization":    organization.Name.ValueString(),
+		"organization": org,
+		"name":         name,
 	})
 
 	// Generate API request body
 	opts := forgejo.CreateTeamOption{
-		Name:       teamName,
+		Name:       name,
 		Permission: forgejo.AccessMode("read"),
 		UnitsMap: map[string]string{
 			"repo.code": "none",
@@ -450,7 +473,7 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID int6
 
 	// Use Forgejo client to create new team
 	team, res, err := client.CreateTeam(
-		organization.Name.ValueString(),
+		org,
 		opts,
 	)
 	if err == nil {
@@ -469,15 +492,15 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID int6
 		switch res.StatusCode {
 		case 403:
 			msg = fmt.Sprintf(
-				"Team with org %s and name '%s' forbidden: %s",
-				organization.Name.String(),
-				teamName,
+				"Team with org '%s' and name '%s' forbidden: %s",
+				org,
+				name,
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
-				"Organization with name %s not found: %s",
-				organization.Name.String(),
+				"Organization with name '%s' not found: %s",
+				org,
 				err,
 			)
 		case 422:
@@ -496,11 +519,11 @@ func createTeam(ctx context.Context, client *forgejo.Client, organizationID int6
 }
 
 // editTeam is a helper function to update an existing team.
-func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts forgejo.EditTeamOption) (*forgejo.Team, diag.Diagnostics) {
+func editTeam(ctx context.Context, client *forgejo.Client, id int64, opts forgejo.EditTeamOption) (*forgejo.Team, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "Update team", map[string]any{
-		"id": teamID,
+		"id": id,
 	})
 
 	// Validate API request body
@@ -512,7 +535,7 @@ func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts fo
 	}
 
 	// Use Forgejo client to update existing team
-	res, err := client.EditTeam(teamID, opts)
+	res, err := client.EditTeam(id, opts)
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -526,7 +549,7 @@ func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts fo
 			case 404:
 				msg = fmt.Sprintf(
 					"Team with ID %d not found: %s",
-					teamID,
+					id,
 					err,
 				)
 			default:
@@ -546,7 +569,7 @@ func editTeam(ctx context.Context, client *forgejo.Client, teamID int64, opts fo
 	team, diags := getOrgTeamByID(
 		ctx,
 		client,
-		teamID,
+		id,
 	)
 	if diags.HasError() {
 		return nil, diags

@@ -43,7 +43,11 @@ data "forgejo_team" "team" {
 ### Required
 
 - `name` (String) Name of the team.
-- `organization_id` (Number) ID of the owning organization.
+
+### Optional
+
+- `organization` (String) Name of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.
+- `organization_id` (Number) Numeric identifier of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.
 
 ### Read-Only
 

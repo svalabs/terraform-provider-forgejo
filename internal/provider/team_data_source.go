@@ -5,9 +5,13 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -30,6 +34,7 @@ type teamDataSource struct {
 type teamDataSourceModel struct {
 	ID                      types.Int64  `tfsdk:"id"`
 	Name                    types.String `tfsdk:"name"`
+	Organization            types.String `tfsdk:"organization"`
 	OrganizationID          types.Int64  `tfsdk:"organization_id"`
 	CanCreateOrgRepo        types.Bool   `tfsdk:"can_create_org_repo"`
 	Description             types.String `tfsdk:"description"`
@@ -57,9 +62,25 @@ func (d *teamDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, r
 				Description: "Name of the team.",
 				Required:    true,
 			},
+			"organization": schema.StringAttribute{
+				MarkdownDescription: "Name of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization_id"),
+					}...),
+				},
+			},
 			"organization_id": schema.Int64Attribute{
-				Description: "ID of the owning organization.",
-				Required:    true,
+				MarkdownDescription: "Numeric identifier of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
+				Validators: []validator.Int64{
+					int64validator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization"),
+					}...),
+				},
 			},
 			"can_create_org_repo": schema.BoolAttribute{
 				Description: "Can create repositories?",
@@ -122,16 +143,32 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
+	// Get organization name from ID if not provided
+	if data.Organization.IsNull() || data.Organization.IsUnknown() {
+		org, diags := getOrganizationByID(
+			ctx,
+			d.client,
+			data.OrganizationID.ValueInt64(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Map response body to model
+		data.Organization = types.StringValue(org.UserName)
+	}
+
 	tflog.Info(ctx, "Read team", map[string]any{
-		"name":            data.Name.ValueString(),
-		"organization_id": data.OrganizationID.ValueInt64(),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to get team
 	team, diags := getOrgTeamByName(
 		ctx,
 		d.client,
-		data.OrganizationID.ValueInt64(),
+		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
@@ -144,6 +181,7 @@ func (d *teamDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.Name = types.StringValue(team.Name)
 	data.Description = types.StringValue(team.Description)
 	if team.Organization != nil {
+		data.Organization = types.StringValue(team.Organization.UserName)
 		data.OrganizationID = types.Int64Value(team.Organization.ID)
 	}
 	data.Permission = types.StringValue(string(team.Permission))
@@ -209,34 +247,17 @@ func getOrgTeamByID(ctx context.Context, client *forgejo.Client, id int64) (*for
 }
 
 // getOrgTeamByName fetches a team by its name and handles errors consistently.
-func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID int64, teamName string) (*forgejo.Team, diag.Diagnostics) {
-	var (
-		diags        diag.Diagnostics
-		organization organizationResourceModel
-	)
-
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		client,
-		orgID,
-	)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	// Map response body to model
-	organization.from(org)
+func getOrgTeamByName(ctx context.Context, client *forgejo.Client, org, name string) (*forgejo.Team, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "List teams", map[string]any{
-		"name":            teamName,
-		"organization_id": orgID,
-		"organization":    organization.Name.ValueString(),
+		"organization": org,
+		"name":         name,
 	})
 
 	// Use Forgejo client to list teams in organization
 	teams, res, err := client.ListOrgTeams(
-		organization.Name.ValueString(),
+		org,
 		forgejo.ListTeamsOptions{
 			ListOptions: forgejo.ListOptions{
 				Page: -1,
@@ -255,8 +276,8 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID int64, 
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Organization with name %s not found: %s",
-					organization.Name.String(),
+					"Organization with name '%s' not found: %s",
+					org,
 					err,
 				)
 			default:
@@ -274,12 +295,12 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, orgID int64, 
 
 	// Search for team with given name
 	idx := slices.IndexFunc(teams, func(t *forgejo.Team) bool {
-		return t.Name == teamName
+		return t.Name == name
 	})
 	if idx == -1 {
 		diags.AddError(
 			"Unable to find team by name",
-			fmt.Sprintf("Team with name '%s' not found", teamName),
+			fmt.Sprintf("Team with name '%s' not found", name),
 		)
 
 		return nil, diags
