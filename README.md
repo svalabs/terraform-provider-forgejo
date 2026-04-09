@@ -81,7 +81,7 @@ The following API token permissions are required:
 - `write:repository`
 - `write:user`
 
-Optionally, for administrative privileges (required to manage users, user repositories, user SSH keys, teams, and organization action secrets/variables):
+Optionally, for administrative privileges (required to manage users, user repositories, and user SSH keys):
 
 - `write:admin`
 
@@ -259,7 +259,7 @@ Re-generate the API token used for authentication, and make sure to select the f
 - `write:organization`
 - `write:repository`
 - `write:user`
-- Optional, for managing users, user repositories, user SSH keys, teams, and organization action secrets/variables: `write:admin`
+- Optional, for managing users, user repositories, and user SSH keys: `write:admin`
 
 ## Developing & Contributing to the Provider
 

@@ -65,7 +65,7 @@ func (r *organizationActionVariableResource) Schema(_ context.Context, _ resourc
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Forgejo organization action variable resource.
 
-**Note**: Managing organization action variables requires administrative privileges!`,
+**Note**: The authenticated user must be a member of the managed organization(s)!`,
 
 		Attributes: map[string]schema.Attribute{
 			"organization_id": schema.Int64Attribute{
