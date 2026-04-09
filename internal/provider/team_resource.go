@@ -89,7 +89,7 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Forgejo team resource.
 
-**Note**: Managing teams requires administrative privileges!`,
+**Note**: The authenticated user must be a member of the managed organization(s)!`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
