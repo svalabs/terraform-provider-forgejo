@@ -784,10 +784,6 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 
 	var state userResourceModel
 
-	tflog.Info(ctx, "Read user", map[string]any{
-		"username": req.ID,
-	})
-
 	// Use Forgejo client to get user
 	usr, diags := getUserByName(
 		ctx,
