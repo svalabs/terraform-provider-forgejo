@@ -4,14 +4,14 @@ page_title: "forgejo_organization_action_variable Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo organization action variable resource.
-  Note: The authenticated user must be a member of the managed organization(s)!
+  Note: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 ---
 
 # forgejo_organization_action_variable (Resource)
 
 Forgejo organization action variable resource.
 
-**Note**: The authenticated user must be a member of the managed organization(s)!
+**Note**: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 
 ## Example Usage
 

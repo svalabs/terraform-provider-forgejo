@@ -4,14 +4,14 @@ page_title: "forgejo_team Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo team resource.
-  Note: The authenticated user must be a member of the managed organization(s)!
+  Note: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 ---
 
 # forgejo_team (Resource)
 
 Forgejo team resource.
 
-**Note**: The authenticated user must be a member of the managed organization(s)!
+**Note**: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 
 ## Example Usage
 
