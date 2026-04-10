@@ -36,6 +36,22 @@ func TestAccGPGKeyResource(t *testing.T) {
 			},
 		},
 		Steps: []resource.TestStep{
+			// Create and Read testing (invalid email)
+			{
+				Config: providerConfig + `
+resource "gpg_key_pair" "test" {
+	identities = [{
+		name  = "TF Admin"
+		email = "invalid"
+	}]
+	passphrase = "supersecret"
+}
+resource "forgejo_gpg_key" "test" {
+	armored_public_key = gpg_key_pair.test.public_key
+}`,
+				ExpectError: regexp.MustCompile(`GPG key creation not found: None of the emails attached to the GPG key could
+be found`),
+			},
 			// Create and Read testing
 			{
 				Config: providerConfig + fmt.Sprintf(`
