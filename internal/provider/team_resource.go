@@ -3,7 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -448,23 +448,38 @@ func (r *teamResource) ImportState(ctx context.Context, req resource.ImportState
 
 	var state teamResourceModel
 
-	teamID, err := strconv.ParseInt(req.ID, 10, 64)
-	if err != nil {
+	// Parse import identifier
+	cmp := strings.Split(req.ID, "/")
+	if len(cmp) != 2 {
 		resp.Diagnostics.AddError(
 			"Unable to parse import identifier",
 			fmt.Sprintf(
-				"Expected numeric team ID, got: '%s'",
+				"Expected import identifier with format: 'org/team', got: '%s'",
 				req.ID,
 			),
 		)
 
 		return
 	}
+	orgName, teamName := cmp[0], cmp[1]
 
-	team, diags := getOrgTeamByID(
+	// Use Forgejo client to get organization
+	org, diags := getOrganizationByName(
 		ctx,
 		r.client,
-		teamID,
+		orgName,
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Use Forgejo client to get team
+	team, diags := getOrgTeamByName(
+		ctx,
+		r.client,
+		org.ID,
+		teamName,
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
