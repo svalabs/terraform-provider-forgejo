@@ -148,6 +148,34 @@ resource "forgejo_team" "test_by_name2" {
 }`,
 				ExpectError: regexp.MustCompile("Input validation error: team already exists"),
 			},
+			// Import testing (invalid identifier)
+			{
+				ResourceName:  "forgejo_team.test_by_name",
+				ImportState:   true,
+				ImportStateId: "invalid",
+				ExpectError:   regexp.MustCompile("Expected import identifier with format: 'org/team', got: 'invalid'"),
+			},
+			// Import testing (non-existent org)
+			{
+				ResourceName:  "forgejo_team.test_by_name",
+				ImportState:   true,
+				ImportStateId: "non-existent/test_team_by_name",
+				ExpectError:   regexp.MustCompile("Organization with name 'non-existent' not found"),
+			},
+			// Import testing (non-existent team)
+			{
+				ResourceName:  "forgejo_team.test_by_name",
+				ImportState:   true,
+				ImportStateId: "team_test_org/non-existent",
+				ExpectError:   regexp.MustCompile("Team with name 'non-existent' not found"),
+			},
+			// Import testing
+			{
+				ResourceName:      "forgejo_team.test_by_name",
+				ImportState:       true,
+				ImportStateId:     "team_test_org/test_team_by_name",
+				ImportStateVerify: true,
+			},
 			// Update and Read testing
 			{
 				Config: providerConfig + `
