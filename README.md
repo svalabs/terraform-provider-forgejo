@@ -197,7 +197,7 @@ Each resource defines its own import identifier, which uniquely identifies the r
 | `forgejo_repository`        | `<<<repo_owner>>>/<<<repo_name>>>`              |
 | `forgejo_branch_protection` | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>` |
 | `forgejo_user`              | `<<<login>>>`                                   |
-| `forgejo_team`              | `<<<org>>>/<<<team_name>>>`                     |
+| `forgejo_team`              | `<<<org_name>>>/<<<team_name>>>`                     |
 
 Refer to the `examples/` directory for more import examples.
 
