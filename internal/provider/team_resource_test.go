@@ -23,7 +23,8 @@ func TestAccTeamResource(t *testing.T) {
 resource "forgejo_team" "test" {
 	name            = "tftest"
 	organization_id = 1011
-	units_map       = {
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }`,
@@ -35,7 +36,8 @@ resource "forgejo_team" "test" {
 resource "forgejo_team" "test" {
 	name         = "tftest"
 	organization = "non-existent"
-	units_map    = {
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }`,
@@ -54,7 +56,8 @@ resource "forgejo_team" "test_by_id" {
 	description               = "Test team."
 	includes_all_repositories = false
 	permission                = "read"
-	units_map                 = {
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }
@@ -65,7 +68,8 @@ resource "forgejo_team" "test_by_name" {
 	description               = "Test team."
 	includes_all_repositories = false
 	permission                = "read"
-	units_map                 = {
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }`,
@@ -113,7 +117,8 @@ resource "forgejo_team" "test_by_id" {
 	description               = "Test team."
 	includes_all_repositories = false
 	permission                = "read"
-	units_map                 = {
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }
@@ -122,7 +127,8 @@ resource "forgejo_team" "test_by_id2" {
 	name            = forgejo_team.test_by_id.name
 	organization_id = forgejo_organization.test.id
 	permission      = "write"
-	units_map                 = {
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }
@@ -133,16 +139,18 @@ resource "forgejo_team" "test_by_name" {
 	description               = "Test team."
 	includes_all_repositories = false
 	permission                = "read"
-	units_map                 = {
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }
 resource "forgejo_team" "test_by_name2" {
 	# Make sure this second team is created later.
-	name            = forgejo_team.test_by_name.name
-	organization    = forgejo_organization.test.name
-	permission      = "write"
-	units_map                 = {
+	name         = forgejo_team.test_by_name.name
+	organization = forgejo_organization.test.name
+	permission   = "write"
+
+	units_map = {
 		"repo.issues" = "read"
 	}
 }`,
@@ -189,7 +197,8 @@ resource "forgejo_team" "test_by_id" {
 	description               = "Updated test team."
 	includes_all_repositories = true
 	permission                = "write"
-	units_map                 = {
+
+	units_map = {
 		"repo.issues" = "write"
 	}
 }
@@ -200,7 +209,8 @@ resource "forgejo_team" "test_by_name" {
 	description               = "Updated test team."
 	includes_all_repositories = true
 	permission                = "write"
-	units_map                 = {
+
+	units_map = {
 		"repo.issues" = "write"
 	}
 }`,
@@ -246,16 +256,18 @@ resource "forgejo_team" "test_by_id" {
 	organization_id = forgejo_organization.test.id
 	description     = "Updated test team."
 	permission      = "write"
-	units_map       = {
+
+	units_map = {
 		"repo.issues" = "write"
 	}
 }
 resource "forgejo_team" "test_by_name" {
-	name            = "renamed_test_team_by_name"
-	organization_id = forgejo_organization.test.id
-	description     = "Updated test team."
-	permission      = "write"
-	units_map       = {
+	name         = "renamed_test_team_by_name"
+	organization = forgejo_organization.test.name
+	description  = "Updated test team."
+	permission   = "write"
+
+	units_map = {
 		"repo.issues" = "write"
 	}
 }`,
@@ -303,15 +315,17 @@ resource "forgejo_team" "test_by_id" {
 	name            = "renamed_test_team_by_id"
 	organization_id = forgejo_organization.new_test.id
 	permission      = "write"
-	units_map       = {
+
+	units_map = {
 		"repo.issues" = "write"
 	}
 }
 resource "forgejo_team" "test_by_name" {
-	name            = "renamed_test_team_by_name"
-	organization_id = forgejo_organization.new_test.id
-	permission      = "write"
-	units_map       = {
+	name         = "renamed_test_team_by_name"
+	organization = forgejo_organization.new_test.name
+	permission   = "write"
+
+	units_map = {
 		"repo.issues" = "write"
 	}
 }`,
@@ -356,7 +370,8 @@ resource "forgejo_team" "test_by_id" {
 	name            = "renamed_test_team_by_id"
 	organization_id = forgejo_organization.new_test.id
 	permission      = "admin"
-	units_map       = {
+
+	units_map = {
 		"repo.code"       = "admin"
 		"repo.issues"     = "admin"
 		"repo.pulls"      = "admin"
@@ -370,10 +385,11 @@ resource "forgejo_team" "test_by_id" {
 	}
 }
 resource "forgejo_team" "test_by_name" {
-	name            = "renamed_test_team_by_name"
-	organization_id = forgejo_organization.new_test.id
-	permission      = "admin"
-	units_map       = {
+	name         = "renamed_test_team_by_name"
+	organization = forgejo_organization.new_test.name
+	permission   = "admin"
+
+	units_map = {
 		"repo.code"       = "admin"
 		"repo.issues"     = "admin"
 		"repo.pulls"      = "admin"
@@ -454,8 +470,8 @@ resource "forgejo_team" "test_by_id" {
 resource "forgejo_team" "test_by_name" {
   count = 100
 
-	organization_id = forgejo_organization.test.id
-	name            = "test_team_${count.index}_by_name"
+	organization = forgejo_organization.test.name
+	name         = "test_team_${count.index}_by_name"
 
 	units_map = {
 		"repo.code" = "read"
@@ -488,6 +504,41 @@ resource "forgejo_team" "test_by_name" {
 					statecheck.ExpectKnownValue("forgejo_team.test_by_name[99]", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_team.test_by_name[99]", tfjsonpath.New("permission"), knownvalue.StringExact("read")),
 					statecheck.ExpectKnownValue("forgejo_team.test_by_name[99]", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"repo.code": knownvalue.StringExact("read"),
+					})),
+				},
+			},
+			// Create and Read testing (many orgs)
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+  count = 100
+
+	name = "team_test_org_${count.index}"
+}
+resource "forgejo_team" "test_by_name" {
+	organization = forgejo_organization.test[99].name
+	name         = "test_team_99_by_name"
+
+	units_map = {
+		"repo.code" = "read"
+	}
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_team.test_by_name", plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("test_team_99_by_name")),
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("team_test_org_99")),
+					statecheck.CompareValuePairs("forgejo_team.test_by_name", tfjsonpath.New("organization_id"), "forgejo_organization.test[99]", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("can_create_org_repo"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("description"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("permission"), knownvalue.StringExact("read")),
+					statecheck.ExpectKnownValue("forgejo_team.test_by_name", tfjsonpath.New("units_map"), knownvalue.MapExact(map[string]knownvalue.Check{
 						"repo.code": knownvalue.StringExact("read"),
 					})),
 				},
