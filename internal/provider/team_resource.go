@@ -463,22 +463,11 @@ func (r *teamResource) ImportState(ctx context.Context, req resource.ImportState
 	}
 	orgName, teamName := cmp[0], cmp[1]
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByName(
-		ctx,
-		r.client,
-		orgName,
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	// Use Forgejo client to get team
 	team, diags := getOrgTeamByName(
 		ctx,
 		r.client,
-		org.ID,
+		orgName,
 		teamName,
 	)
 	resp.Diagnostics.Append(diags...)
@@ -486,12 +475,14 @@ func (r *teamResource) ImportState(ctx context.Context, req resource.ImportState
 		return
 	}
 
+	// Map response body to model
 	diags = state.from(team, ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }
