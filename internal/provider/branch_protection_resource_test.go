@@ -112,9 +112,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 
-	enable_push            = true
-	require_signed_commits = true
-	required_approvals     = 1
+	enable_push               = true
+	require_signed_commits    = true
+	required_approvals        = 1
+	protected_file_patterns   = "*.tf"
+	unprotected_file_patterns = "*.log"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -131,8 +133,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.Null()),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("*.tf")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("*.log")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.Null()),
@@ -309,6 +311,8 @@ resource "forgejo_branch_protection" "test" {
 	block_on_rejected_reviews         = true
 	block_on_official_review_requests = true
 	dismiss_stale_approvals           = true
+	protected_file_patterns           = "*.tf"
+	unprotected_file_patterns         = "*.log"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -322,8 +326,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.Null()),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.Null()),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("*.tf")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("*.log")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.Null()),
