@@ -1,3 +1,22 @@
+## 1.4.2 (April 12, 2026)
+
+ENHANCEMENTS:
+
+- `forgejo_team`: Allow referencing parent organization by name (fixes [#119](https://github.com/svalabs/terraform-provider-forgejo/issues/119))
+- `forgejo_organization`: Use `ListMyOrgs` instead of `AdminListOrgs` for non-admin users
+- `forgejo_team`: Add import support
+
+BUG FIXES:
+
+- Include status code in unknown error messages and handle undocumented conflict error code
+- Additional test cases and checks
+- Obfuscate provider password and token in log output
+- `forgejo_organization`, `forgejo_repository`, `forgejo_team`, `forgejo_user`: Add internal helpers for consistent resource lookup by ID and by name
+
+NEW CONTRIBUTORS 🎉:
+
+- [@ap-1](https://github.com/ap-1) — [#123: Use ListMyOrgs instead of AdminListOrgs for non-admin users](https://github.com/svalabs/terraform-provider-forgejo/pull/123)
+
 ## 1.4.1 (April 5, 2026) 🐰
 
 BUG FIXES:
