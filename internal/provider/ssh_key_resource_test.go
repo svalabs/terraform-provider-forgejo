@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -44,6 +45,11 @@ resource "forgejo_ssh_key" "test" {
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_ssh_key.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -56,6 +62,24 @@ resource "forgejo_ssh_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key_type"), knownvalue.StringExact("user")),
 				},
 			},
+			// Create and Read testing (duplicate key)
+			{
+				Config: providerConfig + `
+resource "tls_private_key" "test" {
+	algorithm = "ED25519"
+}
+resource "forgejo_ssh_key" "test" {
+	user  = "tfadmin"
+	key   = trimspace(tls_private_key.test.public_key_openssh)
+	title = "tftest"
+}
+resource "forgejo_ssh_key" "duplicate" {
+	user  = "tfadmin"
+	key   = trimspace(tls_private_key.test.public_key_openssh)
+	title = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Input validation error: Key content has been used as non-deploy key"),
+			},
 			// Recreate and Read testing
 			{
 				Config: providerConfig + `
@@ -67,6 +91,11 @@ resource "forgejo_ssh_key" "test" {
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest1"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_ssh_key.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -95,6 +124,11 @@ resource "forgejo_ssh_key" "test" {
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_ssh_key.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),

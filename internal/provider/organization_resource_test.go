@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -20,8 +21,12 @@ func TestAccOrganizationResource(t *testing.T) {
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
 	name = "tftest"
-}
-`,
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
@@ -34,13 +39,28 @@ resource "forgejo_organization" "test" {
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("repo_admin_change_team_access"), knownvalue.Bool(true)),
 				},
 			},
+			// Create and Read testing (deuplicate name)
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name = "tftest"
+}
+resource "forgejo_organization" "duplicate" {
+	name = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Input validation error: user already exists"),
+			},
 			// Recreate and Read testing
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
 	name = "tftest1"
-}
-`,
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("")),
@@ -62,8 +82,12 @@ resource "forgejo_organization" "test" {
 	location    = "Mêlée Island"
 	visibility  = "limited"
 	website     = "http://localhost:3000"
-}
-`,
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing... 123")),
@@ -85,8 +109,12 @@ resource "forgejo_organization" "test" {
 	location    = "Mêlée Island"
 	visibility  = "private"
 	website     = "http://localhost:3000"
-}
-`,
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing... 456")),
@@ -104,8 +132,12 @@ resource "forgejo_organization" "test" {
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
 	name = "tftest1"
-}
-`,
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("")),

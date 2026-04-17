@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -42,7 +42,7 @@ type repositoryResource struct {
 }
 
 // repositoryResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Repository
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Repository
 type repositoryResourceModel struct {
 	ID                        types.Int64  `tfsdk:"id"`
 	Owner                     types.String `tfsdk:"owner"`
@@ -221,7 +221,7 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	o.DefaultMergeStyle = &ms
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Permission
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Permission
 type repositoryResourcePermissions struct {
 	Admin types.Bool `tfsdk:"admin"`
 	Push  types.Bool `tfsdk:"push"`
@@ -264,7 +264,7 @@ func (m *repositoryResourceModel) permissionsFrom(ctx context.Context, p *forgej
 	return diags
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#InternalTracker
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#InternalTracker
 type repositoryResourceInternalTracker struct {
 	EnableTimeTracker                types.Bool `tfsdk:"enable_time_tracker"`
 	AllowOnlyContributorsToTrackTime types.Bool `tfsdk:"allow_only_contributors_to_track_time"`
@@ -328,18 +328,20 @@ func (m *repositoryResourceModel) internalTrackerTo(ctx context.Context, o *forg
 	return diags
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#ExternalTracker
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ExternalTracker
 type repositoryResourceExternalTracker struct {
-	ExternalTrackerURL    types.String `tfsdk:"external_tracker_url"`
-	ExternalTrackerFormat types.String `tfsdk:"external_tracker_format"`
-	ExternalTrackerStyle  types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerURL          types.String `tfsdk:"external_tracker_url"`
+	ExternalTrackerFormat       types.String `tfsdk:"external_tracker_format"`
+	ExternalTrackerStyle        types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerRegexPattern types.String `tfsdk:"external_tracker_regexp_pattern"`
 }
 
 func (m repositoryResourceExternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"external_tracker_url":    types.StringType,
-		"external_tracker_format": types.StringType,
-		"external_tracker_style":  types.StringType,
+		"external_tracker_url":            types.StringType,
+		"external_tracker_format":         types.StringType,
+		"external_tracker_style":          types.StringType,
+		"external_tracker_regexp_pattern": types.StringType,
 	}
 }
 
@@ -353,9 +355,10 @@ func (m *repositoryResourceModel) externalTrackerFrom(ctx context.Context, et *f
 	}
 
 	extTrackerElement := repositoryResourceExternalTracker{
-		ExternalTrackerURL:    types.StringValue(et.ExternalTrackerURL),
-		ExternalTrackerFormat: types.StringValue(et.ExternalTrackerFormat),
-		ExternalTrackerStyle:  types.StringValue(et.ExternalTrackerStyle),
+		ExternalTrackerURL:          types.StringValue(et.ExternalTrackerURL),
+		ExternalTrackerFormat:       types.StringValue(et.ExternalTrackerFormat),
+		ExternalTrackerStyle:        types.StringValue(et.ExternalTrackerStyle),
+		ExternalTrackerRegexPattern: types.StringValue(et.ExternalTrackerRegexPattern),
 	}
 
 	extTrackerValue, diags := types.ObjectValueFrom(
@@ -387,12 +390,13 @@ func (m *repositoryResourceModel) externalTrackerTo(ctx context.Context, o *forg
 		o.ExternalTracker.ExternalTrackerURL = extTracker.ExternalTrackerURL.ValueString()
 		o.ExternalTracker.ExternalTrackerFormat = extTracker.ExternalTrackerFormat.ValueString()
 		o.ExternalTracker.ExternalTrackerStyle = extTracker.ExternalTrackerStyle.ValueString()
+		o.ExternalTracker.ExternalTrackerRegexPattern = extTracker.ExternalTrackerRegexPattern.ValueString()
 	}
 
 	return diags
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#ExternalWiki
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ExternalWiki
 type repositoryResourceExternalWiki struct {
 	ExternalWikiURL types.String `tfsdk:"external_wiki_url"`
 }
@@ -683,6 +687,12 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 								"regexp",
 							),
 						},
+					},
+					"external_tracker_regexp_pattern": schema.StringAttribute{
+						Description: "External issue tracker issue regular expression.",
+						Optional:    true,
+						Computed:    true,
+						Default:     stringdefault.StaticString(""),
 					},
 				},
 				Description: "Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`.",
@@ -1231,7 +1241,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create repository", msg)
@@ -1337,7 +1351,11 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository", msg)
@@ -1374,7 +1392,7 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -1512,7 +1530,11 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository", msg)
@@ -1611,7 +1633,11 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete repository", msg)
@@ -1641,42 +1667,21 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	}
 	owner, repositoryName := cmp[0], cmp[1]
 
-	tflog.Info(ctx, "Read repository", map[string]any{
-		"owner": owner,
-		"name":  repositoryName,
-	})
-
-	// Use Forgejo client to get repository by owner and name
-	rep, res, err := r.client.GetRepo(owner, repositoryName)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository with owner '%s' and name '%s' not found: %s",
-					owner,
-					repositoryName,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read repository", msg)
-
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByName(
+		ctx,
+		r.client,
+		owner,
+		repositoryName,
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Map response body to model
 	state.from(rep)
-	diags := state.permissionsFrom(ctx, rep.Permissions)
+	diags = state.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(state.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(state.externalTrackerFrom(ctx, rep.ExternalTracker)...)
 	diags.Append(state.externalWikiFrom(ctx, rep.ExternalWiki)...)

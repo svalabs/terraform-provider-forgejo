@@ -2,11 +2,13 @@ package provider_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -34,6 +36,22 @@ func TestAccGPGKeyResource(t *testing.T) {
 			},
 		},
 		Steps: []resource.TestStep{
+			// Create and Read testing (invalid email)
+			{
+				Config: providerConfig + `
+resource "gpg_key_pair" "test" {
+	identities = [{
+		name  = "TF Admin"
+		email = "invalid"
+	}]
+	passphrase = "supersecret"
+}
+resource "forgejo_gpg_key" "test" {
+	armored_public_key = gpg_key_pair.test.public_key
+}`,
+				ExpectError: regexp.MustCompile(`GPG key creation not found: None of the emails attached to the GPG key could
+be found`),
+			},
 			// Create and Read testing
 			{
 				Config: providerConfig + fmt.Sprintf(`
@@ -47,6 +65,11 @@ resource "gpg_key_pair" "test" {
 resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
 }`, forgejoEmail),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_gpg_key.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("armored_public_key"), knownvalue.StringFunc(validateIsArmoredGPGKey)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
@@ -73,7 +96,7 @@ resource "forgejo_gpg_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("subkeys").AtSliceIndex(0).AtMapKey("expires_at"), knownvalue.NotNull()),
 				},
 			},
-			// Recreate and Read testing
+			// Create and Read testing (duplicate key)
 			{
 				Config: providerConfig + fmt.Sprintf(`
 resource "gpg_key_pair" "test" {
@@ -85,7 +108,30 @@ resource "gpg_key_pair" "test" {
 }
 resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
+}
+resource "forgejo_gpg_key" "duplicate" {
+	armored_public_key = gpg_key_pair.test.public_key
 }`, forgejoEmail),
+				ExpectError: regexp.MustCompile("Input validation error: A key with the same id already exists"),
+			},
+			// Recreate and Read testing
+			{
+				Config: providerConfig + fmt.Sprintf(`
+resource "gpg_key_pair" "test" {
+	identities = [{
+		name  = "TF Admin 2"
+		email = "%s"
+	}]
+	passphrase = "megasecret"
+}
+resource "forgejo_gpg_key" "test" {
+	armored_public_key = gpg_key_pair.test.public_key
+}`, forgejoEmail),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_gpg_key.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("armored_public_key"), knownvalue.StringFunc(validateIsArmoredGPGKey)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),

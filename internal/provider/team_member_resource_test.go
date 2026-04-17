@@ -16,7 +16,7 @@ func TestAccTeamMemberResource(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Create testing (non-existent team)
+			// Create and Read testing (non-existent team)
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
@@ -30,7 +30,7 @@ resource "forgejo_team_member" "test" {
 }`,
 				ExpectError: regexp.MustCompile("Either user 'test_user' or team with ID 1010 not found"),
 			},
-			// Create testing (non-existent user)
+			// Create and Read testing (non-existent user)
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
@@ -42,7 +42,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_team_member" "test" {
 	team_id = forgejo_team.test.id
@@ -50,7 +52,7 @@ resource "forgejo_team_member" "test" {
 }`,
 				ExpectError: regexp.MustCompile("Either user 'non-existing-user' or team with ID [0-9]+ not found"),
 			},
-			// Create testing
+			// Create and Read testing
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
@@ -62,7 +64,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_user" "test" {
 	login    = "test_user"
@@ -73,12 +77,17 @@ resource "forgejo_team_member" "test" {
 	team_id = forgejo_team.test.id
 	user    = forgejo_user.test.login
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_team_member.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("forgejo_team_member.test", tfjsonpath.New("team_id"), "forgejo_team.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.CompareValuePairs("forgejo_team_member.test", tfjsonpath.New("user"), "forgejo_user.test", tfjsonpath.New("login"), compare.ValuesSame()),
 				},
 			},
-			// Update testing (updating any value recreates the resource -- user)
+			// Recreate and Read testing (updating any value recreates the resource -- user)
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
@@ -90,7 +99,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_user" "test" {
 	login    = "test_user"
@@ -108,7 +119,7 @@ resource "forgejo_team_member" "test" {
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("forgejo_team_member.test", plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction("forgejo_team_member.test", plancheck.ResourceActionReplace),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -116,7 +127,7 @@ resource "forgejo_team_member" "test" {
 					statecheck.CompareValuePairs("forgejo_team_member.test", tfjsonpath.New("user"), "forgejo_user.test2", tfjsonpath.New("login"), compare.ValuesSame()),
 				},
 			},
-			// Update testing (updating any value recreates the resource -- team)
+			// Recreate and Read testing (updating any value recreates the resource -- team)
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
@@ -128,7 +139,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_team" "test2" {
 	name                      = "second_test_team"
@@ -136,7 +149,9 @@ resource "forgejo_team" "test2" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_user" "test2" {
 	login    = "second_test_user"
@@ -149,7 +164,7 @@ resource "forgejo_team_member" "test" {
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("forgejo_team_member.test", plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction("forgejo_team_member.test", plancheck.ResourceActionReplace),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{

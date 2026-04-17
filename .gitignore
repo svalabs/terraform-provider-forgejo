@@ -36,3 +36,6 @@ website/vendor
 
 # Exclude sensitive environment variables
 .env
+
+# Exclude coverage files
+coverage.out

@@ -1,3 +1,70 @@
+## 1.4.2 (April 12, 2026)
+
+ENHANCEMENTS:
+
+- `forgejo_team`: Allow referencing parent organization by name (fixes [#119](https://github.com/svalabs/terraform-provider-forgejo/issues/119))
+- `forgejo_organization`: Use `ListMyOrgs` instead of `AdminListOrgs` for non-admin users
+- `forgejo_team`: Add import support
+
+BUG FIXES:
+
+- Include status code in unknown error messages and handle undocumented conflict error code
+- Additional test cases and checks
+- Obfuscate provider password and token in log output
+- `forgejo_organization`, `forgejo_repository`, `forgejo_team`, `forgejo_user`: Add internal helpers for consistent resource lookup by ID and by name
+
+NEW CONTRIBUTORS 🎉:
+
+- [@ap-1](https://github.com/ap-1) — [#123: Use ListMyOrgs instead of AdminListOrgs for non-admin users](https://github.com/svalabs/terraform-provider-forgejo/pull/123)
+
+## 1.4.1 (April 5, 2026) 🐰
+
+BUG FIXES:
+
+- `forgejo_team`, `forgejo_user`: Standardize on ID-based resource lookups (fixes [#119](https://github.com/svalabs/terraform-provider-forgejo/issues/119))
+- `forgejo_team`, `forgejo_team_member`: Correct examples in the documentation
+
+DEPENDENCIES:
+
+- Update to Go 1.25.8
+- Pin docker/setup-compose-action version
+
+## 1.4.0 (April 1, 2026)
+
+FEATURES:
+
+- **New Resource**: `forgejo_organization_action_variable` ([documentation](docs/resources/organization_action_variable.md)) (fixes [#47](https://github.com/svalabs/terraform-provider-forgejo/issues/47))
+- **New Data Source**: `forgejo_organization_action_variable` ([documentation](docs/data-sources/organization_action_variable.md)) (fixes [#47](https://github.com/svalabs/terraform-provider-forgejo/issues/47))
+- **New Resource**: `forgejo_repository_action_variable` ([documentation](docs/resources/repository_action_variable.md)) (fixes [#47](https://github.com/svalabs/terraform-provider-forgejo/issues/47))
+- **New Data Source**: `forgejo_repository_action_variable` ([documentation](docs/data-sources/repository_action_variable.md)) (fixes [#47](https://github.com/svalabs/terraform-provider-forgejo/issues/47))
+
+ENHANCEMENTS:
+
+- Improve error messages
+- Standardize on mapping organization and repository to Terraform data model
+- `forgejo_team`: Update teams to account for v3 SDK (fixes [#113](https://github.com/svalabs/terraform-provider-forgejo/issues/113))
+
+BUG FIXES:
+
+- `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Add support for deleting action secrets
+- `forgejo_repository`: Add missing `external_tracker_regexp_pattern` attribute (fixes [#65](https://github.com/svalabs/terraform-provider-forgejo/issues/65))
+- `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Allow action secret names with up to 255 characters (fixes [#68](https://github.com/svalabs/terraform-provider-forgejo/issues/68))
+- `forgejo_organization`, `forgejo_team`: Remove intermediate state write to prevent partially-populated state
+- `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Obfuscate action secret data in log output
+- `forgejo_repository`, `forgejo_user`: Initialize write-only fields to their default values during import
+- `forgejo_branch_protection`, `forgejo_repository`, `foregejo_user`: Add additional test cases for import testing
+- `forgejo_team_member`: Correct documentation format
+
+DEPENDENCIES:
+
+- Update to Go 1.25.7
+- Bump actions/setup-go from 6.3.0 to 6.4.0
+- Bump codeberg.org/mvdkleijn/forgejo-sdk from 2.2.0 to 3.0.0
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.18.0 to 1.19.0
+- Bump github.com/hashicorp/terraform-plugin-go from 0.30.0 to 0.31.0
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.18.0 to 1.19.0
+- Bump google.golang.org/grpc from 1.79.1 to 1.79.3
+
 ## 1.3.1 (March 8, 2026)
 
 FEATURES:

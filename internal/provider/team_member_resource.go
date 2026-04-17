@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -41,9 +41,7 @@ func (r *teamMemberResource) Metadata(_ context.Context, req resource.MetadataRe
 // Schema defines the schema for the resource.
 func (r *teamMemberResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `Forgejo team member resource.
-
-**Note**: Managing teams requires administrative privileges!`,
+		Description: "Forgejo team member resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"team_id": schema.Int64Attribute{
@@ -108,7 +106,7 @@ func (r *teamMemberResource) Create(ctx context.Context, req resource.CreateRequ
 		data.User.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -138,7 +136,7 @@ func (r *teamMemberResource) Read(ctx context.Context, req resource.ReadRequest,
 		data.User.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -218,7 +216,11 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 				err,
 			)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to create team member", msg)
@@ -259,7 +261,11 @@ func deleteTeamMember(ctx context.Context, client *forgejo.Client, teamID int64,
 				err,
 			)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to delete team member", msg)

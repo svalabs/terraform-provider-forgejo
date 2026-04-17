@@ -7,10 +7,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -25,7 +26,7 @@ type userDataSource struct {
 }
 
 // userDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#User
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#User
 type userDataSourceModel struct {
 	ID               types.Int64  `tfsdk:"id"`
 	Name             types.String `tfsdk:"login"`
@@ -190,34 +191,14 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	tflog.Info(ctx, "Read user", map[string]any{
-		"name": data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to get user by name
-	usr, res, err := d.client.GetUserInfo(data.Name.ValueString())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"User with name %s not found: %s",
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read user", msg)
-
+	// Use Forgejo client to get user
+	usr, diags := getUserByName(
+		ctx,
+		d.client,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -253,4 +234,90 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 // NewUserDataSource is a helper function to simplify the provider implementation.
 func NewUserDataSource() datasource.DataSource {
 	return &userDataSource{}
+}
+
+// getUserByID fetches a user by its ID and handles errors consistently.
+func getUserByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.User, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read user", map[string]any{
+		"id": id,
+	})
+
+	// Use Forgejo client to get user
+	usr, res, err := client.GetUserByID(id)
+	if err == nil {
+		return usr, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"User with ID %d not found: %s",
+				id,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read user", msg)
+
+	return nil, diags
+}
+
+// getUserByName fetches a user by its name and handles errors consistently.
+func getUserByName(ctx context.Context, client *forgejo.Client, name string) (*forgejo.User, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read user", map[string]any{
+		"name": name,
+	})
+
+	// Use Forgejo client to get user
+	usr, res, err := client.GetUserInfo(name)
+	if err == nil {
+		return usr, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"User with name '%s' not found: %s",
+				name,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read user", msg)
+
+	return nil, diags
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -27,7 +27,7 @@ type repositoryDataSource struct {
 }
 
 // repositoryDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Repository
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Repository
 type repositoryDataSourceModel struct {
 	ID                        types.Int64  `tfsdk:"id"`
 	Owner                     types.String `tfsdk:"owner"`
@@ -79,7 +79,7 @@ type repositoryDataSourceModel struct {
 	DefaultMergeStyle         types.String `tfsdk:"default_merge_style"`
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Permission
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Permission
 type repositoryDataSourcePermissions struct {
 	Admin types.Bool `tfsdk:"admin"`
 	Push  types.Bool `tfsdk:"push"`
@@ -94,7 +94,7 @@ func (m repositoryDataSourcePermissions) attributeTypes() map[string]attr.Type {
 	}
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#InternalTracker
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#InternalTracker
 type repositoryDataSourceInternalTracker struct {
 	EnableTimeTracker                types.Bool `tfsdk:"enable_time_tracker"`
 	AllowOnlyContributorsToTrackTime types.Bool `tfsdk:"allow_only_contributors_to_track_time"`
@@ -109,22 +109,24 @@ func (m repositoryDataSourceInternalTracker) attributeTypes() map[string]attr.Ty
 	}
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#ExternalTracker
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ExternalTracker
 type repositoryDataSourceExternalTracker struct {
-	ExternalTrackerURL    types.String `tfsdk:"external_tracker_url"`
-	ExternalTrackerFormat types.String `tfsdk:"external_tracker_format"`
-	ExternalTrackerStyle  types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerURL          types.String `tfsdk:"external_tracker_url"`
+	ExternalTrackerFormat       types.String `tfsdk:"external_tracker_format"`
+	ExternalTrackerStyle        types.String `tfsdk:"external_tracker_style"`
+	ExternalTrackerRegexPattern types.String `tfsdk:"external_tracker_regexp_pattern"`
 }
 
 func (m repositoryDataSourceExternalTracker) attributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"external_tracker_url":    types.StringType,
-		"external_tracker_format": types.StringType,
-		"external_tracker_style":  types.StringType,
+		"external_tracker_url":            types.StringType,
+		"external_tracker_format":         types.StringType,
+		"external_tracker_style":          types.StringType,
+		"external_tracker_regexp_pattern": types.StringType,
 	}
 }
 
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#ExternalWiki
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ExternalWiki
 type repositoryDataSourceExternalWiki struct {
 	ExternalWikiURL types.String `tfsdk:"external_wiki_url"`
 }
@@ -308,6 +310,10 @@ func (d *repositoryDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 						Description: "External issue tracker number format.",
 						Computed:    true,
 					},
+					"external_tracker_regexp_pattern": schema.StringAttribute{
+						Description: "External issue tracker issue regular expression.",
+						Computed:    true,
+					},
 				},
 				Description: "Settings for external issue tracker.",
 				Computed:    true,
@@ -426,39 +432,15 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	tflog.Info(ctx, "Read repository", map[string]any{
-		"owner": data.Owner.ValueString(),
-		"name":  data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to get repository by owner and name
-	rep, res, err := d.client.GetRepo(
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByName(
+		ctx,
+		d.client,
 		data.Owner.ValueString(),
 		data.Name.ValueString(),
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository with owner %s and name %s not found: %s",
-					data.Owner.String(),
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read repository", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -556,9 +538,10 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	// External issue tracker
 	if rep.ExternalTracker != nil {
 		extTracker := repositoryDataSourceExternalTracker{
-			ExternalTrackerURL:    types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
-			ExternalTrackerFormat: types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
-			ExternalTrackerStyle:  types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
+			ExternalTrackerURL:          types.StringValue(rep.ExternalTracker.ExternalTrackerURL),
+			ExternalTrackerFormat:       types.StringValue(rep.ExternalTracker.ExternalTrackerFormat),
+			ExternalTrackerStyle:        types.StringValue(rep.ExternalTracker.ExternalTrackerStyle),
+			ExternalTrackerRegexPattern: types.StringValue(rep.ExternalTracker.ExternalTrackerRegexPattern),
 		}
 		extTrackerValue, diags := types.ObjectValueFrom(
 			ctx,
@@ -607,7 +590,7 @@ func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*
 		"id": id,
 	})
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, res, err := client.GetRepoByID(id)
 	if err == nil {
 		return rep, diags
@@ -630,7 +613,56 @@ func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*
 				err,
 			)
 		default:
-			msg = fmt.Sprintf("Unknown error: %s", err)
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read repository", msg)
+
+	return nil, diags
+}
+
+// getRepositoryByName fetches a repository by its name and handles errors consistently.
+func getRepositoryByName(ctx context.Context, client *forgejo.Client, owner, name string) (*forgejo.Repository, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read repository", map[string]any{
+		"owner": owner,
+		"name":  name,
+	})
+
+	// Use Forgejo client to get repository
+	rep, res, err := client.GetRepo(owner, name)
+	if err == nil {
+		return rep, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Repository with owner '%s' and name '%s' not found: %s",
+				owner,
+				name,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
 	}
 	diags.AddError("Unable to read repository", msg)

@@ -2,6 +2,9 @@
 
 ![Tests](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/test.yml/badge.svg)
 ![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
+![Test Coverage](https://img.shields.io/badge/Coverage-73.8%25-brightgreen?logo=go)
+![Version](https://img.shields.io/github/v/release/svalabs/terraform-provider-forgejo?logo=terraform&label=Version)
+![License](https://img.shields.io/github/license/svalabs/terraform-provider-forgejo?logo=github&label=License)
 
 This repository contains a [Terraform](https://www.terraform.io/) and [OpenTofu](https://opentofu.org/) provider for [Forgejo](https://forgejo.org/) — self-hosted lightweight software forge.
 The project is based on the awesome [Forgejo SDK for Go](https://codeberg.org/mvdkleijn/forgejo-sdk) by [Martijn van der Kleijn](https://vanderkleijn.net/).
@@ -20,8 +23,10 @@ Resources:
 - `forgejo_gpg_key` ([documentation](docs/resources/gpg_key.md))
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
+- `forgejo_organization_action_variable` ([documentation](docs/resources/organization_action_variable.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
+- `forgejo_repository_action_variable` ([documentation](docs/resources/repository_action_variable.md))
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_team` ([documentation](docs/resources/team.md))
 - `forgejo_team_member` ([documentation](docs/resources/team_member.md))
@@ -33,7 +38,9 @@ Data Sources:
 - `forgejo_deploy_key` ([documentation](docs/data-sources/deploy_key.md))
 - `forgejo_gpg_key` ([documentation](docs/data-sources/gpg_key.md))
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
+- `forgejo_organization_action_variable` ([documentation](docs/data-sources/organization_action_variable.md))
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
+- `forgejo_repository_action_variable` ([documentation](docs/data-sources/repository_action_variable.md))
 - `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))
 - `forgejo_team` ([documentation](docs/data-sources/team.md))
 - `forgejo_team_member` ([documentation](docs/data-sources/team_member.md))
@@ -48,7 +55,7 @@ terraform {
   required_providers {
     forgejo = {
       source  = "svalabs/forgejo"
-      version = "~> 1.3.0"
+      version = "~> 1.4.0"
     }
   }
 }
@@ -74,7 +81,7 @@ The following API token permissions are required:
 - `write:repository`
 - `write:user`
 
-Optionally, for administrative privileges (required to manage users, user repositories, user SSH keys, teams, and organization action secrets):
+Optionally, for administrative privileges (required to manage users, user repositories, and user SSH keys):
 
 - `write:admin`
 
@@ -189,7 +196,8 @@ Each resource defines its own import identifier, which uniquely identifies the r
 | --------------------------- | ----------------------------------------------- |
 | `forgejo_repository`        | `<<<repo_owner>>>/<<<repo_name>>>`              |
 | `forgejo_branch_protection` | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>` |
-| `forgejo_user`              | `<<<login>>>`                                    |
+| `forgejo_user`              | `<<<login>>>`                                   |
+| `forgejo_team`              | `<<<org_name>>>/<<<team_name>>>`                |
 
 Refer to the `examples/` directory for more import examples.
 
@@ -252,7 +260,7 @@ Re-generate the API token used for authentication, and make sure to select the f
 - `write:organization`
 - `write:repository`
 - `write:user`
-- Optional, for managing users and user repositories: `write:admin`
+- Optional, for managing users, user repositories, and user SSH keys: `write:admin`
 
 ## Developing & Contributing to the Provider
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -49,6 +50,11 @@ resource "forgejo_deploy_key" "test" {
 	title         = "tftest"
 	read_only     = false
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_deploy_key.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -59,6 +65,29 @@ resource "forgejo_deploy_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/repos/tfadmin/test_repo/keys/[0-9]+$"))),
 				},
+			},
+			// Create and Read testing (duplicate key)
+			{
+				Config: providerConfig + `
+resource "tls_private_key" "test" {
+	algorithm = "ED25519"
+}
+resource "forgejo_repository" "test" {
+	name = "test_repo"
+}
+resource "forgejo_deploy_key" "test" {
+	repository_id = forgejo_repository.test.id
+	key           = trimspace(tls_private_key.test.public_key_openssh)
+	title         = "tftest"
+	read_only     = false
+}
+resource "forgejo_deploy_key" "duplicate" {
+	repository_id = forgejo_repository.test.id
+	key           = trimspace(tls_private_key.test.public_key_openssh)
+	title         = "tftest"
+	read_only     = true
+}`,
+				ExpectError: regexp.MustCompile("Input validation error: This key has already been added to this repository"),
 			},
 			// Recreate and Read testing
 			{
@@ -75,6 +104,11 @@ resource "forgejo_deploy_key" "test" {
 	title         = "tftest"
 	read_only     = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_deploy_key.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),
@@ -101,6 +135,11 @@ resource "forgejo_deploy_key" "test" {
 	title         = "tftest1"
 	read_only     = false
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_deploy_key.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_deploy_key.test", tfjsonpath.New("fingerprint"), knownvalue.StringRegexp(regexp.MustCompile("^SHA256:.{43}$"))),

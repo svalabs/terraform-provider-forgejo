@@ -6,16 +6,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func TestAccBranchProtectionResource(t *testing.T) {
+func TestAccBranchProtectionResource1(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Create and Read testing
+			// Create and Read testing (personal repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
@@ -25,6 +26,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -49,6 +55,23 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
+			},
+			// Create and Read testing (duplicate branch_name)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name   = "main"
+	repository_id = forgejo_repository.test.id
+}
+resource "forgejo_branch_protection" "duplicate" {
+	branch_name   = "main"
+	repository_id = forgejo_repository.test.id
+}`,
+				ExpectError: regexp.MustCompile(`Repository with owner "tfadmin" and name "test_repo_branch_protection"
+forbidden: Branch protection already exist`),
 			},
 			// Import testing (invalid identifier)
 			{
@@ -89,10 +112,17 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 
-	enable_push            = true
-	require_signed_commits = true
-	required_approvals     = 1
+	enable_push               = true
+	require_signed_commits    = true
+	required_approvals        = 1
+	protected_file_patterns   = "*.tf"
+	unprotected_file_patterns = "*.log"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(true)),
@@ -103,8 +133,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.Null()),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("*.tf")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("*.log")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.Null()),
@@ -135,6 +165,11 @@ resource "forgejo_branch_protection" "test" {
 	enable_status_check   = true
 	status_check_contexts = ["ci/on-submit"]
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("dev")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -160,16 +195,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_OrgRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read testing with organization
+			// Recreate and Read testing (organization repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_organization" "test" {
@@ -183,6 +209,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name    = "main"
 	repository_id  = forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -208,16 +239,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_UserRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read testing with user
+			// Recreate and Read testing (user repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_user" "test" {
@@ -233,6 +255,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name		= "main"
 	repository_id	= forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -262,11 +289,12 @@ resource "forgejo_branch_protection" "test" {
 	})
 }
 
-func TestAccBranchProtectionResource_WithOptionalAttributes(t *testing.T) {
+func TestAccBranchProtectionResource2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Create and Read testing (with optional attributes)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
@@ -283,7 +311,14 @@ resource "forgejo_branch_protection" "test" {
 	block_on_rejected_reviews         = true
 	block_on_official_review_requests = true
 	dismiss_stale_approvals           = true
+	protected_file_patterns           = "*.tf"
+	unprotected_file_patterns         = "*.log"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.ListSizeExact(1)),
@@ -291,8 +326,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.Null()),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.Null()),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("*.tf")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("*.log")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.Null()),
@@ -309,15 +344,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(2)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_BranchPattern(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
+			// Recreate and Read testing (branch pattern)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
@@ -327,6 +354,11 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "release/*"
 	repository_id = forgejo_repository.test.id
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_branch_protection.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("release/*")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
@@ -352,45 +384,29 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
 				},
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_InvalidRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
+			// Create and Read testing (invalid repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = 123
 }`,
-				ExpectError: regexp.MustCompile("Unable to read repository"),
+				ExpectError: regexp.MustCompile("Repository with ID 123 not found"),
 			},
-		},
-	})
-}
-
-func TestAccBranchProtectionResource_ArchivedRepo(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
+			// Create and Read testing (archived repo)
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
 	name     = "test_repo_archived"
 	archived = true
 }
-
 resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 }`,
-				ExpectError: regexp.MustCompile("Unable to create branch protection"),
+				ExpectError: regexp.MustCompile("Repository with owner \"tfadmin\" and name \"test_repo_archived\" is archived"),
 			},
+			// Delete testing automatically occurs in TestCase
 		},
 	})
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -96,7 +96,7 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		d.client,
@@ -149,7 +149,11 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read collaborator", msg)

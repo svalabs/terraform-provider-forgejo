@@ -4,14 +4,14 @@ page_title: "forgejo_team Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo team resource.
-  Note: Managing teams requires administrative privileges!
+  Note: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 ---
 
 # forgejo_team (Resource)
 
 Forgejo team resource.
 
-**Note**: Managing teams requires administrative privileges!
+**Note**: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 
 ## Example Usage
 
@@ -36,18 +36,27 @@ resource "forgejo_organization" "owner" {
 # Team with default settings
 resource "forgejo_team" "default_team" {
   organization_id = forgejo_organization.owner.id
-  name            = "org_test_team"
+  name            = "org_test_team_defaults"
+
+  units_map = {
+    "repo.code" = "read"
+  }
 }
 
 # Team with custom settings
 resource "forgejo_team" "custom_team" {
   organization_id           = forgejo_organization.owner.id
-  name                      = "org_test_team"
+  name                      = "org_test_team_non_defaults"
   can_create_org_repo       = true
   description               = "A team with non-default parameters."
   includes_all_repositories = true
   permission                = "read"
-  units                     = ["repo.code", "repo.issues", "repo.pulls"]
+
+  units_map = {
+    "repo.code"   = "read"
+    "repo.issues" = "write"
+    "repo.pulls"  = "read"
+  }
 }
 ```
 
@@ -57,15 +66,16 @@ resource "forgejo_team" "custom_team" {
 ### Required
 
 - `name` (String) Name of the team.
-- `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created.
+- `units_map` (Map of String) Map of access units. **Note**: If the `permission` is `admin` or `owner` all units must be set to `admin` as well.
 
 ### Optional
 
 - `can_create_org_repo` (Boolean) Can create repositories?
 - `description` (String) Description of the team.
 - `includes_all_repositories` (Boolean) Has access to all repositories?
-- `permission` (String) Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set all units. This is due to an SDK limitation.
-- `units` (Set of String) Set of units. **Note**: If the permission is `admin` or `owner` this should include all units due to an SDK limitation.
+- `organization` (String) Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
+- `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
+- `permission` (String) Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set the correct `units_map`.
 
 ### Read-Only
 

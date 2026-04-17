@@ -101,6 +101,7 @@ data "forgejo_repository" "org" {
 Read-Only:
 
 - `external_tracker_format` (String) External issue tracker URL format.
+- `external_tracker_regexp_pattern` (String) External issue tracker issue regular expression.
 - `external_tracker_style` (String) External issue tracker number format.
 - `external_tracker_url` (String) URL of external issue tracker.
 

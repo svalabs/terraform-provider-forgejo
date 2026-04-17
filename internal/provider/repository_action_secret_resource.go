@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -33,7 +33,7 @@ type repositoryActionSecretResource struct {
 }
 
 // repositoryActionSecretResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#CreateSecretOption
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateSecretOption
 type repositoryActionSecretResourceModel struct {
 	RepositoryID types.Int64  `tfsdk:"repository_id"`
 	Name         types.String `tfsdk:"name"`
@@ -47,6 +47,7 @@ func (m *repositoryActionSecretResourceModel) from(s *forgejo.Secret) {
 		return
 	}
 
+	// name is omitted here, to maintain the user's configuration casing
 	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
 }
 
@@ -85,7 +86,7 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 30),
+					stringvalidator.LengthBetween(1, 255),
 				},
 			},
 			"data": schema.StringAttribute{
@@ -143,7 +144,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -202,7 +203,11 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create repository action secret", msg)
@@ -246,7 +251,7 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -300,7 +305,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -353,13 +358,18 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Repository with owner %s and name %s not found: %s",
+					"Action secret with with owner %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
+					data.Name.String(),
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update repository action secret", msg)
@@ -388,7 +398,7 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -408,16 +418,44 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 		"name": data.Name.ValueString(),
 	})
 
-	resp.Diagnostics.AddWarning(
-		"Resource cannot be deleted from Forgejo",
-		fmt.Sprintf(
-			"The Forgejo SDK does not currently support deleting repository action secrets. "+
-				"Secret with owner %s repo %s and name %s will be removed from Terraform state, but will remain in Forgejo.",
-			repo.Owner.String(),
-			repo.Name.String(),
-			data.Name.String(),
-		),
+	// Use Forgejo client to delete existing repository action secret
+	res, err := r.client.DeleteRepoActionSecret(
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
+		data.Name.ValueString(),
 	)
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 400:
+				msg = fmt.Sprintf("Bad request: %s", err)
+			case 404:
+				msg = fmt.Sprintf(
+					"Action secret with owner %s, repo %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
+					data.Name.String(),
+					err,
+				)
+			default:
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
+			}
+		}
+		resp.Diagnostics.AddError("Unable to delete repository action secret", msg)
+
+		return
+	}
 }
 
 // NewRepositoryActionSecretResource is a helper function to simplify the provider implementation.
@@ -457,13 +495,17 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Repository action secrets with user '%s' and repo '%s' not found: %s",
+					"Action secrets with user '%s' and repo '%s' not found: %s",
 					owner,
 					repoName,
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		diags.AddError("Unable to list repository action secrets", msg)
@@ -479,7 +521,7 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 		diags.AddError(
 			"Unable to find repository action secret by name",
 			fmt.Sprintf(
-				"Repository action secret with user '%s' repo '%s' and name %s not found",
+				"Action secret with user '%s' repo '%s' and name %s not found",
 				owner,
 				repoName,
 				data.Name.String(),

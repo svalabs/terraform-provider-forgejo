@@ -10,6 +10,10 @@ on:
       - opened
       - reopened
 
+permissions:
+  issues: write
+  pull-requests: write
+
 jobs:
   triage_label:
     runs-on: ubuntu-latest
@@ -22,6 +26,6 @@ jobs:
       COMMAND: ${{ github.event.pull_request && 'pr' || 'issue' }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: 'Add triage label on open or reopen'
+      - name: "Add triage label on open or reopen"
         run: gh ${{ env.COMMAND }} edit ${{ github.event.issue.html_url || github.event.pull_request.html_url }} --add-label waiting-response
         continue-on-error: true

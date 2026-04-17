@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -32,7 +32,7 @@ type organizationResource struct {
 }
 
 // organizationResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Organization
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Organization
 type organizationResourceModel struct {
 	ID                        types.Int64  `tfsdk:"id"`
 	Name                      types.String `tfsdk:"name"`
@@ -241,7 +241,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create organization", msg)
@@ -270,34 +274,14 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	tflog.Info(ctx, "Read organization", map[string]any{
-		"name": data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to get organization by name
-	org, res, err := r.client.GetOrg(data.Name.ValueString())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name %s not found: %s",
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization", msg)
-
+	// Use Forgejo client to get organization
+	org, diags := getOrganizationByName(
+		ctx,
+		r.client,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -365,7 +349,11 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update organization", msg)
@@ -373,34 +361,14 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	tflog.Info(ctx, "Read organization", map[string]any{
-		"name": data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to fetch updated organization
-	org, res, err := r.client.GetOrg(data.Name.ValueString())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name %s not found: %s",
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization", msg)
-
+	// Use Forgejo client to get organization
+	org, diags := getOrganizationByName(
+		ctx,
+		r.client,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -448,7 +416,11 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete organization", msg)

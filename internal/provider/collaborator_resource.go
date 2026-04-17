@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -133,7 +133,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -202,7 +202,11 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create collaborator", msg)
@@ -231,7 +235,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -284,7 +288,11 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read collaborator", msg)
@@ -316,7 +324,7 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -385,7 +393,11 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to update collaborator", msg)
@@ -414,7 +426,7 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -461,7 +473,11 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete collaborator", msg)

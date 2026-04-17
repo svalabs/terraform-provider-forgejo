@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -21,7 +22,7 @@ func TestAccOrganizationDataSource(t *testing.T) {
 data "forgejo_organization" "test" {
 	name = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("Organization with name \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile("Organization with name 'non_existent' not found"),
 			},
 			// Read testing
 			{
@@ -32,6 +33,11 @@ resource "forgejo_organization" "test" {
 data "forgejo_organization" "test" {
 	name = forgejo_organization.test.name
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_organization.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("description"), knownvalue.NotNull()),

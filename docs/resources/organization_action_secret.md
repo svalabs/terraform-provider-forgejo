@@ -4,14 +4,14 @@ page_title: "forgejo_organization_action_secret Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo organization action secret resource.
-  Note: Managing organization action secrets requires administrative privileges!
+  Note: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 ---
 
 # forgejo_organization_action_secret (Resource)
 
 Forgejo organization action secret resource.
 
-**Note**: Managing organization action secrets requires administrative privileges!
+**Note**: The authenticated user must be a member of the managed organization(s) or have administrative privileges!
 
 ## Example Usage
 

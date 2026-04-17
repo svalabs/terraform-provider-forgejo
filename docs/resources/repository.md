@@ -248,6 +248,7 @@ Required:
 
 Optional:
 
+- `external_tracker_regexp_pattern` (String) External issue tracker issue regular expression.
 - `external_tracker_style` (String) External issue tracker number format.
 
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -41,7 +42,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 data "forgejo_team_member" "test" {
 	team_id = forgejo_team.test.id
@@ -61,7 +64,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_user" "test" {
 	login    = "test_user"
@@ -86,7 +91,9 @@ resource "forgejo_team" "test" {
 	can_create_org_repo       = true
 	includes_all_repositories = true
 	permission                = "read"
-	units                     = ["repo.code"]
+	units_map                 = {
+		"repo.code" = "read"
+	}
 }
 resource "forgejo_user" "test" {
 	login    = "test_user"
@@ -101,6 +108,11 @@ data "forgejo_team_member" "test" {
 	team_id = forgejo_team_member.test.team_id
 	user    = forgejo_team_member.test.user
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.forgejo_team_member.test", plancheck.ResourceActionRead),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("data.forgejo_team_member.test", tfjsonpath.New("team_id"), "forgejo_team.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.CompareValuePairs("data.forgejo_team_member.test", tfjsonpath.New("user"), "forgejo_user.test", tfjsonpath.New("login"), compare.ValuesSame()),

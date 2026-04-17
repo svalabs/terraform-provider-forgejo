@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -29,7 +29,7 @@ type deployKeyResource struct {
 }
 
 // deployKeyResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#DeployKey
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#DeployKey
 type deployKeyResourceModel struct {
 	RepositoryID types.Int64  `tfsdk:"repository_id"`
 	KeyID        types.Int64  `tfsdk:"key_id"`
@@ -175,7 +175,7 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -235,7 +235,11 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create deploy key", msg)
@@ -267,7 +271,7 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -312,7 +316,11 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read deploy key", msg)
@@ -354,7 +362,7 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	// Use Forgejo client to get repository by id
+	// Use Forgejo client to get repository
 	rep, diags := getRepositoryByID(
 		ctx,
 		r.client,
@@ -407,7 +415,11 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete deploy key", msg)

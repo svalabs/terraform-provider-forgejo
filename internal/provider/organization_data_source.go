@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -26,7 +26,7 @@ type organizationDataSource struct {
 }
 
 // organizationDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#Organization
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Organization
 type organizationDataSourceModel struct {
 	ID          types.Int64  `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
@@ -121,34 +121,14 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	tflog.Info(ctx, "Read organization", map[string]any{
-		"name": data.Name.ValueString(),
-	})
-
-	// Use Forgejo client to get organization by name
-	org, res, err := d.client.GetOrg(data.Name.ValueString())
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name %s not found: %s",
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization", msg)
-
+	// Use Forgejo client to get organization
+	org, diags := getOrganizationByName(
+		ctx,
+		d.client,
+		data.Name.ValueString(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -173,16 +153,16 @@ func NewOrganizationDataSource() datasource.DataSource {
 }
 
 // getOrganizationByID fetches an organization by its ID and handles errors consistently.
-func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID types.Int64) (*forgejo.Organization, diag.Diagnostics) {
+func getOrganizationByID(ctx context.Context, client *forgejo.Client, id int64) (*forgejo.Organization, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "List organizations", map[string]any{
-		"id": orgID.ValueInt64(),
+		"id": id,
 	})
 
 	// Use Forgejo client to list organizations
-	organizations, res, err := client.AdminListOrgs(
-		forgejo.AdminListOrgsOptions{
+	orgs, res, err := client.ListMyOrgs(
+		forgejo.ListOrgsOptions{
 			ListOptions: forgejo.ListOptions{
 				Page: -1,
 			},
@@ -204,7 +184,11 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		diags.AddError("Unable to list organizations", msg)
@@ -213,17 +197,60 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, orgID type
 	}
 
 	// Search for organization with given ID
-	idx := slices.IndexFunc(organizations, func(o *forgejo.Organization) bool {
-		return o.ID == orgID.ValueInt64()
+	idx := slices.IndexFunc(orgs, func(o *forgejo.Organization) bool {
+		return o.ID == id
 	})
 	if idx == -1 {
 		diags.AddError(
 			"Unable to find organization by ID",
-			fmt.Sprintf("Organization with ID %d not found", orgID.ValueInt64()),
+			fmt.Sprintf("Organization with ID %d not found", id),
 		)
 
 		return nil, diags
 	}
 
-	return organizations[idx], diags
+	return orgs[idx], diags
+}
+
+// getOrganizationByName fetches an organization by its name and handles errors consistently.
+func getOrganizationByName(ctx context.Context, client *forgejo.Client, name string) (*forgejo.Organization, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read organization", map[string]any{
+		"name": name,
+	})
+
+	// Use Forgejo client to get organization
+	org, res, err := client.GetOrg(name)
+	if err == nil {
+		return org, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Organization with name '%s' not found: %s",
+				name,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read organization", msg)
+
+	return nil, diags
 }

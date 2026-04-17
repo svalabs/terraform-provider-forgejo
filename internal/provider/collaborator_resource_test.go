@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -54,6 +55,11 @@ resource "forgejo_collaborator" "test" {
 	user          = forgejo_user.test.login
 	permission    = "read"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_collaborator.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("user"), knownvalue.StringExact("tftest")),
@@ -76,6 +82,11 @@ resource "forgejo_collaborator" "test" {
 	user          = forgejo_user.test.login
 	permission    = "write"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_collaborator.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("user"), knownvalue.StringExact("tftest")),
@@ -98,6 +109,11 @@ resource "forgejo_collaborator" "test" {
 	user          = forgejo_user.test.login
 	permission    = "admin"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_collaborator.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_collaborator.test", tfjsonpath.New("user"), knownvalue.StringExact("tftest")),

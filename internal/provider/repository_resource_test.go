@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -30,6 +31,11 @@ resource "forgejo_repository" "test" {
 resource "forgejo_repository" "test" {
 	name = "tftest"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -94,6 +100,17 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
 			},
+			// Create and Read testing (duplicate name)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "tftest"
+}
+resource "forgejo_repository" "duplicate" {
+	name = "tftest"
+}`,
+				ExpectError: regexp.MustCompile("Repository with name \"tftest\" already exists"),
+			},
 			// Import testing (invalid identifier)
 			{
 				ResourceName:  "forgejo_repository.test",
@@ -132,6 +149,11 @@ resource "forgejo_repository" "test" {
 	owner = forgejo_organization.owner.name
 	name  = "tftest"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -208,6 +230,11 @@ resource "forgejo_repository" "test" {
 	owner = forgejo_user.owner.login
 	name  = "tftest"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -291,6 +318,11 @@ resource "forgejo_repository" "test" {
 	has_pull_requests = false
 	has_wiki          = false
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -389,6 +421,11 @@ resource "forgejo_repository" "test" {
 
 	has_wiki = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(false)),
@@ -502,6 +539,11 @@ resource "forgejo_repository" "test" {
 		external_wiki_url = "https://some.wiki"
 	}
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(false)),
@@ -523,6 +565,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_url"), knownvalue.StringExact("https://some.tracker")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_format"), knownvalue.StringExact("https://some.tracker/{user}/{repo}/{index}")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_style"), knownvalue.StringExact("alphanumeric")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_regexp_pattern"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki").AtMapKey("external_wiki_url"), knownvalue.StringExact("https://some.wiki")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.Bool(false)),
@@ -596,9 +639,10 @@ resource "forgejo_repository" "test" {
 
 	has_issues = true
 	external_tracker = {
-		external_tracker_url    = "https://another.tracker"
-		external_tracker_format = "https://another.tracker/{user}/{repo}/{index}"
-		external_tracker_style  = "regexp"
+		external_tracker_url            = "https://another.tracker"
+		external_tracker_format         = "https://another.tracker/{user}/{repo}/{index}"
+		external_tracker_style          = "regexp"
+		external_tracker_regexp_pattern = "issue-[0-9]+"
 	}
 
 	has_pull_requests           = true
@@ -616,6 +660,11 @@ resource "forgejo_repository" "test" {
 		external_wiki_url = "https://another.wiki"
 	}
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -637,6 +686,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_url"), knownvalue.StringExact("https://another.tracker")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_format"), knownvalue.StringExact("https://another.tracker/{user}/{repo}/{index}")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_style"), knownvalue.StringExact("regexp")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_regexp_pattern"), knownvalue.StringExact("issue-[0-9]+")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki").AtMapKey("external_wiki_url"), knownvalue.StringExact("https://another.wiki")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.Bool(false)),
@@ -710,9 +760,10 @@ resource "forgejo_repository" "test" {
 
 	has_issues = true
 	external_tracker = {
-		external_tracker_url    = "https://yet.another.tracker"
-		external_tracker_format = "https://yet.another.tracker/{user}/{repo}/{index}"
-		external_tracker_style  = "regexp"
+		external_tracker_url            = "https://yet.another.tracker"
+		external_tracker_format         = "https://yet.another.tracker/{user}/{repo}/{index}"
+		external_tracker_style          = "regexp"
+		external_tracker_regexp_pattern = "issue-[0-9]+"
 	}
 
 	has_pull_requests           = true
@@ -730,6 +781,11 @@ resource "forgejo_repository" "test" {
 		external_wiki_url = "https://yet.another.wiki"
 	}
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -751,6 +807,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_url"), knownvalue.StringExact("https://yet.another.tracker")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_format"), knownvalue.StringExact("https://yet.another.tracker/{user}/{repo}/{index}")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_style"), knownvalue.StringExact("regexp")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_tracker").AtMapKey("external_tracker_regexp_pattern"), knownvalue.StringExact("issue-[0-9]+")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("external_wiki").AtMapKey("external_wiki_url"), knownvalue.StringExact("https://yet.another.wiki")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.Bool(false)),
@@ -810,6 +867,11 @@ resource "forgejo_repository" "test" {
 	owner = forgejo_user.owner.login
 	name  = "tftest"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -882,6 +944,11 @@ resource "forgejo_repository" "test" {
 	clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
 	mirror     = false
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -956,6 +1023,11 @@ resource "forgejo_repository" "test" {
 	archived    = true
 	description = "Purely for testing..."
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1028,6 +1100,11 @@ resource "forgejo_repository" "test" {
 	clone_addr = "https://github.com/svalabs/terraform-provider-forgejo"
 	mirror     = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1102,6 +1179,11 @@ resource "forgejo_repository" "test" {
 	mirror_interval = "12h0m0s"
 	description     = "Purely for testing..."
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1179,6 +1261,11 @@ resource "forgejo_repository" "test" {
 	milestones      = true
 	labels          = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1251,6 +1338,11 @@ resource "forgejo_repository" "test" {
 	clone_addr      = "https://github.com/acch/test-non-default-branch"
 	mirror          = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1326,6 +1418,11 @@ resource "forgejo_repository" "test" {
 	mirror_interval = "12h0m0s"
 	description     = "Purely for testing..."
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1402,6 +1499,11 @@ resource "forgejo_repository" "test" {
 	readme       = "Default"
 	trust_model  = "collaborator"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1477,6 +1579,11 @@ resource "forgejo_repository" "test" {
 	name               = "tftest"
 	archive_on_destroy = true
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionReplace),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),
@@ -1548,6 +1655,11 @@ resource "forgejo_repository" "test" {
 resource "forgejo_organization" "owner" {
 	name = "test_org"
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionDestroy),
+					},
+				},
 			},
 			// Archive on destroy testing (organisation repo; reading after destroy)
 			{
@@ -1628,6 +1740,11 @@ import {
 	id = "test_org/tftest"
 	to = forgejo_repository.test
 }`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_manual_merge"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("allow_merge_commits"), knownvalue.Bool(true)),

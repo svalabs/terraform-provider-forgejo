@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -59,7 +59,7 @@ type gpgKeyResource struct {
 }
 
 // gpgKeyResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2#GPGKey
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#GPGKey
 type gpgKeyResourceModel struct {
 	ArmoredPublicKey  types.String `tfsdk:"armored_public_key"`
 	ID                types.Int64  `tfsdk:"id"`
@@ -127,7 +127,6 @@ func getEmails(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 			"verified": types.BoolValue(e.Verified),
 		}
 		elem, diags := types.ObjectValue(gpgKeyEmailAttrTypes, values)
-
 		if diags.HasError() {
 			return types.List{}, diags
 		}
@@ -161,7 +160,6 @@ func getSubkeys(k *forgejo.GPGKey) (types.List, diag.Diagnostics) {
 			"expires_at":          types.StringValue(e.Expires.Format(time.RFC3339)),
 		}
 		elem, diags := types.ObjectValue(gpgKeySubkeyAttrTypes, values)
-
 		if diags.HasError() {
 			return types.List{}, diags
 		}
@@ -356,7 +354,11 @@ func (r *gpgKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 			case 422:
 				msg = fmt.Sprintf("Input validation error: %s", err)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to create GPG key", msg)
@@ -418,7 +420,11 @@ func (r *gpgKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to read GPG key", msg)
@@ -490,7 +496,11 @@ func (r *gpgKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 					err,
 				)
 			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
 			}
 		}
 		resp.Diagnostics.AddError("Unable to delete GPG key", msg)
