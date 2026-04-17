@@ -639,29 +639,14 @@ func (r *repositoryWebhookResource) ImportState(ctx context.Context, req resourc
 	})
 
 	// Use Forgejo client to get repository by name
-	rep, res, err := r.client.GetRepo(owner, repositoryName)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Repository '%s' not found: %s",
-					req.ID,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf("Unknown error: %s", err)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read repository", msg)
-
+	rep, diags := getRepositoryByName(
+		ctx,
+		r.client,
+		owner,
+		repositoryName,
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -698,7 +683,7 @@ func (r *repositoryWebhookResource) ImportState(ctx context.Context, req resourc
 	state.RepositoryID = types.Int64Value(rep.ID)
 
 	// Save data into Terraform state
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
 }
