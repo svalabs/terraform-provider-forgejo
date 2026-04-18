@@ -48,4 +48,8 @@ resource "forgejo_organization_action_variable" "this" {
 
 - `data` (String) Data of the variable.
 - `name` (String) Name of the variable.
-- `organization_id` (Number) Numeric identifier of the organization. Changing this forces a new resource to be created.
+
+### Optional
+
+- `organization` (String) Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
+- `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.

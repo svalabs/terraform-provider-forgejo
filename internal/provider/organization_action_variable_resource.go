@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -30,6 +33,7 @@ type organizationActionVariableResource struct {
 // organizationActionVariableResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateVariableOption
 type organizationActionVariableResourceModel struct {
+	Organization   types.String `tfsdk:"organization"`
 	OrganizationID types.Int64  `tfsdk:"organization_id"`
 	Name           types.String `tfsdk:"name"`
 	Data           types.String `tfsdk:"data"`
@@ -68,11 +72,30 @@ func (r *organizationActionVariableResource) Schema(_ context.Context, _ resourc
 **Note**: The authenticated user must be a member of the managed organization(s) or have administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
+			"organization": schema.StringAttribute{
+				MarkdownDescription: "Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization_id"),
+					}...),
+				},
+			},
 			"organization_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the organization. Changing this forces a new resource to be created.",
-				Required:    true,
+				MarkdownDescription: "Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.Int64{
+					int64validator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization"),
+					}...),
 				},
 			},
 			"name": schema.StringAttribute{
@@ -117,10 +140,7 @@ func (r *organizationActionVariableResource) Configure(_ context.Context, req re
 func (r *organizationActionVariableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	defer un(trace(ctx, "Create organization action variable resource"))
 
-	var (
-		organization organizationResourceModel
-		data         organizationActionVariableResourceModel
-	)
+	var data organizationActionVariableResourceModel
 
 	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
@@ -129,25 +149,29 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	// Get organization name from ID if not provided
+	if data.Organization.IsNull() || data.Organization.IsUnknown() {
+		org, diags := getOrganizationByID(
+			ctx,
+			r.client,
+			data.OrganizationID.ValueInt64(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Map response body to model
+		data.Organization = types.StringValue(org.UserName)
+	} else {
+		// Clear organization ID if name is provided
+		data.OrganizationID = types.Int64Null()
 	}
 
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Create organization action variable", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
-		"data":            data.Data.ValueString(),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
+		"data":         data.Data.ValueString(),
 	})
 
 	// Generate API request body from plan
@@ -164,7 +188,7 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 
 	// Use Forgejo client to create new organization action variable
 	res, err := r.client.CreateOrgActionVariable(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -182,13 +206,13 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 			case 404:
 				msg = fmt.Sprintf(
 					"Organization with name %s not found: %s",
-					organization.Name.String(),
+					data.Organization.String(),
 					err,
 				)
 			case 409:
 				msg = fmt.Sprintf(
 					"Action variable with org %s and name %s conflict: %s",
-					organization.Name.String(),
+					data.Organization.String(),
 					data.Name.String(),
 					err,
 				)
@@ -207,7 +231,7 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 
 	// Use Forgejo client to get organization action variable
 	variable, res, err := r.client.GetOrgActionVariable(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -225,7 +249,7 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 			case 404:
 				msg = fmt.Sprintf(
 					"Action variable with org %s and name %s not found: %s",
-					organization.Name.String(),
+					data.Organization.String(),
 					data.Name.String(),
 					err,
 				)
@@ -254,10 +278,7 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 func (r *organizationActionVariableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	defer un(trace(ctx, "Read organization action variable resource"))
 
-	var (
-		organization organizationResourceModel
-		data         organizationActionVariableResourceModel
-	)
+	var data organizationActionVariableResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -266,29 +287,14 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Read organization action variable", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to get organization action variable
 	variable, res, err := r.client.GetOrgActionVariable(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -306,7 +312,7 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 			case 404:
 				msg = fmt.Sprintf(
 					"Action variable with org %s and name %s not found: %s",
-					organization.Name.String(),
+					data.Organization.String(),
 					data.Name.String(),
 					err,
 				)
@@ -326,11 +332,7 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 	// Map response body to model
 	data.from(variable)
 
-	/*
-	 * The variable exists, so we re-save the state from the prior state data.
-	 * This is to signal to Terraform that the resource still exists without
-	 * overriding the user's configuration casing for the name.
-	 */
+	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -340,9 +342,8 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 	defer un(trace(ctx, "Update organization action variable resource"))
 
 	var (
-		organization organizationResourceModel
-		state        organizationActionVariableResourceModel
-		plan         organizationActionVariableResourceModel
+		state organizationActionVariableResourceModel
+		plan  organizationActionVariableResourceModel
 	)
 
 	// Read Terraform prior state data into the model
@@ -359,26 +360,30 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		plan.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	// Get organization name from ID if not provided
+	if plan.Organization.IsNull() || plan.Organization.IsUnknown() {
+		org, diags := getOrganizationByID(
+			ctx,
+			r.client,
+			plan.OrganizationID.ValueInt64(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Map response body to model
+		plan.Organization = types.StringValue(org.UserName)
+	} else {
+		// Clear organization ID if name is provided
+		plan.OrganizationID = types.Int64Null()
 	}
 
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Update organization action variable", map[string]any{
-		"organization_id": plan.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"old_name":        state.Name.ValueString(),
-		"new_name":        plan.Name.ValueString(),
-		"data":            plan.Data.ValueString(),
+		"organization": plan.Organization.ValueString(),
+		"old_name":     state.Name.ValueString(),
+		"new_name":     plan.Name.ValueString(),
+		"data":         plan.Data.ValueString(),
 	})
 
 	// Generate API request body from plan
@@ -395,7 +400,7 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 
 	// Use Forgejo client to update organization action variable
 	res, err := r.client.UpdateOrgActionVariable(
-		organization.Name.ValueString(),
+		state.Organization.ValueString(),
 		state.Name.ValueString(),
 		opts,
 	)
@@ -414,7 +419,7 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 			case 404:
 				msg = fmt.Sprintf(
 					"Action variable with org %s and name %s not found: %s",
-					organization.Name.String(),
+					state.Organization.String(),
 					state.Name.String(),
 					err,
 				)
@@ -440,10 +445,7 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 func (r *organizationActionVariableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	defer un(trace(ctx, "Delete organization action variable resource"))
 
-	var (
-		organization organizationResourceModel
-		data         organizationActionVariableResourceModel
-	)
+	var data organizationActionVariableResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -452,29 +454,14 @@ func (r *organizationActionVariableResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Delete organization action variable", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to delete existing organization action variable
 	res, err := r.client.DeleteOrgActionVariable(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -492,7 +479,7 @@ func (r *organizationActionVariableResource) Delete(ctx context.Context, req res
 			case 404:
 				msg = fmt.Sprintf(
 					"Action variable with org %s and name %s not found: %s",
-					organization.Name.String(),
+					data.Organization.String(),
 					data.Name.String(),
 					err,
 				)

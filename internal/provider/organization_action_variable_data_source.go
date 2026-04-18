@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -26,6 +30,7 @@ type organizationActionVariableDataSource struct {
 // organizationActionVariableDataSourceModel maps the data source schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ActionVariable
 type organizationActionVariableDataSourceModel struct {
+	Organization   types.String `tfsdk:"organization"`
 	OrganizationID types.Int64  `tfsdk:"organization_id"`
 	Name           types.String `tfsdk:"name"`
 	Data           types.String `tfsdk:"data"`
@@ -42,9 +47,25 @@ func (d *organizationActionVariableDataSource) Schema(_ context.Context, _ datas
 		Description: "Forgejo organization action variable data source.",
 
 		Attributes: map[string]schema.Attribute{
+			"organization": schema.StringAttribute{
+				MarkdownDescription: "Name of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization_id"),
+					}...),
+				},
+			},
 			"organization_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the organization.",
-				Required:    true,
+				MarkdownDescription: "Numeric identifier of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
+				Validators: []validator.Int64{
+					int64validator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization"),
+					}...),
+				},
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the variable.",
@@ -85,10 +106,7 @@ func (d *organizationActionVariableDataSource) Configure(_ context.Context, req 
 func (d *organizationActionVariableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	defer un(trace(ctx, "Read organization action variable data source"))
 
-	var (
-		organization organizationResourceModel
-		data         organizationActionVariableDataSourceModel
-	)
+	var data organizationActionVariableDataSourceModel
 
 	// Read Terraform configuration data into model
 	diags := req.Config.Get(ctx, &data)
@@ -97,29 +115,30 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		d.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	// Get organization name from ID if not provided
+	if data.Organization.IsNull() || data.Organization.IsUnknown() {
+		org, diags := getOrganizationByID(
+			ctx,
+			d.client,
+			data.OrganizationID.ValueInt64(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Map response body to model
+		data.Organization = types.StringValue(org.UserName)
 	}
 
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Read organization action variable", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to get organization action variable
 	variable, res, err := d.client.GetOrgActionVariable(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -137,7 +156,7 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 			case 404:
 				msg = fmt.Sprintf(
 					"Action variable with org %s and name %s not found: %s",
-					organization.Name.String(),
+					data.Organization.String(),
 					data.Name.String(),
 					err,
 				)

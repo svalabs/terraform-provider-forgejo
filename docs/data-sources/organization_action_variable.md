@@ -43,7 +43,11 @@ data "forgejo_organization_action_variable" "this" {
 ### Required
 
 - `name` (String) Name of the variable.
-- `organization_id` (Number) Numeric identifier of the organization.
+
+### Optional
+
+- `organization` (String) Name of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.
+- `organization_id` (Number) Numeric identifier of the owning organization. **Note**: One of `organization` or `organization_id` must be specified.
 
 ### Read-Only
 
