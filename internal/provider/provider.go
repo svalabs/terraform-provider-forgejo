@@ -271,6 +271,7 @@ func (p *forgejoProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewTeamResource,
 		NewTeamMemberResource,
 		NewUserResource,
+		NewBranchResource,
 	}
 }
 
