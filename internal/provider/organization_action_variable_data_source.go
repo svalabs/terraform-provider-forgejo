@@ -155,7 +155,7 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action variable with org %s and name %s not found: %s",
+					"Action variable with organization %s and name %s not found: %s",
 					data.Organization.String(),
 					data.Name.String(),
 					err,

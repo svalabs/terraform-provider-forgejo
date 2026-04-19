@@ -358,7 +358,7 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action secret with org %s and name %s not found: %s",
+					"Action secret with organization %s and name %s not found: %s",
 					data.Organization.String(),
 					data.Name.String(),
 					err,
@@ -418,7 +418,7 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action secret with org %s and name %s not found: %s",
+					"Action secret with organization %s and name %s not found: %s",
 					data.Organization.String(),
 					data.Name.String(),
 					err,

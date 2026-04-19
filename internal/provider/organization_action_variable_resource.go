@@ -212,7 +212,7 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 				)
 			case 409:
 				msg = fmt.Sprintf(
-					"Action variable with org %s and name %s conflict: %s",
+					"Action variable with organization %s and name %s conflict: %s",
 					data.Organization.String(),
 					data.Name.String(),
 					err,
@@ -362,7 +362,7 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action variable with org %s and name %s not found: %s",
+					"Action variable with organization %s and name %s not found: %s",
 					state.Organization.String(),
 					state.Name.String(),
 					err,
@@ -422,7 +422,7 @@ func (r *organizationActionVariableResource) Delete(ctx context.Context, req res
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action variable with org %s and name %s not found: %s",
+					"Action variable with organization %s and name %s not found: %s",
 					data.Organization.String(),
 					data.Name.String(),
 					err,

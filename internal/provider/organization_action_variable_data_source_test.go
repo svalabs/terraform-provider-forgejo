@@ -33,7 +33,7 @@ data "forgejo_organization_action_variable" "test" {
 	organization = "non-existent"
 	name         = "my_variable"
 }`,
-				ExpectError: regexp.MustCompile("Action variable with org \"non-existent\" and name \"my_variable\" not found"),
+				ExpectError: regexp.MustCompile("Action variable with organization \"non-existent\" and name \"my_variable\" not found"),
 			},
 			// Read testing (non-existent variable by ID)
 			{
@@ -45,7 +45,7 @@ data "forgejo_organization_action_variable" "test" {
 	organization_id = forgejo_organization.test.id
 	name            = "my_variable"
 }`,
-				ExpectError: regexp.MustCompile(`Action variable with org "test_org" and name "my_variable" not found`),
+				ExpectError: regexp.MustCompile(`Action variable with organization "test_org" and name "my_variable" not found`),
 			},
 			// Read testing (non-existent variable by name)
 			{
@@ -57,7 +57,7 @@ data "forgejo_organization_action_variable" "test" {
 	organization = forgejo_organization.test.name
 	name         = "my_variable"
 }`,
-				ExpectError: regexp.MustCompile(`Action variable with org "test_org" and name "my_variable" not found`),
+				ExpectError: regexp.MustCompile(`Action variable with organization "test_org" and name "my_variable" not found`),
 			},
 			// Read testing
 			{

@@ -539,7 +539,7 @@ func createTeam(ctx context.Context, client *forgejo.Client, org, name string) (
 		switch res.StatusCode {
 		case 403:
 			msg = fmt.Sprintf(
-				"Team with org '%s' and name '%s' forbidden: %s",
+				"Team with organization '%s' and name '%s' forbidden: %s",
 				org,
 				name,
 				err,
