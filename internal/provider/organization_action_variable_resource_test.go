@@ -96,7 +96,8 @@ resource "forgejo_organization_action_variable" "duplicate_by_name" {
 	name         = forgejo_organization_action_variable.test_by_name.name
 	data         = "my_other_variable_value"
 }`,
-				ExpectError: regexp.MustCompile("Action variable .* conflict"),
+				ExpectError: regexp.MustCompile(`Action variable with organization "test_org" and name "my_variable_by_.*"
+conflict`),
 			},
 			// Update and Read testing (rename variable)
 			{
