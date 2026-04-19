@@ -353,7 +353,7 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 		return
 	}
 
-	// Read Terraform plan data into model
+	// Read Terraform plan data into the model
 	diags = req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

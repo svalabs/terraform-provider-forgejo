@@ -90,7 +90,7 @@ data "forgejo_organization_action_variable" "test_by_name" {
 					statecheck.ExpectKnownValue("data.forgejo_organization_action_variable.test_by_id", tfjsonpath.New("name"), knownvalue.StringExact("my_variable")),
 					statecheck.ExpectKnownValue("data.forgejo_organization_action_variable.test_by_id", tfjsonpath.New("data"), knownvalue.StringExact("my_variable_value")),
 					statecheck.ExpectKnownValue("data.forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
-					// organization_id not populated when reading by name (ActionVariable response carries no org info)
+					statecheck.ExpectKnownValue("data.forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_organization_action_variable.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("my_variable")),
 					statecheck.ExpectKnownValue("data.forgejo_organization_action_variable.test_by_name", tfjsonpath.New("data"), knownvalue.StringExact("my_variable_value")),
 				},

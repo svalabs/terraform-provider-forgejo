@@ -65,7 +65,7 @@ resource "forgejo_organization_action_variable" "test_by_name" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("name"), knownvalue.StringExact("my_variable_by_id")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("data"), knownvalue.StringExact("my_variable_value")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
-					// organization_id not populated when creating by name (ActionVariable response carries no org info)
+					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("my_variable_by_name")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("data"), knownvalue.StringExact("my_variable_value")),
 				},
@@ -126,7 +126,7 @@ resource "forgejo_organization_action_variable" "test_by_name" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_id")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("data"), knownvalue.StringExact("my_variable_value")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
-					// organization_id not populated when creating by name (ActionVariable response carries no org info)
+					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_name")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("data"), knownvalue.StringExact("my_variable_value")),
 				},
@@ -159,7 +159,7 @@ resource "forgejo_organization_action_variable" "test_by_name" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_id")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("data"), knownvalue.StringExact("my_new_variable_value")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
-					// organization_id not populated when creating by name (ActionVariable response carries no org info)
+					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_name")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("data"), knownvalue.StringExact("my_new_variable_value")),
 				},
@@ -192,7 +192,7 @@ resource "forgejo_organization_action_variable" "test_by_name" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_id_with_a_very_long_name_that_is_over_30_characters_long")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("data"), knownvalue.StringExact("my_new_variable_value")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
-					// organization_id not populated when creating by name (ActionVariable response carries no org info)
+					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_name_with_a_very_long_name_that_is_over_30_characters_long")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("data"), knownvalue.StringExact("my_new_variable_value")),
 				},
@@ -228,7 +228,7 @@ resource "forgejo_organization_action_variable" "test_by_name" {
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_id_with_a_very_long_name_that_is_over_30_characters_long")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_id", tfjsonpath.New("data"), knownvalue.StringExact("my_new_variable_value")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("new_test_org")),
-					// organization_id not populated when creating by name (ActionVariable response carries no org info)
+					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("organization_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("my_new_variable_by_name_with_a_very_long_name_that_is_over_30_characters_long")),
 					statecheck.ExpectKnownValue("forgejo_organization_action_variable.test_by_name", tfjsonpath.New("data"), knownvalue.StringExact("my_new_variable_value")),
 				},
