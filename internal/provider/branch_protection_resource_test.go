@@ -85,14 +85,16 @@ forbidden: Branch protection already exist`),
 				ResourceName:  "forgejo_branch_protection.test",
 				ImportState:   true,
 				ImportStateId: "tfadmin/non-existent/main",
-				ExpectError:   regexp.MustCompile("Branch protection not found for 'tfadmin/non-existent/main'"),
+				ExpectError: regexp.MustCompile(`Branch protection with owner 'tfadmin', repo 'non-existent' and name 'main'
+not found`),
 			},
 			// Import testing (non-existent resource)
 			{
 				ResourceName:  "forgejo_branch_protection.test",
 				ImportState:   true,
 				ImportStateId: "tfadmin/test_repo_branch_protection/non-existent",
-				ExpectError:   regexp.MustCompile("Branch protection not found for\n'tfadmin/test_repo_branch_protection/non-existent'"),
+				ExpectError: regexp.MustCompile(`Branch protection with owner 'tfadmin', repo 'test_repo_branch_protection'
+and name 'non-existent' not found`),
 			},
 			// Import testing
 			{

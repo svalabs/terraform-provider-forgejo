@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -230,39 +231,13 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 	}
 
 	// Use Forgejo client to get organization action variable
-	variable, res, err := r.client.GetOrgActionVariable(
+	variable, diags := r.getVariable(
+		ctx,
 		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 400:
-				msg = fmt.Sprintf("Bad request: %s", err)
-			case 404:
-				msg = fmt.Sprintf(
-					"Action variable with org %s and name %s not found: %s",
-					data.Organization.String(),
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization action variable", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -287,45 +262,14 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 		return
 	}
 
-	tflog.Info(ctx, "Read organization action variable", map[string]any{
-		"organization": data.Organization.ValueString(),
-		"name":         data.Name.ValueString(),
-	})
-
 	// Use Forgejo client to get organization action variable
-	variable, res, err := r.client.GetOrgActionVariable(
+	variable, diags := r.getVariable(
+		ctx,
 		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 400:
-				msg = fmt.Sprintf("Bad request: %s", err)
-			case 404:
-				msg = fmt.Sprintf(
-					"Action variable with org %s and name %s not found: %s",
-					data.Organization.String(),
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read organization action variable", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -500,4 +444,54 @@ func (r *organizationActionVariableResource) Delete(ctx context.Context, req res
 // NewOrganizationActionVariableResource is a helper function to simplify the provider implementation.
 func NewOrganizationActionVariableResource() resource.Resource {
 	return &organizationActionVariableResource{}
+}
+
+// getVariable returns the variable with the given name from the organization.
+func (r *organizationActionVariableResource) getVariable(ctx context.Context, org, name string) (*forgejo.ActionVariable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read organization action variable", map[string]any{
+		"org":  org,
+		"name": name,
+	})
+
+	// Use Forgejo client to get organization action variable
+	variable, res, err := r.client.GetOrgActionVariable(
+		org,
+		name,
+	)
+	if err == nil {
+		return variable, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 400:
+			msg = fmt.Sprintf("Bad request: %s", err)
+		case 404:
+			msg = fmt.Sprintf(
+				"Action variable with organization '%s' and name '%s' not found: %s",
+				org,
+				name,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read organization action variable", msg)
+
+	return nil, diags
 }

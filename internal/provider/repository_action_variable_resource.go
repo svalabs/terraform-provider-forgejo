@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -208,41 +209,14 @@ func (r *repositoryActionVariableResource) Create(ctx context.Context, req resou
 	}
 
 	// Use Forgejo client to get repository action variable
-	variable, res, err := r.client.GetRepoActionVariable(
+	variable, diags := r.getVariable(
+		ctx,
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		data.Name.ValueString(),
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 400:
-				msg = fmt.Sprintf("Bad request: %s", err)
-			case 404:
-				msg = fmt.Sprintf(
-					"Action variable with owner %s, repo %s and name %s not found: %s",
-					repo.Owner.String(),
-					repo.Name.String(),
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read repository action variable", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -284,49 +258,15 @@ func (r *repositoryActionVariableResource) Read(ctx context.Context, req resourc
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "Read repository action variable", map[string]any{
-		"repository_id": data.RepositoryID.ValueInt64(),
-		"user":          repo.Owner.ValueString(),
-		"repo":          repo.Name.ValueString(),
-		"name":          data.Name.ValueString(),
-	})
-
 	// Use Forgejo client to get repository action variable
-	variable, res, err := r.client.GetRepoActionVariable(
+	variable, diags := r.getVariable(
+		ctx,
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		data.Name.ValueString(),
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 400:
-				msg = fmt.Sprintf("Bad request: %s", err)
-			case 404:
-				msg = fmt.Sprintf(
-					"Action variable with owner %s, repo %s and name %s not found: %s",
-					repo.Owner.String(),
-					repo.Name.String(),
-					data.Name.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read repository action variable", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -526,4 +466,57 @@ func (r *repositoryActionVariableResource) Delete(ctx context.Context, req resou
 // NewRepositoryActionVariableResource is a helper function to simplify the provider implementation.
 func NewRepositoryActionVariableResource() resource.Resource {
 	return &repositoryActionVariableResource{}
+}
+
+// getVariable returns the variable with the given name from the repository.
+func (r *repositoryActionVariableResource) getVariable(ctx context.Context, owner, repo, name string) (*forgejo.ActionVariable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read repository action variable", map[string]any{
+		"owner": owner,
+		"repo":  repo,
+		"name":  name,
+	})
+
+	// Use Forgejo client to get repository action variable
+	variable, res, err := r.client.GetRepoActionVariable(
+		owner,
+		repo,
+		name,
+	)
+	if err == nil {
+		return variable, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 400:
+			msg = fmt.Sprintf("Bad request: %s", err)
+		case 404:
+			msg = fmt.Sprintf(
+				"Action variable with owner '%s', repo '%s' and name '%s' not found: %s",
+				owner,
+				repo,
+				name,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read repository action variable", msg)
+
+	return nil, diags
 }

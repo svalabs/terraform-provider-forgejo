@@ -220,7 +220,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 		ctx,
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
-		&data,
+		data.Name.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -270,7 +270,7 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 		ctx,
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
-		&data,
+		data.Name.ValueString(),
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -464,19 +464,19 @@ func NewRepositoryActionSecretResource() resource.Resource {
 }
 
 // getSecret returns the secret with the given name from the repository.
-func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, repoName string, data *repositoryActionSecretResourceModel) (*forgejo.Secret, diag.Diagnostics) {
+func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, repo, name string) (*forgejo.Secret, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "List repository action secrets", map[string]any{
-		"user": owner,
-		"repo": repoName,
-		"name": data.Name.ValueString(),
+		"owner": owner,
+		"repo":  repo,
+		"name":  name,
 	})
 
 	// Use Forgejo client to list repository action secrets
 	secrets, res, err := r.client.ListRepoActionSecret(
 		owner,
-		repoName,
+		repo,
 		forgejo.ListRepoActionSecretOption{
 			ListOptions: forgejo.ListOptions{
 				Page: -1,
@@ -495,9 +495,9 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Action secrets with user '%s' and repo '%s' not found: %s",
+					"Action secrets with owner '%s' and repo '%s' not found: %s",
 					owner,
-					repoName,
+					repo,
 					err,
 				)
 			default:
@@ -515,16 +515,16 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 
 	// Search for repository action secrets with given name
 	idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
-		return strings.EqualFold(s.Name, data.Name.ValueString())
+		return strings.EqualFold(s.Name, name)
 	})
 	if idx == -1 {
 		diags.AddError(
 			"Unable to find repository action secret by name",
 			fmt.Sprintf(
-				"Action secret with user '%s' repo '%s' and name %s not found",
+				"Action secret with owner '%s' repo '%s' and name '%s' not found",
 				owner,
-				repoName,
-				data.Name.String(),
+				repo,
+				name,
 			),
 		)
 
