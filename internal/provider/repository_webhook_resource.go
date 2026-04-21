@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -125,8 +124,7 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 			},
 			"branch_filter": schema.StringAttribute{
 				Description: "List of allowed branches for push, branch creation and branch deletion events, specified as glob pattern. If empty or *, events for all branches are reported.",
-				Computed:    true,
-				Default:     stringdefault.StaticString("*"),
+				Optional:    true,
 			},
 			"config": schema.MapAttribute{
 				Description: "Map of configuration settings.",
