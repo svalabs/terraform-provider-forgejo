@@ -95,7 +95,6 @@ resource "forgejo_repository_webhook" "test" {
 				ImportStateIdPrefix:                  "tfadmin/test_repo/",
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "webhook_id",
-				// ImportStateVerifyIgnore:              []string{"authorization_header", "branch_filter"},
 			},
 			// Update and Read testing
 			{
