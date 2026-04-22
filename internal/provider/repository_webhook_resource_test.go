@@ -171,7 +171,6 @@ resource "forgejo_repository_webhook" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("url"), knownvalue.StringExact("http://example.com/abc12345")),
 				},
 			},
-
 		},
 	})
 }
