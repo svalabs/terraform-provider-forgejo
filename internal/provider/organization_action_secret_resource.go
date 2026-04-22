@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -35,6 +37,7 @@ type organizationActionSecretResource struct {
 // organizationActionSecretResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateSecretOption
 type organizationActionSecretResourceModel struct {
+	Organization   types.String `tfsdk:"organization"`
 	OrganizationID types.Int64  `tfsdk:"organization_id"`
 	Name           types.String `tfsdk:"name"`
 	Data           types.String `tfsdk:"data"`
@@ -74,11 +77,30 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 **Note**: The authenticated user must be a member of the managed organization(s) or have administrative privileges!`,
 
 		Attributes: map[string]schema.Attribute{
+			"organization": schema.StringAttribute{
+				MarkdownDescription: "Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization_id"),
+					}...),
+				},
+			},
 			"organization_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the organization. Changing this forces a new resource to be created.",
-				Required:    true,
+				MarkdownDescription: "Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.",
+				Computed:            true,
+				Optional:            true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
+				},
+				Validators: []validator.Int64{
+					int64validator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("organization"),
+					}...),
 				},
 			},
 			"name": schema.StringAttribute{
@@ -134,37 +156,38 @@ func (r *organizationActionSecretResource) Configure(_ context.Context, req reso
 func (r *organizationActionSecretResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	defer un(trace(ctx, "Create organization action secret resource"))
 
-	var (
-		organization organizationResourceModel
-		data         organizationActionSecretResourceModel
-	)
+	var data organizationActionSecretResourceModel
 
-	// Read Terraform plan data into model
+	// Read Terraform plan data into the model
 	diags := req.Plan.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	// Get organization name from ID if not provided
+	if data.Organization.IsNull() || data.Organization.IsUnknown() {
+		org, diags := getOrganizationByID(
+			ctx,
+			r.client,
+			data.OrganizationID.ValueInt64(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Map response body to model
+		data.Organization = types.StringValue(org.UserName)
+	} else {
+		// Clear organization ID if name is provided
+		data.OrganizationID = types.Int64Null()
 	}
 
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Create organization action secret", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
-		"data":            strings.Repeat("*", len(data.Data.ValueString())),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
+		"data":         strings.Repeat("*", len(data.Data.ValueString())),
 	})
 
 	// Generate API request body from plan
@@ -181,7 +204,7 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 
 	// Use Forgejo client to create new organization action secret
 	res, err := r.client.CreateOrgActionSecret(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -199,7 +222,7 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 			case 404:
 				msg = fmt.Sprintf(
 					"Organization with name %s not found: %s",
-					organization.Name.String(),
+					data.Organization.String(),
 					err,
 				)
 			default:
@@ -216,7 +239,11 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 	}
 
 	// Use Forgejo client to get organization action secret
-	secret, diags := r.getSecret(ctx, &data)
+	secret, diags := r.getSecret(
+		ctx,
+		data.Organization.ValueString(),
+		data.Name.ValueString(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -244,7 +271,11 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 	}
 
 	// Use Forgejo client to get organization action secret
-	secret, diags := r.getSecret(ctx, &data)
+	secret, diags := r.getSecret(
+		ctx,
+		data.Organization.ValueString(),
+		data.Name.ValueString(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -253,11 +284,7 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 	// Map response body to model
 	data.from(secret)
 
-	/*
-	 * The secret exists, so we re-save the state from the prior state data.
-	 * This is to signal to Terraform that the resource still exists without
-	 * overriding the user's configuration casing for the name.
-	 */
+	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -266,37 +293,38 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 func (r *organizationActionSecretResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer un(trace(ctx, "Update organization action secret resource"))
 
-	var (
-		organization organizationResourceModel
-		data         organizationActionSecretResourceModel
-	)
+	var data organizationActionSecretResourceModel
 
-	// Read Terraform plan data into model
+	// Read Terraform plan data into the model
 	diags := req.Plan.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
+	// Get organization name from ID if not provided
+	if data.Organization.IsNull() || data.Organization.IsUnknown() {
+		org, diags := getOrganizationByID(
+			ctx,
+			r.client,
+			data.OrganizationID.ValueInt64(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// Map response body to model
+		data.Organization = types.StringValue(org.UserName)
+	} else {
+		// Clear organization ID if name is provided
+		data.OrganizationID = types.Int64Null()
 	}
 
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Update organization action secret", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
-		"data":            strings.Repeat("*", len(data.Data.ValueString())),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
+		"data":         strings.Repeat("*", len(data.Data.ValueString())),
 	})
 
 	// Generate API request body from plan
@@ -313,7 +341,7 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 
 	// Use Forgejo client to update organization action secret
 	res, err := r.client.CreateOrgActionSecret(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -330,8 +358,8 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action secret with org %s and name %s not found: %s",
-					organization.Name.String(),
+					"Action secret with organization %s and name %s not found: %s",
+					data.Organization.String(),
 					data.Name.String(),
 					err,
 				)
@@ -357,10 +385,7 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 func (r *organizationActionSecretResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	defer un(trace(ctx, "Delete organization action secret resource"))
 
-	var (
-		organization organizationResourceModel
-		data         organizationActionSecretResourceModel
-	)
+	var data organizationActionSecretResourceModel
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -369,29 +394,14 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Map response body to model
-	organization.from(org)
-
 	tflog.Info(ctx, "Delete organization action secret", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
+		"organization": data.Organization.ValueString(),
+		"name":         data.Name.ValueString(),
 	})
 
 	// Use Forgejo client to delete existing organization action secret
 	res, err := r.client.DeleteOrgActionSecret(
-		organization.Name.ValueString(),
+		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
 	if err != nil {
@@ -408,8 +418,8 @@ func (r *organizationActionSecretResource) Delete(ctx context.Context, req resou
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action secret with org %s and name %s not found: %s",
-					organization.Name.String(),
+					"Action secret with organization %s and name %s not found: %s",
+					data.Organization.String(),
 					data.Name.String(),
 					err,
 				)
@@ -433,34 +443,17 @@ func NewOrganizationActionSecretResource() resource.Resource {
 }
 
 // getSecret returns the secret with the given name from the organization.
-func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *organizationActionSecretResourceModel) (*forgejo.Secret, diag.Diagnostics) {
-	var (
-		diags        diag.Diagnostics
-		organization organizationResourceModel
-	)
-
-	// Use Forgejo client to get organization
-	org, diags := getOrganizationByID(
-		ctx,
-		r.client,
-		data.OrganizationID.ValueInt64(),
-	)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	// Map response body to model
-	organization.from(org)
+func (r *organizationActionSecretResource) getSecret(ctx context.Context, org, name string) (*forgejo.Secret, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "List organization action secrets", map[string]any{
-		"organization_id": data.OrganizationID.ValueInt64(),
-		"organization":    organization.Name.ValueString(),
-		"name":            data.Name.ValueString(),
+		"org":  org,
+		"name": name,
 	})
 
 	// Use Forgejo client to list organization action secrets
 	secrets, res, err := r.client.ListOrgActionSecret(
-		organization.Name.ValueString(),
+		org,
 		forgejo.ListOrgActionSecretOption{
 			ListOptions: forgejo.ListOptions{
 				Page: -1,
@@ -479,8 +472,8 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Action secrets with org %s not found: %s",
-					organization.Name.String(),
+					"Action secrets with organization '%s' not found: %s",
+					org,
 					err,
 				)
 			default:
@@ -498,15 +491,15 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, data *
 
 	// Search for organization action secrets with given name
 	idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
-		return strings.EqualFold(s.Name, data.Name.ValueString())
+		return strings.EqualFold(s.Name, name)
 	})
 	if idx == -1 {
 		diags.AddError(
 			"Unable to find organization action secret by name",
 			fmt.Sprintf(
-				"Action secret with org %s and name %s not found",
-				organization.Name.String(),
-				data.Name.String(),
+				"Action secret with organization '%s' and name '%s' not found",
+				org,
+				name,
 			),
 		)
 

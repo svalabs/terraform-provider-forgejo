@@ -28,7 +28,7 @@ func TestAccGPGKeyDataSource(t *testing.T) {
 data "forgejo_gpg_key" "test" {
 	key_id = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile(`GPG key with key_id "non_existent" not found`),
+				ExpectError: regexp.MustCompile("GPG key with key_id \"non_existent\" not found"),
 			},
 			// Read testing (valid user, non-existent resource)
 			{
@@ -37,7 +37,7 @@ data "forgejo_gpg_key" "test" {
 	user   = "tfadmin"
 	key_id = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile(`GPG key with user "tfadmin" and key_id "non_existent" not found`),
+				ExpectError: regexp.MustCompile("GPG key with user \"tfadmin\" and key_id \"non_existent\" not found"),
 			},
 			// Read testing (non-existent user)
 			{
@@ -46,7 +46,7 @@ data "forgejo_gpg_key" "test" {
 	user   = "invalid"
 	key_id = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile(`GPG keys for user "invalid" not found`),
+				ExpectError: regexp.MustCompile("GPG keys for user \"invalid\" not found"),
 			},
 			// Read testing (current user)
 			{

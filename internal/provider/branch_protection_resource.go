@@ -368,45 +368,15 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 	// Map response body to model
 	repo.from(rep)
 
-	tflog.Info(ctx, "Read branch protection", map[string]any{
-		"repository_id":    data.RepositoryID.ValueInt64(),
-		"repository_name":  repo.Name.ValueString(),
-		"repository_owner": repo.Owner.ValueString(),
-		"branch_name":      data.BranchName.ValueString(),
-	})
-
 	// Use Forgejo client to get branch protection
-	protection, res, err := r.client.GetBranchProtection(
+	protection, diags := r.getBranchProtection(
+		ctx,
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
 		data.BranchName.ValueString(),
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Branch with name %s not found: %s",
-					data.BranchName.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		resp.Diagnostics.AddError("Unable to read branch protection", msg)
-
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -635,46 +605,15 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 	}
 	owner, repo, branchName := parts[0], parts[1], parts[2]
 
-	tflog.Info(ctx, "Read branch protection", map[string]any{
-		"owner":       owner,
-		"repo":        repo,
-		"branch_name": branchName,
-	})
-
 	// Use Forgejo client to get branch protection
-	protection, res, err := r.client.GetBranchProtection(
+	protection, diags := r.getBranchProtection(
+		ctx,
 		owner,
 		repo,
 		branchName,
 	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Branch protection not found for '%s/%s/%s': %s",
-					owner,
-					repo,
-					branchName,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		response.Diagnostics.AddError("Unable to read branch protection", msg)
-
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -707,6 +646,57 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 // NewBranchProtectionResource is a helper function to simplify the provider implementation.
 func NewBranchProtectionResource() resource.Resource {
 	return &branchProtectionResource{}
+}
+
+// getBranchProtection returns the branch protection with the given name from the repository.
+func (r *branchProtectionResource) getBranchProtection(ctx context.Context, owner, repo, name string) (*forgejo.BranchProtection, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read branch protection", map[string]any{
+		"owner": owner,
+		"repo":  repo,
+		"name":  name,
+	})
+
+	// Use Forgejo client to get branch protection
+	protection, res, err := r.client.GetBranchProtection(
+		owner,
+		repo,
+		name,
+	)
+	if err == nil {
+		return protection, diags
+	}
+
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Branch protection with owner '%s', repo '%s' and name '%s' not found: %s",
+				owner,
+				repo,
+				name,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
+	}
+	diags.AddError("Unable to read branch protection", msg)
+
+	return nil, diags
 }
 
 // Helper function to convert model to CreateBranchProtectionOption.

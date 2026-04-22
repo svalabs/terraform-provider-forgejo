@@ -48,7 +48,11 @@ resource "forgejo_organization_action_secret" "this" {
 
 - `data` (String, Sensitive) Data of the secret.
 - `name` (String) Name of the secret. Changing this forces a new resource to be created.
-- `organization_id` (Number) Numeric identifier of the organization. Changing this forces a new resource to be created.
+
+### Optional
+
+- `organization` (String) Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
+- `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
 
 ### Read-Only
 

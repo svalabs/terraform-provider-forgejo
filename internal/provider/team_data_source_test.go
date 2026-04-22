@@ -103,7 +103,7 @@ data "forgejo_team" "test_by_name" {
 					})),
 					statecheck.ExpectKnownValue("data.forgejo_team.test_by_name", tfjsonpath.New("name"), knownvalue.StringExact("test_team_by_name")),
 					statecheck.ExpectKnownValue("data.forgejo_team.test_by_name", tfjsonpath.New("organization"), knownvalue.StringExact("test_org")),
-					// organization_id not populated when fetching team by name
+					statecheck.ExpectKnownValue("data.forgejo_team.test_by_name", tfjsonpath.New("organization_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_team.test_by_name", tfjsonpath.New("can_create_org_repo"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("data.forgejo_team.test_by_name", tfjsonpath.New("includes_all_repositories"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("data.forgejo_team.test_by_name", tfjsonpath.New("permission"), knownvalue.StringExact("read")),

@@ -2,7 +2,7 @@
 
 ![Tests](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/test.yml/badge.svg)
 ![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
-![Test Coverage](https://img.shields.io/badge/Coverage-73.8%25-brightgreen?logo=go)
+![Test Coverage](https://img.shields.io/badge/Coverage-74.8%25-brightgreen?logo=go)
 ![Version](https://img.shields.io/github/v/release/svalabs/terraform-provider-forgejo?logo=terraform&label=Version)
 ![License](https://img.shields.io/github/license/svalabs/terraform-provider-forgejo?logo=github&label=License)
 
