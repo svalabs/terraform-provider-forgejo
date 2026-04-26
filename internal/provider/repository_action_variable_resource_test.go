@@ -64,7 +64,7 @@ resource "forgejo_repository_action_variable" "duplicate" {
 	name          = "my_variable"
 	data          = "my_other_variable_value"
 }`,
-				ExpectError: regexp.MustCompile(`Action variable with owner "tfadmin", repo "test_repo" and name "my_variable"
+				ExpectError: regexp.MustCompile(`Action variable with owner "` + forgejoTestUser + `", repo "test_repo" and name "my_variable"
 conflict: variable already exists`),
 			},
 			// Update and Read testing (rename variable)

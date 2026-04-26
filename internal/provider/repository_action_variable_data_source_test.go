@@ -35,7 +35,7 @@ data "forgejo_repository_action_variable" "test" {
 	repository_id = forgejo_repository.test.id
 	name          = "my_variable"
 }`,
-				ExpectError: regexp.MustCompile(`Action variable with owner "tfadmin", repo "test_repo" and name "my_variable"
+				ExpectError: regexp.MustCompile(`Action variable with owner "` + forgejoTestUser + `", repo "test_repo" and name "my_variable"
 not found`),
 			},
 			// Read testing

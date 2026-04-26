@@ -11,11 +11,17 @@ import (
 )
 
 const (
+	// forgejoTest* defines the test environment used to configure the Forgejo
+	// provider during acceptance testing.
+	forgejoTestHost  = "http://localhost:3000"
+	forgejoTestUser  = "tfadmin"
+	forgejoTestEmail = forgejoTestUser + "@localhost"
+
 	// providerConfig is a shared configuration to combine with the actual
 	// test configuration so the Forgejo client is properly configured.
 	// It is also possible to use the FORGEJO_ environment variables instead,
 	// such as updating the Makefile and running the testing through that tool.
-	providerConfig = `provider "forgejo" { host = "http://localhost:3000" }
+	providerConfig = `provider "forgejo" { host = "` + forgejoTestHost + `" }
 `
 )
 

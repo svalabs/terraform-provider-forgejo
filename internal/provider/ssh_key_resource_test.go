@@ -41,7 +41,7 @@ resource "tls_private_key" "test" {
 	algorithm = "ED25519"
 }
 resource "forgejo_ssh_key" "test" {
-	user  = "tfadmin"
+	user  = "` + forgejoTestUser + `"
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
 }`,
@@ -57,8 +57,8 @@ resource "forgejo_ssh_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key"), knownvalue.StringRegexp(regexp.MustCompile("^ssh-ed25519 .{68}$"))),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("read_only"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
-					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/user/keys/[0-9]+$"))),
-					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact("tfadmin")),
+					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/api/v1/user/keys/[0-9]+$"))),
+					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact(forgejoTestUser)),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key_type"), knownvalue.StringExact("user")),
 				},
 			},
@@ -69,12 +69,12 @@ resource "tls_private_key" "test" {
 	algorithm = "ED25519"
 }
 resource "forgejo_ssh_key" "test" {
-	user  = "tfadmin"
+	user  = "` + forgejoTestUser + `"
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
 }
 resource "forgejo_ssh_key" "duplicate" {
-	user  = "tfadmin"
+	user  = "` + forgejoTestUser + `"
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
 }`,
@@ -87,7 +87,7 @@ resource "tls_private_key" "test" {
 	algorithm = "ED25519"
 }
 resource "forgejo_ssh_key" "test" {
-	user  = "tfadmin"
+	user  = "` + forgejoTestUser + `"
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest1"
 }`,
@@ -103,8 +103,8 @@ resource "forgejo_ssh_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key"), knownvalue.StringRegexp(regexp.MustCompile("^ssh-ed25519 .{68}$"))),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("read_only"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest1")),
-					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/user/keys/[0-9]+$"))),
-					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact("tfadmin")),
+					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/api/v1/user/keys/[0-9]+$"))),
+					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact(forgejoTestUser)),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key_type"), knownvalue.StringExact("user")),
 				},
 			},
@@ -136,7 +136,7 @@ resource "forgejo_ssh_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key"), knownvalue.StringRegexp(regexp.MustCompile("^ssh-ed25519 .{68}$"))),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("read_only"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
-					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/user/keys/[0-9]+$"))),
+					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/api/v1/user/keys/[0-9]+$"))),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("forgejo_ssh_key.test", tfjsonpath.New("key_type"), knownvalue.StringExact("user")),
 				},

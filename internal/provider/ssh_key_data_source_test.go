@@ -34,10 +34,10 @@ data "forgejo_ssh_key" "test" {
 			{
 				Config: providerConfig + `
 data "forgejo_ssh_key" "test" {
-	user  = "tfadmin"
+	user  = "` + forgejoTestUser + `"
 	title = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("SSH key with user \"tfadmin\" and title \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile("SSH key with user \"" + forgejoTestUser + "\" and title \"non_existent\" not found"),
 			},
 			// Read testing
 			{
@@ -46,12 +46,12 @@ resource "tls_private_key" "test" {
 	algorithm = "ED25519"
 }
 resource "forgejo_ssh_key" "test" {
-	user  = "tfadmin"
+	user  = "` + forgejoTestUser + `"
 	key   = trimspace(tls_private_key.test.public_key_openssh)
 	title = "tftest"
 }
 data "forgejo_ssh_key" "test" {
-	user  = "tfadmin"
+	user  = "` + forgejoTestUser + `"
 	title = forgejo_ssh_key.test.title
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -66,8 +66,8 @@ data "forgejo_ssh_key" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("key"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("read_only"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
-					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/user/keys/[0-9]+$"))),
-					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact("tfadmin")),
+					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/api/v1/user/keys/[0-9]+$"))),
+					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("user"), knownvalue.StringExact(forgejoTestUser)),
 					statecheck.ExpectKnownValue("data.forgejo_ssh_key.test", tfjsonpath.New("key_type"), knownvalue.StringExact("user")),
 				},
 			},

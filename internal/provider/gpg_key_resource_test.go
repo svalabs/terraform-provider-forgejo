@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-const forgejoEmail = "tfadmin@localhost"
-
 func TestAccGPGKeyResource(t *testing.T) {
 	validateIsArmoredGPGKey := func(value string) error {
 		lines := strings.Split(value, "\n")
@@ -64,7 +62,7 @@ resource "gpg_key_pair" "test" {
 }
 resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
-}`, forgejoEmail),
+}`, forgejoTestEmail),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("forgejo_gpg_key.test", plancheck.ResourceActionCreate),
@@ -82,7 +80,7 @@ resource "forgejo_gpg_key" "test" {
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("can_certify"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("expires_at"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("email"), knownvalue.StringExact(forgejoEmail)),
+					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("email"), knownvalue.StringExact(forgejoTestEmail)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("verified"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("subkeys").AtSliceIndex(0).AtMapKey("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_gpg_key.test", tfjsonpath.New("subkeys").AtSliceIndex(0).AtMapKey("primary_key_id"), knownvalue.NotNull()),
@@ -111,7 +109,7 @@ resource "forgejo_gpg_key" "test" {
 }
 resource "forgejo_gpg_key" "duplicate" {
 	armored_public_key = gpg_key_pair.test.public_key
-}`, forgejoEmail),
+}`, forgejoTestEmail),
 				ExpectError: regexp.MustCompile("Input validation error: A key with the same id already exists"),
 			},
 			// Recreate and Read testing
@@ -126,7 +124,7 @@ resource "gpg_key_pair" "test" {
 }
 resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
-}`, forgejoEmail),
+}`, forgejoTestEmail),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("forgejo_gpg_key.test", plancheck.ResourceActionReplace),

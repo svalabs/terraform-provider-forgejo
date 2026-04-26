@@ -70,7 +70,7 @@ resource "forgejo_branch_protection" "duplicate" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 }`,
-				ExpectError: regexp.MustCompile(`Repository with owner "tfadmin" and name "test_repo_branch_protection"
+				ExpectError: regexp.MustCompile(`Repository with owner "` + forgejoTestUser + `" and name "test_repo_branch_protection"
 forbidden: Branch protection already exist`),
 			},
 			// Import testing (invalid identifier)
@@ -84,23 +84,23 @@ forbidden: Branch protection already exist`),
 			{
 				ResourceName:  "forgejo_branch_protection.test",
 				ImportState:   true,
-				ImportStateId: "tfadmin/non-existent/main",
-				ExpectError: regexp.MustCompile(`Branch protection with owner 'tfadmin', repo 'non-existent' and name 'main'
+				ImportStateId: "" + forgejoTestUser + "/non-existent/main",
+				ExpectError: regexp.MustCompile(`Branch protection with owner '` + forgejoTestUser + `', repo 'non-existent' and name 'main'
 not found`),
 			},
 			// Import testing (non-existent resource)
 			{
 				ResourceName:  "forgejo_branch_protection.test",
 				ImportState:   true,
-				ImportStateId: "tfadmin/test_repo_branch_protection/non-existent",
-				ExpectError: regexp.MustCompile(`Branch protection with owner 'tfadmin', repo 'test_repo_branch_protection'
+				ImportStateId: forgejoTestUser + "/test_repo_branch_protection/non-existent",
+				ExpectError: regexp.MustCompile(`Branch protection with owner '` + forgejoTestUser + `', repo 'test_repo_branch_protection'
 and name 'non-existent' not found`),
 			},
 			// Import testing
 			{
 				ResourceName:                         "forgejo_branch_protection.test",
 				ImportState:                          true,
-				ImportStateId:                        "tfadmin/test_repo_branch_protection/main",
+				ImportStateId:                        forgejoTestUser + "/test_repo_branch_protection/main",
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "branch_name",
 			},
@@ -307,7 +307,7 @@ resource "forgejo_branch_protection" "test" {
 	repository_id                     = forgejo_repository.test.id
 	enable_push                       = true
 	enable_push_whitelist             = true
-	push_whitelist_usernames          = ["tfadmin"]
+	push_whitelist_usernames          = ["` + forgejoTestUser + `"]
 	require_signed_commits            = true
 	required_approvals                = 2
 	block_on_rejected_reviews         = true
@@ -406,7 +406,7 @@ resource "forgejo_branch_protection" "test" {
 	branch_name   = "main"
 	repository_id = forgejo_repository.test.id
 }`,
-				ExpectError: regexp.MustCompile("Repository with owner \"tfadmin\" and name \"test_repo_archived\" is archived"),
+				ExpectError: regexp.MustCompile("Repository with owner \"" + forgejoTestUser + "\" and name \"test_repo_archived\" is archived"),
 			},
 			// Delete testing automatically occurs in TestCase
 		},

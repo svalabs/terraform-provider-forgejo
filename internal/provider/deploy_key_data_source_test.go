@@ -40,7 +40,7 @@ data "forgejo_deploy_key" "test" {
 	repository_id = forgejo_repository.test.id
 	title         = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("Deploy key with user \"tfadmin\" repo \"test_repo\" and title \"non_existent\" not"),
+				ExpectError: regexp.MustCompile("Deploy key with user \"" + forgejoTestUser + "\" repo \"test_repo\" and title \"non_existent\" not"),
 			},
 			// Read testing
 			{
@@ -74,7 +74,7 @@ data "forgejo_deploy_key" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("read_only"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("title"), knownvalue.StringExact("tftest")),
-					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/api/v1/repos/tfadmin/test_repo/keys/[0-9]+$"))),
+					statecheck.ExpectKnownValue("data.forgejo_deploy_key.test", tfjsonpath.New("url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/api/v1/repos/"+forgejoTestUser+"/test_repo/keys/[0-9]+$"))),
 				},
 			},
 		},

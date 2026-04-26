@@ -42,7 +42,7 @@ data "forgejo_user" "test" {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("active"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
+					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("description"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_user.test", tfjsonpath.New("email"), knownvalue.NotNull()),

@@ -35,7 +35,7 @@ data "forgejo_collaborator" "test" {
 	repository_id = forgejo_repository.test.id
 	user          = "tftest"
 }`,
-				ExpectError: regexp.MustCompile("Collaborator with user \"tfadmin\" repo \"test_repo\" and name \"tftest\" not"),
+				ExpectError: regexp.MustCompile("Collaborator with user \"" + forgejoTestUser + "\" repo \"test_repo\" and name \"tftest\" not"),
 			},
 			// Read testing
 			{

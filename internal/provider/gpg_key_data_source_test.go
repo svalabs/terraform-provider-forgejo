@@ -34,10 +34,10 @@ data "forgejo_gpg_key" "test" {
 			{
 				Config: providerConfig + `
 data "forgejo_gpg_key" "test" {
-	user   = "tfadmin"
+	user   = "` + forgejoTestUser + `"
 	key_id = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("GPG key with user \"tfadmin\" and key_id \"non_existent\" not found"),
+				ExpectError: regexp.MustCompile("GPG key with user \"" + forgejoTestUser + "\" and key_id \"non_existent\" not found"),
 			},
 			// Read testing (non-existent user)
 			{
@@ -65,7 +65,7 @@ data "forgejo_gpg_key" "test" {
 	key_id = gpg_key_pair.test.id
 
 	depends_on = [forgejo_gpg_key.test]
-}`, forgejoEmail),
+}`, forgejoTestEmail),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("data.forgejo_gpg_key.test", plancheck.ResourceActionRead),
@@ -82,7 +82,7 @@ data "forgejo_gpg_key" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("can_certify"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("expires_at"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("email"), knownvalue.StringExact(forgejoEmail)),
+					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("email"), knownvalue.StringExact(forgejoTestEmail)),
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("emails").AtSliceIndex(0).AtMapKey("verified"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("subkeys").AtSliceIndex(0).AtMapKey("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("subkeys").AtSliceIndex(0).AtMapKey("primary_key_id"), knownvalue.NotNull()),
@@ -110,11 +110,11 @@ resource "forgejo_gpg_key" "test" {
 	armored_public_key = gpg_key_pair.test.public_key
 }
 data "forgejo_gpg_key" "test" {
-	user   = "tfadmin"
+	user   = "`+forgejoTestUser+`"
 	key_id = gpg_key_pair.test.id
 
 	depends_on = [forgejo_gpg_key.test]
-}`, forgejoEmail),
+}`, forgejoTestEmail),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_gpg_key.test", tfjsonpath.New("key_id"), knownvalue.NotNull()),

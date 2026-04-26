@@ -39,7 +39,7 @@ data "forgejo_organization" "test" {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^http://localhost:3000/avatars/[0-9a-z]{32}$"))),
+					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/avatars/[0-9a-z]{32}$"))),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("description"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("full_name"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_organization.test", tfjsonpath.New("id"), knownvalue.NotNull()),

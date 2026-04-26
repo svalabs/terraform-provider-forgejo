@@ -29,10 +29,10 @@ data "forgejo_repository" "test" {
 			{
 				Config: providerConfig + `
 data "forgejo_repository" "test" {
-	owner = "tfadmin"
+	owner = "` + forgejoTestUser + `"
 	name  = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("Repository with owner 'tfadmin' and name 'non_existent' not found"),
+				ExpectError: regexp.MustCompile("Repository with owner '" + forgejoTestUser + "' and name 'non_existent' not found"),
 			},
 			// Read testing (personal repo)
 			{
@@ -41,7 +41,7 @@ resource "forgejo_repository" "test" {
 	name = "tftest"
 }
 data "forgejo_repository" "test" {
-	owner = "tfadmin"
+	owner = "` + forgejoTestUser + `"
 	name  = forgejo_repository.test.name
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -57,7 +57,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("archived"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_branch"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_merge_style"), knownvalue.StringExact("merge")),
@@ -67,7 +67,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("forks_count"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact("tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact(forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_actions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_issues"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_packages"), knownvalue.NotNull()),
@@ -75,7 +75,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_pull_requests"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_releases"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_wiki"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.NotNull()),
@@ -86,13 +86,13 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact(forgejoTestUser)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("release_counter"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("size"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("stars_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("template"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
@@ -119,7 +119,7 @@ resource "forgejo_repository" "test" {
 	}
 }
 data "forgejo_repository" "test" {
-	owner = "tfadmin"
+	owner = "` + forgejoTestUser + `"
 	name  = forgejo_repository.test.name
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -135,7 +135,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("archived"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_branch"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_merge_style"), knownvalue.StringExact("merge")),
@@ -145,7 +145,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("forks_count"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact("tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact(forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_actions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_issues"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_packages"), knownvalue.NotNull()),
@@ -153,7 +153,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_pull_requests"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_releases"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_wiki"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.Null()),
@@ -164,13 +164,13 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact(forgejoTestUser)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("release_counter"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("size"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("stars_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("template"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
@@ -205,7 +205,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("archived"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("")),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact("http://localhost:3000/test_org/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/test_org/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_branch"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_merge_style"), knownvalue.StringExact("merge")),
@@ -223,7 +223,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_pull_requests"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_releases"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_wiki"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact("http://localhost:3000/test_org/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact(forgejoTestHost+"/test_org/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.NotNull()),
@@ -257,7 +257,7 @@ resource "forgejo_repository" "test" {
 	mirror     = false
 }
 data "forgejo_repository" "test" {
-	owner = "tfadmin"
+	owner = "` + forgejoTestUser + `"
 	name  = forgejo_repository.test.name
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -273,7 +273,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("archived"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("https://github.com/svalabs/terraform-provider-forgejo")),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_branch"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_merge_style"), knownvalue.StringExact("merge")),
@@ -283,7 +283,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("forks_count"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact("tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact(forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_actions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_issues"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_packages"), knownvalue.NotNull()),
@@ -291,7 +291,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_pull_requests"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_releases"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_wiki"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.NotNull()),
@@ -302,13 +302,13 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact(forgejoTestUser)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("release_counter"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("size"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("stars_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("template"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
@@ -325,7 +325,7 @@ resource "forgejo_repository" "test" {
 	mirror     = true
 }
 data "forgejo_repository" "test" {
-	owner = "tfadmin"
+	owner = "` + forgejoTestUser + `"
 	name  = forgejo_repository.test.name
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -341,7 +341,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("archived"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("https://github.com/svalabs/terraform-provider-forgejo")),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("created_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_branch"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("default_merge_style"), knownvalue.StringExact("merge")),
@@ -351,7 +351,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("external_wiki"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("fork"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("forks_count"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact("tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("full_name"), knownvalue.StringExact(forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_actions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_issues"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_packages"), knownvalue.NotNull()),
@@ -359,7 +359,7 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_pull_requests"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_releases"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("has_wiki"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact("http://localhost:3000/tfadmin/tftest")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("html_url"), knownvalue.StringExact(forgejoTestHost+"/"+forgejoTestUser+"/tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.NotNull()),
@@ -370,13 +370,13 @@ data "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_issues_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("open_pr_counter"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact("tfadmin")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("owner"), knownvalue.StringExact(forgejoTestUser)),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("parent_id"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("permissions"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("private"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("release_counter"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("size"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/tfadmin/tftest.git")),
+					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("ssh_url"), knownvalue.StringExact("ssh://git@localhost:2222/"+forgejoTestUser+"/tftest.git")),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("stars_count"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("template"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("data.forgejo_repository.test", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
