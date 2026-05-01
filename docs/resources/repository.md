@@ -184,6 +184,7 @@ import {
 - `autodetect_manual_merge` (Boolean) Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `clone_addr` (String) Migrate / clone from URL. Changing this forces a new resource to be created.
 - `default_branch` (String) Default branch of the repository.
+- `default_delete_branch_after_merge` (Boolean) Delete pull request branch after merge by default? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `default_merge_style` (String) Default merge style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `description` (String) Description of the repository.
 - `external_tracker` (Attributes) Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--external_tracker))

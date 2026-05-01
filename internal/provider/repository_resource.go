@@ -44,69 +44,70 @@ type repositoryResource struct {
 // repositoryResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Repository
 type repositoryResourceModel struct {
-	ID                        types.Int64  `tfsdk:"id"`
-	Owner                     types.String `tfsdk:"owner"`
-	Name                      types.String `tfsdk:"name"`
-	FullName                  types.String `tfsdk:"full_name"`
-	Description               types.String `tfsdk:"description"`
-	Empty                     types.Bool   `tfsdk:"empty"`
-	Private                   types.Bool   `tfsdk:"private"`
-	Fork                      types.Bool   `tfsdk:"fork"`
-	Template                  types.Bool   `tfsdk:"template"`
-	ParentID                  types.Int64  `tfsdk:"parent_id"`
-	Mirror                    types.Bool   `tfsdk:"mirror"`
-	Size                      types.Int64  `tfsdk:"size"`
-	HTMLURL                   types.String `tfsdk:"html_url"`
-	SSHURL                    types.String `tfsdk:"ssh_url"`
-	CloneURL                  types.String `tfsdk:"clone_url"`
-	Website                   types.String `tfsdk:"website"`
-	Stars                     types.Int64  `tfsdk:"stars_count"`
-	Forks                     types.Int64  `tfsdk:"forks_count"`
-	Watchers                  types.Int64  `tfsdk:"watchers_count"`
-	OpenIssues                types.Int64  `tfsdk:"open_issues_count"`
-	OpenPulls                 types.Int64  `tfsdk:"open_pr_counter"`
-	Releases                  types.Int64  `tfsdk:"release_counter"`
-	DefaultBranch             types.String `tfsdk:"default_branch"`
-	Archived                  types.Bool   `tfsdk:"archived"`
-	Created                   types.String `tfsdk:"created_at"`
-	Updated                   types.String `tfsdk:"updated_at"`
-	Permissions               types.Object `tfsdk:"permissions"`
-	HasIssues                 types.Bool   `tfsdk:"has_issues"`
-	InternalTracker           types.Object `tfsdk:"internal_tracker"`
-	ExternalTracker           types.Object `tfsdk:"external_tracker"`
-	HasWiki                   types.Bool   `tfsdk:"has_wiki"`
-	ExternalWiki              types.Object `tfsdk:"external_wiki"`
-	HasPullRequests           types.Bool   `tfsdk:"has_pull_requests"`
-	HasProjects               types.Bool   `tfsdk:"has_projects"`
-	HasReleases               types.Bool   `tfsdk:"has_releases"`
-	HasPackages               types.Bool   `tfsdk:"has_packages"`
-	HasActions                types.Bool   `tfsdk:"has_actions"`
-	IgnoreWhitespaceConflicts types.Bool   `tfsdk:"ignore_whitespace_conflicts"`
-	AllowMerge                types.Bool   `tfsdk:"allow_merge_commits"`
-	AllowRebase               types.Bool   `tfsdk:"allow_rebase"`
-	AllowRebaseMerge          types.Bool   `tfsdk:"allow_rebase_explicit"`
-	AllowSquash               types.Bool   `tfsdk:"allow_squash_merge"`
-	AvatarURL                 types.String `tfsdk:"avatar_url"`
-	Internal                  types.Bool   `tfsdk:"internal"`
-	MirrorInterval            types.String `tfsdk:"mirror_interval"`
-	MirrorUpdated             types.String `tfsdk:"mirror_updated"`
-	DefaultMergeStyle         types.String `tfsdk:"default_merge_style"`
-	AllowManualMerge          types.Bool   `tfsdk:"allow_manual_merge"`
-	AutodetectManualMerge     types.Bool   `tfsdk:"autodetect_manual_merge"`
-	IssueLabels               types.String `tfsdk:"issue_labels"`
-	AutoInit                  types.Bool   `tfsdk:"auto_init"`
-	Gitignores                types.String `tfsdk:"gitignores"`
-	License                   types.String `tfsdk:"license"`
-	Readme                    types.String `tfsdk:"readme"`
-	TrustModel                types.String `tfsdk:"trust_model"`
-	CloneAddr                 types.String `tfsdk:"clone_addr"`
-	AuthToken                 types.String `tfsdk:"auth_token"`
-	LFS                       types.Bool   `tfsdk:"lfs"`
-	LFSEndpoint               types.String `tfsdk:"lfs_endpoint"`
-	Milestones                types.Bool   `tfsdk:"milestones"`
-	Labels                    types.Bool   `tfsdk:"labels"`
-	Service                   types.String `tfsdk:"service"`
-	ArchiveOnDestroy          types.Bool   `tfsdk:"archive_on_destroy"`
+	ID                            types.Int64  `tfsdk:"id"`
+	Owner                         types.String `tfsdk:"owner"`
+	Name                          types.String `tfsdk:"name"`
+	FullName                      types.String `tfsdk:"full_name"`
+	Description                   types.String `tfsdk:"description"`
+	Empty                         types.Bool   `tfsdk:"empty"`
+	Private                       types.Bool   `tfsdk:"private"`
+	Fork                          types.Bool   `tfsdk:"fork"`
+	Template                      types.Bool   `tfsdk:"template"`
+	ParentID                      types.Int64  `tfsdk:"parent_id"`
+	Mirror                        types.Bool   `tfsdk:"mirror"`
+	Size                          types.Int64  `tfsdk:"size"`
+	HTMLURL                       types.String `tfsdk:"html_url"`
+	SSHURL                        types.String `tfsdk:"ssh_url"`
+	CloneURL                      types.String `tfsdk:"clone_url"`
+	Website                       types.String `tfsdk:"website"`
+	Stars                         types.Int64  `tfsdk:"stars_count"`
+	Forks                         types.Int64  `tfsdk:"forks_count"`
+	Watchers                      types.Int64  `tfsdk:"watchers_count"`
+	OpenIssues                    types.Int64  `tfsdk:"open_issues_count"`
+	OpenPulls                     types.Int64  `tfsdk:"open_pr_counter"`
+	Releases                      types.Int64  `tfsdk:"release_counter"`
+	DefaultBranch                 types.String `tfsdk:"default_branch"`
+	Archived                      types.Bool   `tfsdk:"archived"`
+	Created                       types.String `tfsdk:"created_at"`
+	Updated                       types.String `tfsdk:"updated_at"`
+	Permissions                   types.Object `tfsdk:"permissions"`
+	HasIssues                     types.Bool   `tfsdk:"has_issues"`
+	InternalTracker               types.Object `tfsdk:"internal_tracker"`
+	ExternalTracker               types.Object `tfsdk:"external_tracker"`
+	HasWiki                       types.Bool   `tfsdk:"has_wiki"`
+	ExternalWiki                  types.Object `tfsdk:"external_wiki"`
+	HasPullRequests               types.Bool   `tfsdk:"has_pull_requests"`
+	HasProjects                   types.Bool   `tfsdk:"has_projects"`
+	HasReleases                   types.Bool   `tfsdk:"has_releases"`
+	HasPackages                   types.Bool   `tfsdk:"has_packages"`
+	HasActions                    types.Bool   `tfsdk:"has_actions"`
+	IgnoreWhitespaceConflicts     types.Bool   `tfsdk:"ignore_whitespace_conflicts"`
+	AllowMerge                    types.Bool   `tfsdk:"allow_merge_commits"`
+	AllowRebase                   types.Bool   `tfsdk:"allow_rebase"`
+	AllowRebaseMerge              types.Bool   `tfsdk:"allow_rebase_explicit"`
+	AllowSquash                   types.Bool   `tfsdk:"allow_squash_merge"`
+	AvatarURL                     types.String `tfsdk:"avatar_url"`
+	Internal                      types.Bool   `tfsdk:"internal"`
+	MirrorInterval                types.String `tfsdk:"mirror_interval"`
+	MirrorUpdated                 types.String `tfsdk:"mirror_updated"`
+	DefaultMergeStyle             types.String `tfsdk:"default_merge_style"`
+	AllowManualMerge              types.Bool   `tfsdk:"allow_manual_merge"`
+	AutodetectManualMerge         types.Bool   `tfsdk:"autodetect_manual_merge"`
+	DefaultDeleteBranchAfterMerge types.Bool   `tfsdk:"default_delete_branch_after_merge"`
+	IssueLabels                   types.String `tfsdk:"issue_labels"`
+	AutoInit                      types.Bool   `tfsdk:"auto_init"`
+	Gitignores                    types.String `tfsdk:"gitignores"`
+	License                       types.String `tfsdk:"license"`
+	Readme                        types.String `tfsdk:"readme"`
+	TrustModel                    types.String `tfsdk:"trust_model"`
+	CloneAddr                     types.String `tfsdk:"clone_addr"`
+	AuthToken                     types.String `tfsdk:"auth_token"`
+	LFS                           types.Bool   `tfsdk:"lfs"`
+	LFSEndpoint                   types.String `tfsdk:"lfs_endpoint"`
+	Milestones                    types.Bool   `tfsdk:"milestones"`
+	Labels                        types.Bool   `tfsdk:"labels"`
+	Service                       types.String `tfsdk:"service"`
+	ArchiveOnDestroy              types.Bool   `tfsdk:"archive_on_destroy"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -216,6 +217,7 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 
 	o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
 	o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
+	o.DefaultDeleteBranchAfterMerge = m.DefaultDeleteBranchAfterMerge.ValueBoolPointer()
 
 	ms := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
 	o.DefaultMergeStyle = &ms
@@ -842,6 +844,12 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
+			"default_delete_branch_after_merge": schema.BoolAttribute{
+				Description: "Delete pull request branch after merge by default? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
 			"issue_labels": schema.StringAttribute{
 				Description: "Issue Label set to use.",
 				Optional:    true,
@@ -1270,33 +1278,34 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	tflog.Info(ctx, "Update repository", map[string]any{
-		"owner":                       rep.Owner.UserName,
-		"name":                        data.Name.ValueString(),
-		"description":                 data.Description.ValueString(),
-		"website":                     data.Website.ValueString(),
-		"private":                     data.Private.ValueBool(),
-		"template":                    data.Template.ValueBool(),
-		"has_issues":                  data.HasIssues.ValueBool(),
-		"internal_tracker":            data.InternalTracker.String(),
-		"external_tracker":            data.ExternalTracker.String(),
-		"has_wiki":                    data.HasWiki.ValueBool(),
-		"external_wiki":               data.ExternalWiki.String(),
-		"default_branch":              data.DefaultBranch.ValueString(),
-		"has_pull_requests":           data.HasPullRequests.ValueBool(),
-		"has_projects":                data.HasProjects.ValueBool(),
-		"has_releases":                data.HasReleases.ValueBool(),
-		"has_packages":                data.HasPackages.ValueBool(),
-		"has_actions":                 data.HasActions.ValueBool(),
-		"ignore_whitespace_conflicts": data.IgnoreWhitespaceConflicts.ValueBool(),
-		"allow_merge_commits":         data.AllowMerge.ValueBool(),
-		"allow_rebase":                data.AllowRebase.ValueBool(),
-		"allow_rebase_explicit":       data.AllowRebaseMerge.ValueBool(),
-		"allow_squash_merge":          data.AllowSquash.ValueBool(),
-		"archived":                    data.Archived.ValueBool(),
-		"mirror_interval":             data.MirrorInterval.ValueString(),
-		"allow_manual_merge":          data.AllowManualMerge.ValueBool(),
-		"autodetect_manual_merge":     data.AutodetectManualMerge.ValueBool(),
-		"default_merge_style":         data.DefaultMergeStyle.ValueString(),
+		"owner":                             rep.Owner.UserName,
+		"name":                              data.Name.ValueString(),
+		"description":                       data.Description.ValueString(),
+		"website":                           data.Website.ValueString(),
+		"private":                           data.Private.ValueBool(),
+		"template":                          data.Template.ValueBool(),
+		"has_issues":                        data.HasIssues.ValueBool(),
+		"internal_tracker":                  data.InternalTracker.String(),
+		"external_tracker":                  data.ExternalTracker.String(),
+		"has_wiki":                          data.HasWiki.ValueBool(),
+		"external_wiki":                     data.ExternalWiki.String(),
+		"default_branch":                    data.DefaultBranch.ValueString(),
+		"has_pull_requests":                 data.HasPullRequests.ValueBool(),
+		"has_projects":                      data.HasProjects.ValueBool(),
+		"has_releases":                      data.HasReleases.ValueBool(),
+		"has_packages":                      data.HasPackages.ValueBool(),
+		"has_actions":                       data.HasActions.ValueBool(),
+		"ignore_whitespace_conflicts":       data.IgnoreWhitespaceConflicts.ValueBool(),
+		"allow_merge_commits":               data.AllowMerge.ValueBool(),
+		"allow_rebase":                      data.AllowRebase.ValueBool(),
+		"allow_rebase_explicit":             data.AllowRebaseMerge.ValueBool(),
+		"allow_squash_merge":                data.AllowSquash.ValueBool(),
+		"archived":                          data.Archived.ValueBool(),
+		"mirror_interval":                   data.MirrorInterval.ValueString(),
+		"allow_manual_merge":                data.AllowManualMerge.ValueBool(),
+		"autodetect_manual_merge":           data.AutodetectManualMerge.ValueBool(),
+		"default_delete_branch_after_merge": data.DefaultDeleteBranchAfterMerge.ValueBool(),
+		"default_merge_style":               data.DefaultMergeStyle.ValueString(),
 	})
 
 	// Generate API request body from plan
@@ -1449,33 +1458,34 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	tflog.Info(ctx, "Update repository", map[string]any{
-		"owner":                       owner,
-		"name":                        data.Name.ValueString(),
-		"description":                 data.Description.ValueString(),
-		"website":                     data.Website.ValueString(),
-		"private":                     data.Private.ValueBool(),
-		"template":                    data.Template.ValueBool(),
-		"has_issues":                  data.HasIssues.ValueBool(),
-		"internal_tracker":            data.InternalTracker.String(),
-		"external_tracker":            data.ExternalTracker.String(),
-		"has_wiki":                    data.HasWiki.ValueBool(),
-		"external_wiki":               data.ExternalWiki.String(),
-		"default_branch":              data.DefaultBranch.ValueString(),
-		"has_pull_requests":           data.HasPullRequests.ValueBool(),
-		"has_projects":                data.HasProjects.ValueBool(),
-		"has_releases":                data.HasReleases.ValueBool(),
-		"has_packages":                data.HasPackages.ValueBool(),
-		"has_actions":                 data.HasActions.ValueBool(),
-		"ignore_whitespace_conflicts": data.IgnoreWhitespaceConflicts.ValueBool(),
-		"allow_merge_commits":         data.AllowMerge.ValueBool(),
-		"allow_rebase":                data.AllowRebase.ValueBool(),
-		"allow_rebase_explicit":       data.AllowRebaseMerge.ValueBool(),
-		"allow_squash_merge":          data.AllowSquash.ValueBool(),
-		"archived":                    data.Archived.ValueBool(),
-		"mirror_interval":             data.MirrorInterval.ValueString(),
-		"allow_manual_merge":          data.AllowManualMerge.ValueBool(),
-		"autodetect_manual_merge":     data.AutodetectManualMerge.ValueBool(),
-		"default_merge_style":         data.DefaultMergeStyle.ValueString(),
+		"owner":                             owner,
+		"name":                              data.Name.ValueString(),
+		"description":                       data.Description.ValueString(),
+		"website":                           data.Website.ValueString(),
+		"private":                           data.Private.ValueBool(),
+		"template":                          data.Template.ValueBool(),
+		"has_issues":                        data.HasIssues.ValueBool(),
+		"internal_tracker":                  data.InternalTracker.String(),
+		"external_tracker":                  data.ExternalTracker.String(),
+		"has_wiki":                          data.HasWiki.ValueBool(),
+		"external_wiki":                     data.ExternalWiki.String(),
+		"default_branch":                    data.DefaultBranch.ValueString(),
+		"has_pull_requests":                 data.HasPullRequests.ValueBool(),
+		"has_projects":                      data.HasProjects.ValueBool(),
+		"has_releases":                      data.HasReleases.ValueBool(),
+		"has_packages":                      data.HasPackages.ValueBool(),
+		"has_actions":                       data.HasActions.ValueBool(),
+		"ignore_whitespace_conflicts":       data.IgnoreWhitespaceConflicts.ValueBool(),
+		"allow_merge_commits":               data.AllowMerge.ValueBool(),
+		"allow_rebase":                      data.AllowRebase.ValueBool(),
+		"allow_rebase_explicit":             data.AllowRebaseMerge.ValueBool(),
+		"allow_squash_merge":                data.AllowSquash.ValueBool(),
+		"archived":                          data.Archived.ValueBool(),
+		"mirror_interval":                   data.MirrorInterval.ValueString(),
+		"allow_manual_merge":                data.AllowManualMerge.ValueBool(),
+		"autodetect_manual_merge":           data.AutodetectManualMerge.ValueBool(),
+		"default_delete_branch_after_merge": data.DefaultDeleteBranchAfterMerge.ValueBool(),
+		"default_merge_style":               data.DefaultMergeStyle.ValueString(),
 	})
 
 	// Generate API request body from plan
@@ -1695,6 +1705,7 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	state.ArchiveOnDestroy = types.BoolValue(false)
 	state.AutoInit = types.BoolValue(true)
 	state.AutodetectManualMerge = types.BoolValue(false)
+	state.DefaultDeleteBranchAfterMerge = types.BoolValue(false)
 	state.Gitignores = types.StringValue("")
 	state.IssueLabels = types.StringValue("")
 	state.Labels = types.BoolValue(false)
