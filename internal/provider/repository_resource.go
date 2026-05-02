@@ -94,6 +94,13 @@ type repositoryResourceModel struct {
 	AllowManualMerge              types.Bool   `tfsdk:"allow_manual_merge"`
 	AutodetectManualMerge         types.Bool   `tfsdk:"autodetect_manual_merge"`
 	DefaultDeleteBranchAfterMerge types.Bool   `tfsdk:"default_delete_branch_after_merge"`
+	AllowFastForwardOnly          types.Bool   `tfsdk:"allow_fast_forward_only_merge"`
+	AllowRebaseUpdate             types.Bool   `tfsdk:"allow_rebase_update"`
+	DefaultAllowMaintainerEdit    types.Bool   `tfsdk:"default_allow_maintainer_edit"`
+	DefaultUpdateStyle            types.String `tfsdk:"default_update_style"`
+	EnablePrune                   types.Bool   `tfsdk:"enable_prune"`
+	GloballyEditableWiki          types.Bool   `tfsdk:"globally_editable_wiki"`
+	WikiBranch                    types.String `tfsdk:"wiki_branch"`
 	IssueLabels                   types.String `tfsdk:"issue_labels"`
 	AutoInit                      types.Bool   `tfsdk:"auto_init"`
 	Gitignores                    types.String `tfsdk:"gitignores"`
@@ -218,6 +225,13 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	o.AllowManualMerge = m.AllowManualMerge.ValueBoolPointer()
 	o.AutodetectManualMerge = m.AutodetectManualMerge.ValueBoolPointer()
 	o.DefaultDeleteBranchAfterMerge = m.DefaultDeleteBranchAfterMerge.ValueBoolPointer()
+	o.AllowFastForwardOnly = m.AllowFastForwardOnly.ValueBoolPointer()
+	o.AllowRebaseUpdate = m.AllowRebaseUpdate.ValueBoolPointer()
+	o.DefaultAllowMaintainerEdit = m.DefaultAllowMaintainerEdit.ValueBoolPointer()
+	o.DefaultUpdateStyle = m.DefaultUpdateStyle.ValueStringPointer()
+	o.EnablePrune = m.EnablePrune.ValueBoolPointer()
+	o.GloballyEditableWiki = m.GloballyEditableWiki.ValueBoolPointer()
+	o.WikiBranch = m.WikiBranch.ValueStringPointer()
 
 	ms := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
 	o.DefaultMergeStyle = &ms
@@ -850,6 +864,54 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
+			"allow_fast_forward_only_merge": schema.BoolAttribute{
+				Description: "Allowed to fast-forward-only merge pull requests? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"allow_rebase_update": schema.BoolAttribute{
+				Description: "Allowed to update pull request branch by rebase? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+			},
+			"default_allow_maintainer_edit": schema.BoolAttribute{
+				Description: "Allow maintainer edits on pull requests by default? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"default_update_style": schema.StringAttribute{
+				Description: "Default pull request update style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString("merge"),
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						"merge",
+						"rebase",
+					),
+				},
+			},
+			"enable_prune": schema.BoolAttribute{
+				Description: "Remove obsolete remote-tracking references when mirroring? **Note**: This setting is only effective if `mirror` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"globally_editable_wiki": schema.BoolAttribute{
+				Description: "Is the repository wiki globally editable? **Note**: This setting is only effective if `has_wiki` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"wiki_branch": schema.StringAttribute{
+				Description: "Branch used for the repository wiki. **Note**: This setting is only effective if `has_wiki` is `true`.",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
+			},
 			"issue_labels": schema.StringAttribute{
 				Description: "Issue Label set to use.",
 				Optional:    true,
@@ -1305,6 +1367,13 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		"allow_manual_merge":                data.AllowManualMerge.ValueBool(),
 		"autodetect_manual_merge":           data.AutodetectManualMerge.ValueBool(),
 		"default_delete_branch_after_merge": data.DefaultDeleteBranchAfterMerge.ValueBool(),
+		"allow_fast_forward_only_merge":     data.AllowFastForwardOnly.ValueBool(),
+		"allow_rebase_update":               data.AllowRebaseUpdate.ValueBool(),
+		"default_allow_maintainer_edit":     data.DefaultAllowMaintainerEdit.ValueBool(),
+		"default_update_style":              data.DefaultUpdateStyle.ValueString(),
+		"enable_prune":                      data.EnablePrune.ValueBool(),
+		"globally_editable_wiki":            data.GloballyEditableWiki.ValueBool(),
+		"wiki_branch":                       data.WikiBranch.ValueString(),
 		"default_merge_style":               data.DefaultMergeStyle.ValueString(),
 	})
 
@@ -1485,6 +1554,13 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		"allow_manual_merge":                data.AllowManualMerge.ValueBool(),
 		"autodetect_manual_merge":           data.AutodetectManualMerge.ValueBool(),
 		"default_delete_branch_after_merge": data.DefaultDeleteBranchAfterMerge.ValueBool(),
+		"allow_fast_forward_only_merge":     data.AllowFastForwardOnly.ValueBool(),
+		"allow_rebase_update":               data.AllowRebaseUpdate.ValueBool(),
+		"default_allow_maintainer_edit":     data.DefaultAllowMaintainerEdit.ValueBool(),
+		"default_update_style":              data.DefaultUpdateStyle.ValueString(),
+		"enable_prune":                      data.EnablePrune.ValueBool(),
+		"globally_editable_wiki":            data.GloballyEditableWiki.ValueBool(),
+		"wiki_branch":                       data.WikiBranch.ValueString(),
 		"default_merge_style":               data.DefaultMergeStyle.ValueString(),
 	})
 
@@ -1706,6 +1782,13 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	state.AutoInit = types.BoolValue(true)
 	state.AutodetectManualMerge = types.BoolValue(false)
 	state.DefaultDeleteBranchAfterMerge = types.BoolValue(false)
+	state.AllowFastForwardOnly = types.BoolValue(false)
+	state.AllowRebaseUpdate = types.BoolValue(true)
+	state.DefaultAllowMaintainerEdit = types.BoolValue(false)
+	state.DefaultUpdateStyle = types.StringValue("merge")
+	state.EnablePrune = types.BoolValue(false)
+	state.GloballyEditableWiki = types.BoolValue(false)
+	state.WikiBranch = types.StringValue("")
 	state.Gitignores = types.StringValue("")
 	state.IssueLabels = types.StringValue("")
 	state.Labels = types.BoolValue(false)

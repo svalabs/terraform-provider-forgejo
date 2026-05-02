@@ -172,10 +172,12 @@ import {
 
 ### Optional
 
+- `allow_fast_forward_only_merge` (Boolean) Allowed to fast-forward-only merge pull requests? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_manual_merge` (Boolean) Allowed to manually merge pull requests? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_merge_commits` (Boolean) Allowed to create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_rebase` (Boolean) Allowed to rebase then fast-forward? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_rebase_explicit` (Boolean) Allowed to rebase then create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
+- `allow_rebase_update` (Boolean) Allowed to update pull request branch by rebase? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `allow_squash_merge` (Boolean) Allowed to create squash commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `archive_on_destroy` (Boolean) Archive the repo instead of delete?
 - `archived` (Boolean) Is the repository archived?
@@ -183,13 +185,17 @@ import {
 - `auto_init` (Boolean) Whether the repository should be auto-intialized? Changing this forces a new resource to be created.
 - `autodetect_manual_merge` (Boolean) Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `clone_addr` (String) Migrate / clone from URL. Changing this forces a new resource to be created.
+- `default_allow_maintainer_edit` (Boolean) Allow maintainer edits on pull requests by default? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `default_branch` (String) Default branch of the repository.
 - `default_delete_branch_after_merge` (Boolean) Delete pull request branch after merge by default? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `default_merge_style` (String) Default merge style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.
+- `default_update_style` (String) Default pull request update style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `description` (String) Description of the repository.
+- `enable_prune` (Boolean) Remove obsolete remote-tracking references when mirroring? **Note**: This setting is only effective if `mirror` is `true`.
 - `external_tracker` (Attributes) Settings for external issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--external_tracker))
 - `external_wiki` (Attributes) Settings for external wiki. **Note**: This setting is only effective if `has_wiki` is `true`. (see [below for nested schema](#nestedatt--external_wiki))
 - `gitignores` (String) Gitignores to use. Changing this forces a new resource to be created.
+- `globally_editable_wiki` (Boolean) Is the repository wiki globally editable? **Note**: This setting is only effective if `has_wiki` is `true`.
 - `has_actions` (Boolean) Are integrated CI/CD pipelines enabled?
 - `has_issues` (Boolean) Is the repository issue tracker enabled?
 - `has_packages` (Boolean) Is the repository package registry enabled?
@@ -214,6 +220,7 @@ import {
 - `template` (Boolean) Is the repository a template?
 - `trust_model` (String) TrustModel of the repository. Changing this forces a new resource to be created.
 - `website` (String) Website of the repository.
+- `wiki_branch` (String) Branch used for the repository wiki. **Note**: This setting is only effective if `has_wiki` is `true`.
 
 ### Read-Only
 
