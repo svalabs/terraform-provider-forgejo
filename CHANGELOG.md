@@ -1,3 +1,18 @@
+## 1.4.3 (May 2, 2026)
+
+ENHANCEMENTS:
+
+- `forgejo_organization_action_variable`, `forgejo_organization_action_secret`: Allow referencing parent organization by name
+- `forgejo_repository`: Add missing `default_delete_branch_after_merge` attribute (fixes [#131](https://github.com/svalabs/terraform-provider-forgejo/issues/131))
+- `forgejo_repository`: Add remaining missing write-only attributes
+- Extract internal helpers to reduce code duplication across resources
+- More consistent error messages across resources
+
+DEPENDENCIES:
+
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.15.0 to 1.16.0
+- Bump goreleaser/goreleaser-action from 7.0.0 to 7.2.1
+
 ## 1.4.2 (April 12, 2026)
 
 ENHANCEMENTS:
