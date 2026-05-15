@@ -26,5 +26,7 @@
   "runArgs": [
     "--net=host",
     "--env-file", ".env"
-  ]
+  ],
+
+  "remoteUser": "vscode"
 }
