@@ -910,10 +910,13 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Default:     stringdefault.StaticString(""),
 			},
 			"issue_labels": schema.StringAttribute{
-				Description: "Issue Label set to use.",
+				Description: "Issue Label set to use. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
 			},
 			"auto_init": schema.BoolAttribute{
 				Description: "Whether the repository should be auto-intialized? Changing this forces a new resource to be created.",

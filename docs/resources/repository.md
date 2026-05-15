@@ -205,7 +205,7 @@ import {
 - `has_wiki` (Boolean) Is the repository wiki enabled?
 - `ignore_whitespace_conflicts` (Boolean) Are whitespace conflicts ignored? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `internal_tracker` (Attributes) Settings for built-in issue tracker. **Note**: This setting is only effective if `has_issues` is `true`. (see [below for nested schema](#nestedatt--internal_tracker))
-- `issue_labels` (String) Issue Label set to use.
+- `issue_labels` (String) Issue Label set to use. Changing this forces a new resource to be created.
 - `labels` (Boolean) Whether to migrate labels. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
 - `lfs` (Boolean) Whether to migrate LFS files. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
 - `lfs_endpoint` (String) LFS endpoint to use. Changing this forces a new resource to be created. **Note**: This setting is only effective if `lfs` is `true`.

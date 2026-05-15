@@ -553,7 +553,7 @@ resource "forgejo_repository" "test" {
 	has_packages                = false
 	has_projects                = false
 	has_releases                = false
-	issue_labels                = "Advanced"
+	issue_labels                = ""
 	private                     = true
 	template                    = true
 
@@ -632,7 +632,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("issue_labels"), knownvalue.StringExact("Advanced")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("issue_labels"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("labels"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("lfs_endpoint"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("lfs"), knownvalue.Bool(false)),
@@ -681,7 +681,7 @@ resource "forgejo_repository" "test" {
 	has_packages                = true
 	has_projects                = true
 	has_releases                = true
-	issue_labels                = "Default"
+	issue_labels                = ""
 	private                     = false
 	template                    = false
 
@@ -761,7 +761,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("issue_labels"), knownvalue.StringExact("Default")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("issue_labels"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("labels"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("lfs_endpoint"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("lfs"), knownvalue.Bool(false)),
@@ -810,7 +810,7 @@ resource "forgejo_repository" "test" {
 	has_packages                = true
 	has_projects                = true
 	has_releases                = true
-	issue_labels                = "Default"
+	issue_labels                = ""
 	private                     = false
 	template                    = false
 
@@ -890,7 +890,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("ignore_whitespace_conflicts"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal_tracker"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("internal"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("issue_labels"), knownvalue.StringExact("Default")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("issue_labels"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("labels"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("lfs_endpoint"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("lfs"), knownvalue.Bool(false)),
