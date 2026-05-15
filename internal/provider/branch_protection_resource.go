@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -130,11 +132,13 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Patterns for protected files.",
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"unprotected_file_patterns": schema.StringAttribute{
 				Description: "Patterns for unprotected files.",
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"enable_merge_whitelist": schema.BoolAttribute{
 				Description: "Enable merge whitelist.",
@@ -174,6 +178,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Number of required approvals.",
 				Computed:    true,
 				Optional:    true,
+				Default:     int64default.StaticInt64(0),
 			},
 			"block_on_rejected_reviews": schema.BoolAttribute{
 				Description: "Block merge on rejected reviews.",
@@ -832,28 +837,11 @@ func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, da
 	data.PushWhitelistDeployKeys = types.BoolValue(protection.PushWhitelistDeployKeys)
 	data.EnableStatusCheck = types.BoolValue(protection.EnableStatusCheck)
 	data.RequireSignedCommits = types.BoolValue(protection.RequireSignedCommits)
-
-	if protection.ProtectedFilePatterns != "" {
-		data.ProtectedFilePatterns = types.StringValue(protection.ProtectedFilePatterns)
-	} else {
-		data.ProtectedFilePatterns = types.StringNull()
-	}
-
-	if protection.UnprotectedFilePatterns != "" {
-		data.UnprotectedFilePatterns = types.StringValue(protection.UnprotectedFilePatterns)
-	} else {
-		data.UnprotectedFilePatterns = types.StringNull()
-	}
-
+	data.ProtectedFilePatterns = types.StringValue(protection.ProtectedFilePatterns)
+	data.UnprotectedFilePatterns = types.StringValue(protection.UnprotectedFilePatterns)
 	data.EnableMergeWhitelist = types.BoolValue(protection.EnableMergeWhitelist)
 	data.EnableApprovalsWhitelist = types.BoolValue(protection.EnableApprovalsWhitelist)
-
-	if protection.RequiredApprovals != 0 {
-		data.RequiredApprovals = types.Int64Value(protection.RequiredApprovals)
-	} else {
-		data.RequiredApprovals = types.Int64Null()
-	}
-
+	data.RequiredApprovals = types.Int64Value(protection.RequiredApprovals)
 	data.BlockOnRejectedReviews = types.BoolValue(protection.BlockOnRejectedReviews)
 	data.BlockOnOfficialReviewRequests = types.BoolValue(protection.BlockOnOfficialReviewRequests)
 	data.BlockOnOutdatedBranch = types.BoolValue(protection.BlockOnOutdatedBranch)
