@@ -325,8 +325,8 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			},
 			"deactivate_on_destroy": schema.BoolAttribute{
 				Description: "Deactivate the user instead of delete?",
-				Computed:    true,
 				Optional:    true,
+				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 		},
