@@ -800,9 +800,6 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the repository.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"internal": schema.BoolAttribute{
 				Description: "Is the repository internal?",

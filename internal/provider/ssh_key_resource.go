@@ -105,9 +105,6 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"url": schema.StringAttribute{
 				Description: "URL of the SSH key.",
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"title": schema.StringAttribute{
 				Description: "Title of the SSH key. Changing this forces a new resource to be created.",
