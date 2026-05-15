@@ -58,10 +58,6 @@ func (m *teamResourceModel) from(t *forgejo.Team, ctx context.Context) (diags di
 	m.ID = types.Int64Value(t.ID)
 	m.Name = types.StringValue(t.Name)
 	m.Description = types.StringValue(t.Description)
-	if t.Organization != nil {
-		m.Organization = types.StringValue(t.Organization.UserName)
-		m.OrganizationID = types.Int64Value(t.Organization.ID)
-	}
 	m.Permission = types.StringValue(string(t.Permission))
 	m.CanCreateOrgRepo = types.BoolValue(t.CanCreateOrgRepo)
 	m.IncludesAllRepositories = types.BoolValue(t.IncludesAllRepositories)
@@ -256,6 +252,9 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 		// Map response body to model
 		data.Organization = types.StringValue(org.UserName)
+	} else {
+		// Clear organization ID if name is provided
+		data.OrganizationID = types.Int64Value(0)
 	}
 
 	// Use Forgejo client to create new team
@@ -352,10 +351,20 @@ func (r *teamResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer un(trace(ctx, "Update team resource"))
 
-	var data teamResourceModel
+	var (
+		state teamResourceModel
+		plan  teamResourceModel
+	)
+
+	// Read Terraform prior state data into the model
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Read Terraform plan data into the model
-	diags := req.Plan.Get(ctx, &data)
+	diags = req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -363,7 +372,7 @@ func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Generate API request body from plan
 	opts := forgejo.EditTeamOption{}
-	diags = data.to(&opts, ctx)
+	diags = plan.to(&opts, ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -373,7 +382,7 @@ func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	team, diags := editTeam(
 		ctx,
 		r.client,
-		data.ID.ValueInt64(),
+		state.ID.ValueInt64(),
 		opts,
 	)
 	resp.Diagnostics.Append(diags...)
@@ -382,14 +391,14 @@ func (r *teamResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map response body to model
-	diags = data.from(team, ctx)
+	diags = state.from(team, ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Save data into Terraform state
-	diags = resp.State.Set(ctx, &data)
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -481,6 +490,10 @@ func (r *teamResource) ImportState(ctx context.Context, req resource.ImportState
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Initialize write-only fields to their default values
+	state.Organization = types.StringValue(orgName)
+	state.OrganizationID = types.Int64Value(0)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)

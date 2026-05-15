@@ -166,7 +166,7 @@ func (r *organizationActionVariableResource) Create(ctx context.Context, req res
 		data.Organization = types.StringValue(org.UserName)
 	} else {
 		// Clear organization ID if name is provided
-		data.OrganizationID = types.Int64Null()
+		data.OrganizationID = types.Int64Value(0)
 	}
 
 	tflog.Info(ctx, "Create organization action variable", map[string]any{
@@ -304,25 +304,6 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 		return
 	}
 
-	// Get organization name from ID if not provided
-	if plan.Organization.IsNull() || plan.Organization.IsUnknown() {
-		org, diags := getOrganizationByID(
-			ctx,
-			r.client,
-			plan.OrganizationID.ValueInt64(),
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Map response body to model
-		plan.Organization = types.StringValue(org.UserName)
-	} else {
-		// Clear organization ID if name is provided
-		plan.OrganizationID = types.Int64Null()
-	}
-
 	tflog.Info(ctx, "Update organization action variable", map[string]any{
 		"organization": plan.Organization.ValueString(),
 		"old_name":     state.Name.ValueString(),
@@ -379,6 +360,10 @@ func (r *organizationActionVariableResource) Update(ctx context.Context, req res
 
 		return
 	}
+
+	// Copy organization info to plan data
+	plan.Organization = state.Organization
+	plan.OrganizationID = state.OrganizationID
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &plan)

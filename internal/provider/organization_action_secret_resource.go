@@ -181,7 +181,7 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 		data.Organization = types.StringValue(org.UserName)
 	} else {
 		// Clear organization ID if name is provided
-		data.OrganizationID = types.Int64Null()
+		data.OrganizationID = types.Int64Value(0)
 	}
 
 	tflog.Info(ctx, "Create organization action secret", map[string]any{
@@ -293,43 +293,34 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 func (r *organizationActionSecretResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	defer un(trace(ctx, "Update organization action secret resource"))
 
-	var data organizationActionSecretResourceModel
+	var (
+		state organizationActionSecretResourceModel
+		plan  organizationActionSecretResourceModel
+	)
 
-	// Read Terraform plan data into the model
-	diags := req.Plan.Get(ctx, &data)
+	// Read Terraform prior state data into the model
+	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Get organization name from ID if not provided
-	if data.Organization.IsNull() || data.Organization.IsUnknown() {
-		org, diags := getOrganizationByID(
-			ctx,
-			r.client,
-			data.OrganizationID.ValueInt64(),
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		// Map response body to model
-		data.Organization = types.StringValue(org.UserName)
-	} else {
-		// Clear organization ID if name is provided
-		data.OrganizationID = types.Int64Null()
+	// Read Terraform plan data into the model
+	diags = req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	tflog.Info(ctx, "Update organization action secret", map[string]any{
-		"organization": data.Organization.ValueString(),
-		"name":         data.Name.ValueString(),
-		"data":         strings.Repeat("*", len(data.Data.ValueString())),
+		"organization": plan.Organization.ValueString(),
+		"name":         plan.Name.ValueString(),
+		"data":         strings.Repeat("*", len(plan.Data.ValueString())),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.CreateSecretOption{}
-	data.to(&opts)
+	plan.to(&opts)
 
 	// Validate API request body
 	err := opts.Validate()
@@ -341,7 +332,7 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 
 	// Use Forgejo client to update organization action secret
 	res, err := r.client.CreateOrgActionSecret(
-		data.Organization.ValueString(),
+		state.Organization.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -359,8 +350,8 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 			case 404:
 				msg = fmt.Sprintf(
 					"Action secret with organization %s and name %s not found: %s",
-					data.Organization.String(),
-					data.Name.String(),
+					state.Organization.String(),
+					state.Name.String(),
 					err,
 				)
 			default:
@@ -376,8 +367,12 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Copy organization info to plan data
+	plan.Organization = state.Organization
+	plan.OrganizationID = state.OrganizationID
+
 	// Save data into Terraform state
-	diags = resp.State.Set(ctx, &data)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 }
 
