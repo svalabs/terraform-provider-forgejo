@@ -1,6 +1,6 @@
 FROM registry.access.redhat.com/ubi9/ubi:latest
 
-ARG goversion=1.25.8
+ARG goversion=1.25.10
 
 RUN useradd --create-home vscode
 
@@ -37,6 +37,6 @@ RUN dnf -y update && \
     terraform && \
   dnf clean all && \
   curl --location https://go.dev/dl/go${goversion}.linux-amd64.tar.gz | tar -C /usr/local -xzf - && \
-  curl --location https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin
+  curl --location https://golangci-lint.run/install.sh | sh -s -- -b /usr/local/bin
 
 USER vscode
