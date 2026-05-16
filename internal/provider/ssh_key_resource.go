@@ -64,8 +64,10 @@ func (m *sshKeyResourceModel) to(o *forgejo.CreateKeyOption) {
 		return
 	}
 
-	o.Title = m.Title.ValueString()
 	o.Key = m.Key.ValueString()
+	o.Title = m.Title.ValueString()
+	// As of version 15.0.1, Forgejo ignores read_only
+	// o.ReadOnly = m.ReadOnly.ValueBool()
 }
 
 // Metadata returns the resource type name.
@@ -183,9 +185,10 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	tflog.Info(ctx, "Create SSH key", map[string]any{
-		"user":  data.User.ValueString(),
-		"title": data.Title.ValueString(),
-		"key":   data.Key.ValueString(),
+		"user":      data.User.ValueString(),
+		"title":     data.Title.ValueString(),
+		"key":       data.Key.ValueString(),
+		"read_only": data.ReadOnly.ValueBool(),
 	})
 
 	// Generate API request body from plan
