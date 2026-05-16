@@ -30,9 +30,10 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                = &branchProtectionResource{}
-	_ resource.ResourceWithConfigure   = &branchProtectionResource{}
-	_ resource.ResourceWithImportState = &branchProtectionResource{}
+	_ resource.Resource                     = &branchProtectionResource{}
+	_ resource.ResourceWithConfigure        = &branchProtectionResource{}
+	_ resource.ResourceWithImportState      = &branchProtectionResource{}
+	_ resource.ResourceWithConfigValidators = &branchProtectionResource{}
 )
 
 // branchProtectionResource is the resource implementation.
@@ -752,6 +753,13 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 	// Save data into Terraform state
 	diags = response.State.Set(ctx, &data)
 	response.Diagnostics.Append(diags...)
+}
+
+// ConfigValidators returns a list of configuration validators for the resource.
+func (r *branchProtectionResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		branchProtectionResourcePushConfigValidator{},
+	}
 }
 
 // NewBranchProtectionResource is a helper function to simplify the provider implementation.
