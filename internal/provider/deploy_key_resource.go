@@ -102,6 +102,7 @@ func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"url": schema.StringAttribute{
 				Description: "URL of the deploy key.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"title": schema.StringAttribute{
 				Description: "Title of the deploy key. Changing this forces a new resource to be created.",

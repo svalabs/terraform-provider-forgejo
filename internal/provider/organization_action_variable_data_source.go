@@ -174,7 +174,7 @@ func (d *organizationActionVariableDataSource) Read(ctx context.Context, req dat
 	}
 
 	// Map response body to model
-	// name is omitted here, to maintain the user's configuration casing
+	// Name is omitted here, to maintain the user's configuration casing
 	data.Data = types.StringValue(variable.Data)
 
 	// Save data into Terraform state

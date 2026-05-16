@@ -112,7 +112,7 @@ func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) 
 	o.FullName = m.FullName.ValueStringPointer()
 
 	if s != nil && !m.Password.Equal(s.Password) {
-		// only update password if it has changed
+		// Only update password if it has changed
 		o.Password = m.Password.ValueString()
 	}
 
@@ -189,10 +189,12 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the user.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"html_url": schema.StringAttribute{
 				Description: "URL to the user's profile page.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"language": schema.StringAttribute{
 				Description: "Locale of the user.",
@@ -253,9 +255,10 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Default:     stringdefault.StaticString(""),
 			},
 			"visibility": schema.StringAttribute{
-				Description: "Visibility of the user.",
+				Description: "Visibility of the user. Possible values are 'public' (default), 'limited', or 'private'.",
 				Optional:    true,
 				Computed:    true,
+				// No static default value, because DEFAULT_USER_VISIBILITY controls server setting
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},

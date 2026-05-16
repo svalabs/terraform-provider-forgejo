@@ -159,7 +159,7 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.DefaultBranch = types.StringValue(r.DefaultBranch)
 
 	if !m.Mirror.ValueBool() {
-		// cannot archive/un-archive repository mirrors
+		// Cannot archive/un-archive repository mirrors
 		m.Archived = types.BoolValue(r.Archived)
 	}
 
@@ -178,7 +178,7 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.MirrorUpdated = types.StringValue(r.MirrorUpdated.Format(time.RFC3339))
 
 	if m.HasPullRequests.ValueBool() {
-		// only update PR settings if PRs are enabled
+		// Only update PR settings if PRs are enabled
 		m.IgnoreWhitespaceConflicts = types.BoolValue(r.IgnoreWhitespaceConflicts)
 		m.AllowMerge = types.BoolValue(r.AllowMerge)
 		m.AllowRebase = types.BoolValue(r.AllowRebase)
@@ -214,7 +214,7 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	o.AllowSquash = m.AllowSquash.ValueBoolPointer()
 
 	if !m.Mirror.ValueBool() {
-		// cannot archive/un-archive repository mirrors
+		// Cannot archive/un-archive repository mirrors
 		o.Archived = m.Archived.ValueBoolPointer()
 	}
 
@@ -562,14 +562,17 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"html_url": schema.StringAttribute{
 				Description: "HTML URL of the repository.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"ssh_url": schema.StringAttribute{
 				Description: "SSH URL of the repository.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"clone_url": schema.StringAttribute{
 				Description: "Clone URL of the repository.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"website": schema.StringAttribute{
 				Description: "Website of the repository.",
@@ -605,6 +608,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Default branch of the repository.",
 				Optional:    true,
 				Computed:    true,
+				// No static default value, because DEFAULT_BRANCH controls server setting
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -800,6 +804,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the repository.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"internal": schema.BoolAttribute{
 				Description: "Is the repository internal?",
@@ -812,6 +817,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Mirror interval of the repository. **Note**: This setting is only effective if `mirror` is `true`.",
 				Optional:    true,
 				Computed:    true,
+				// No static default value, because DEFAULT_INTERVAL controls server setting
 				Validators: []validator.String{
 					stringvalidator.All(
 						stringvalidator.AlsoRequires(path.Expressions{

@@ -42,7 +42,7 @@ func (m *repositoryActionVariableResourceModel) from(v *forgejo.ActionVariable) 
 		return
 	}
 
-	// name is omitted here, to maintain the user's configuration casing
+	// Name is omitted here, to maintain the user's configuration casing
 	m.Data = types.StringValue(v.Data)
 }
 

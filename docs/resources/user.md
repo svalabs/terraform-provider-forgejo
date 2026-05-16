@@ -77,7 +77,7 @@ resource "forgejo_user" "non_defaults" {
 - `restricted` (Boolean) Is the user restricted?
 - `send_notify` (Boolean) Send notification to administrators? Changing this forces a new resource to be created.
 - `source_id` (Number) Numeric identifier of the user's authentication source.
-- `visibility` (String) Visibility of the user.
+- `visibility` (String) Visibility of the user. Possible values are 'public' (default), 'limited', or 'private'.
 - `website` (String) Website of the user.
 
 ### Read-Only

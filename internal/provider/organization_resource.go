@@ -108,6 +108,7 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the organization.",
 				Computed:    true,
+				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"description": schema.StringAttribute{
 				Description: "Description of the organization.",
@@ -131,6 +132,7 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 				Description: "Visibility of the organization. Possible values are 'public' (default), 'limited', or 'private'.",
 				Optional:    true,
 				Computed:    true,
+				// No static default value, because DEFAULT_ORG_VISIBILITY controls server setting
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
