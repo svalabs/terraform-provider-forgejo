@@ -286,3 +286,12 @@ Read-Only:
 - `admin` (Boolean) Allowed to administer?
 - `pull` (Boolean) Allowed to pull?
 - `push` (Boolean) Allowed to push?
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Import using the repo_owner/repo_name.
+terraform import forgejo_repository.imported test_user/repository-to-be-imported
+```
