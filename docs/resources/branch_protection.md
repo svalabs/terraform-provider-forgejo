@@ -59,29 +59,29 @@ resource "forgejo_branch_protection" "main" {
 
 ### Required
 
-- `branch_name` (String) Name of the branch to protect (can be a pattern). Changing this forces a new resource to be created.
+- `branch_name` (String) Name of the branch to protect. Changing this forces a new resource to be created.
 - `repository_id` (Number) Numeric identifier of the repository. Changing this forces a new resource to be created.
 
 ### Optional
 
-- `approvals_whitelist_teams` (List of String) Teams that can approve.
-- `approvals_whitelist_usernames` (List of String) Usernames that can approve.
+- `approvals_whitelist_teams` (List of String) Whitelisted teams for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
+- `approvals_whitelist_usernames` (List of String) Whitelisted users for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
 - `block_on_official_review_requests` (Boolean) Block merge on official review requests.
-- `block_on_outdated_branch` (Boolean) Block merge on outdated branch.
+- `block_on_outdated_branch` (Boolean) Block merge if pull request is outdated.
 - `block_on_rejected_reviews` (Boolean) Block merge on rejected reviews.
 - `dismiss_stale_approvals` (Boolean) Dismiss stale approvals.
-- `enable_approvals_whitelist` (Boolean) Enable approvals whitelist.
-- `enable_merge_whitelist` (Boolean) Enable merge whitelist.
+- `enable_approvals_whitelist` (Boolean) Restrict approvals to whitelisted users or teams.
+- `enable_merge_whitelist` (Boolean) Restrict merge to whitelisted users or teams.
 - `enable_push` (Boolean) Enable push to the branch.
-- `enable_push_whitelist` (Boolean) Enable push whitelist.
-- `enable_status_check` (Boolean) Enable status checks.
-- `merge_whitelist_teams` (List of String) Teams allowed to merge.
-- `merge_whitelist_usernames` (List of String) Usernames allowed to merge.
-- `protected_file_patterns` (String) Patterns for protected files.
-- `push_whitelist_deploy_keys` (Boolean) Allow deploy keys to push.
-- `push_whitelist_teams` (List of String) Teams allowed to push.
-- `push_whitelist_usernames` (List of String) Usernames allowed to push.
+- `enable_push_whitelist` (Boolean) Restrict push to whitelisted users or teams. **Note**: This setting is only effective if `enable_push` is `true`.
+- `enable_status_check` (Boolean) Enable status check.
+- `merge_whitelist_teams` (List of String) Whitelisted teams for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.
+- `merge_whitelist_usernames` (List of String) Whitelisted users for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.
+- `protected_file_patterns` (String) Protected file patterns (separated using semicolon ';').
+- `push_whitelist_deploy_keys` (Boolean) Whitelist deploy keys with write access to push. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
+- `push_whitelist_teams` (List of String) Whitelisted teams for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
+- `push_whitelist_usernames` (List of String) Whitelisted users for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
 - `require_signed_commits` (Boolean) Require signed commits.
 - `required_approvals` (Number) Number of required approvals.
-- `status_check_contexts` (List of String) Status check contexts that must pass.
-- `unprotected_file_patterns` (String) Patterns for unprotected files.
+- `status_check_contexts` (List of String) Status check patterns. **Note**: This setting is only effective if `enable_status_check` is `true`.
+- `unprotected_file_patterns` (String) Unprotected file patterns (separated using semicolon ';').

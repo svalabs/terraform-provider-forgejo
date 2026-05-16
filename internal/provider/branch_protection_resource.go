@@ -5,15 +5,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -79,7 +85,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				},
 			},
 			"branch_name": schema.StringAttribute{
-				Description: "Name of the branch to protect (can be a pattern). Changing this forces a new resource to be created.",
+				Description: "Name of the branch to protect. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -89,90 +95,184 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Enable push to the branch.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"enable_push_whitelist": schema.BoolAttribute{
-				Description: "Enable push whitelist.",
+				Description: "Restrict push to whitelisted users or teams. **Note**: This setting is only effective if `enable_push` is `true`.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_push"),
+					}...),
+				},
 			},
 			"push_whitelist_usernames": schema.ListAttribute{
-				Description: "Usernames allowed to push.",
+				Description: "Whitelisted users for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_push_whitelist"),
+					}...),
+				},
 			},
 			"push_whitelist_teams": schema.ListAttribute{
-				Description: "Teams allowed to push.",
+				Description: "Whitelisted teams for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_push_whitelist"),
+					}...),
+				},
 			},
 			"push_whitelist_deploy_keys": schema.BoolAttribute{
-				Description: "Allow deploy keys to push.",
+				Description: "Whitelist deploy keys with write access to push. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_push_whitelist"),
+					}...),
+				},
 			},
 			"enable_status_check": schema.BoolAttribute{
-				Description: "Enable status checks.",
+				Description: "Enable status check.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"status_check_contexts": schema.ListAttribute{
-				Description: "Status check contexts that must pass.",
+				Description: "Status check patterns. **Note**: This setting is only effective if `enable_status_check` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_status_check"),
+					}...),
+				},
 			},
 			"require_signed_commits": schema.BoolAttribute{
 				Description: "Require signed commits.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"protected_file_patterns": schema.StringAttribute{
-				Description: "Patterns for protected files.",
+				Description: "Protected file patterns (separated using semicolon ';').",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"unprotected_file_patterns": schema.StringAttribute{
-				Description: "Patterns for unprotected files.",
+				Description: "Unprotected file patterns (separated using semicolon ';').",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
 			},
 			"enable_merge_whitelist": schema.BoolAttribute{
-				Description: "Enable merge whitelist.",
+				Description: "Restrict merge to whitelisted users or teams.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"merge_whitelist_usernames": schema.ListAttribute{
-				Description: "Usernames allowed to merge.",
+				Description: "Whitelisted users for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_merge_whitelist"),
+					}...),
+				},
 			},
 			"merge_whitelist_teams": schema.ListAttribute{
-				Description: "Teams allowed to merge.",
+				Description: "Whitelisted teams for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_merge_whitelist"),
+					}...),
+				},
 			},
 			"enable_approvals_whitelist": schema.BoolAttribute{
-				Description: "Enable approvals whitelist.",
+				Description: "Restrict approvals to whitelisted users or teams.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"approvals_whitelist_usernames": schema.ListAttribute{
-				Description: "Usernames that can approve.",
+				Description: "Whitelisted users for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_approvals_whitelist"),
+					}...),
+				},
 			},
 			"approvals_whitelist_teams": schema.ListAttribute{
-				Description: "Teams that can approve.",
+				Description: "Whitelisted teams for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_approvals_whitelist"),
+					}...),
+				},
 			},
 			"required_approvals": schema.Int64Attribute{
 				Description: "Number of required approvals.",
@@ -184,21 +284,25 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Block merge on rejected reviews.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"block_on_official_review_requests": schema.BoolAttribute{
 				Description: "Block merge on official review requests.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"block_on_outdated_branch": schema.BoolAttribute{
-				Description: "Block merge on outdated branch.",
+				Description: "Block merge if pull request is outdated.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"dismiss_stale_approvals": schema.BoolAttribute{
 				Description: "Dismiss stale approvals.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 		},
 	}
