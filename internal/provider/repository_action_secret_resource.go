@@ -358,7 +358,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 				msg = fmt.Sprintf("Bad request: %s", err)
 			case 404:
 				msg = fmt.Sprintf(
-					"Action secret with with owner %s, repo %s and name %s not found: %s",
+					"Action secret with owner %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.Name.String(),
