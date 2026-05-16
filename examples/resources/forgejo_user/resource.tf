@@ -30,3 +30,10 @@ resource "forgejo_user" "non_defaults" {
   location    = "Mêlée Island"
   visibility  = "private"
 }
+
+# Import user
+# id follows the format: <login>
+import {
+  id = "test_user_defaults"
+  to = "forgejo_user.defaults"
+}
