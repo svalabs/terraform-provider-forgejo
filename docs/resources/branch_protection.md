@@ -85,3 +85,12 @@ resource "forgejo_branch_protection" "main" {
 - `required_approvals` (Number) Number of required approvals.
 - `status_check_contexts` (List of String) Status check patterns. **Note**: This setting is only effective if `enable_status_check` is `true`.
 - `unprotected_file_patterns` (String) Unprotected file patterns (separated using semicolon ';').
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Import using the repo_owner/repo_name/branch.
+terraform import forgejo_branch_protection.main tfadmin/personal_test_repo/main
+```
