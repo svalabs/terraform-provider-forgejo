@@ -758,6 +758,8 @@ func (r *branchProtectionResource) ConfigValidators(_ context.Context) []resourc
 	return []resource.ConfigValidator{
 		branchProtectionResourcePushConfigValidator{},
 		branchProtectionResourceStatusCheckConfigValidator{},
+		branchProtectionResourceMergeConfigValidator{},
+		branchProtectionResourceApprovalConfigValidator{},
 	}
 }
 

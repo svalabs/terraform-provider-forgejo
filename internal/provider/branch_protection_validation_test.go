@@ -184,3 +184,127 @@ resource "forgejo_branch_protection" "test" {
 		},
 	})
 }
+
+func TestAccBranchProtectionValidationMergeConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check merge_settings attributes
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name               = "main"
+	repository_id             = forgejo_repository.test.id
+	enable_merge_whitelist    = false
+	merge_whitelist_usernames = ["` + forgejoTestUser + `"]
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Merge configuration is not valid when 'enable_merge_whitelist' is false"),
+			},
+			// Valid. merge_whitelist_usernames is set
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name               = "main"
+	repository_id             = forgejo_repository.test.id
+	enable_merge_whitelist    = true
+	merge_whitelist_usernames = ["` + forgejoTestUser + `"]
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			// Valid. merge configuration is disabled
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name               = "main"
+	repository_id             = forgejo_repository.test.id
+	enable_merge_whitelist    = false
+	merge_whitelist_usernames = []
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBranchProtectionValidationApprovalsConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check approvals attributes
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name                   = "main"
+	repository_id                 = forgejo_repository.test.id
+	enable_approvals_whitelist    = false
+	approvals_whitelist_usernames = ["` + forgejoTestUser + `"]
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Approvals configuration is not valid when 'enable_approvals_whitelist' is false"),
+			},
+			// Valid. approvals_whitelist_usernames is set
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name                   = "main"
+	repository_id                 = forgejo_repository.test.id
+	enable_approvals_whitelist    = true
+	approvals_whitelist_usernames = ["` + forgejoTestUser + `"]
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			// Valid. merge configuration is disabled
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name                   = "main"
+	repository_id                 = forgejo_repository.test.id
+	enable_approvals_whitelist    = false
+	approvals_whitelist_usernames = []
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.ListSizeExact(0)),
+				},
+			},
+		},
+	})
+}

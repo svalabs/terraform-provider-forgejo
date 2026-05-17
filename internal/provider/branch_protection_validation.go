@@ -10,6 +10,8 @@ import (
 var (
 	_ resource.ConfigValidator = &branchProtectionResourcePushConfigValidator{}
 	_ resource.ConfigValidator = &branchProtectionResourceStatusCheckConfigValidator{}
+	_ resource.ConfigValidator = &branchProtectionResourceMergeConfigValidator{}
+	_ resource.ConfigValidator = &branchProtectionResourceApprovalConfigValidator{}
 )
 
 // branchProtectionResourcePushConfigValidator validates the configuration of branch protection push settings.
@@ -118,6 +120,110 @@ func (b branchProtectionResourceStatusCheckConfigValidator) ValidateResource(ctx
 		response.Diagnostics.AddError(
 			"Cannot specify status check contexts without enabling status check",
 			"Set 'enable_status_check' to true if 'status_check_contexts' are used",
+		)
+	}
+}
+
+// branchProtectionResourceMergeConfigValidator validates the configuration of branch protection merge settings.
+type branchProtectionResourceMergeConfigValidator struct {
+}
+
+// Description describes the validation in plain text formatting.
+func (b branchProtectionResourceMergeConfigValidator) Description(_ context.Context) string {
+	return `
+Validates the merge configuration of a branch protection resource.
+If 'enable_merge_whitelist' is false, both 'merge_whitelist_usernames' and 'merge_whitelist_teams' must be empty.
+`
+}
+
+// MarkdownDescription describes the validation in Markdown formatting.
+func (b branchProtectionResourceMergeConfigValidator) MarkdownDescription(_ context.Context) string {
+	return "Validates the merge configuration of a branch protection resource.\n\n" +
+		"- If `enable_merge_whitelist` is false, both `merge_whitelist_usernames` and `merge_whitelist_teams` must be empty.\n"
+}
+
+// ValidateResource validates the configuration of the merge settings for a branch protection resource.
+// Decision Matrix:
+// - If 'enable_merge_whitelist' is false, both 'merge_whitelist_usernames' and 'merge_whitelist_teams' must be empty.
+func (b branchProtectionResourceMergeConfigValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var config branchProtectionResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	enableWhitelist := config.EnableMergeWhitelist
+	whitelistedUsernames := config.MergeWhitelistUsernames
+	whitelistedTeams := config.MergeWhitelistTeams
+
+	if enableWhitelist.IsUnknown() || whitelistedUsernames.IsUnknown() || whitelistedTeams.IsUnknown() {
+		return
+	}
+
+	opts := basetypes.CollectionLengthOptions{
+		UnhandledNullAsZero:    true,
+		UnhandledUnknownAsZero: true,
+	}
+
+	areWhitelistedUsernamesNotEmpty := whitelistedUsernames.Length(opts) > 0
+	areWhitelistedTeamsNotEmpty := whitelistedTeams.Length(opts) > 0
+
+	if !enableWhitelist.ValueBool() && (areWhitelistedUsernamesNotEmpty || areWhitelistedTeamsNotEmpty) {
+		response.Diagnostics.AddError(
+			"Merge configuration is not valid when 'enable_merge_whitelist' is false",
+			"Set 'enable_merge_whitelist' to true if 'merge_whitelist_usernames' or 'merge_whitelist_teams' are used",
+		)
+	}
+}
+
+// branchProtectionResourceApprovalConfigValidator validates the configuration of branch protection approval settings.
+type branchProtectionResourceApprovalConfigValidator struct {
+}
+
+// Description describes the validation in plain text formatting.
+func (b branchProtectionResourceApprovalConfigValidator) Description(_ context.Context) string {
+	return `
+Validates the approvals configuration of a branch protection resource.
+If 'enable_approvals_whitelist' is false, both 'approvals_whitelist_usernames' and 'approvals_whitelist_teams' must be empty.
+`
+}
+
+// MarkdownDescription describes the validation in Markdown formatting.
+func (b branchProtectionResourceApprovalConfigValidator) MarkdownDescription(_ context.Context) string {
+	return "Validates the approvals configuration of a branch protection resource.\n\n" +
+		"- If `enable_approvals_whitelist` is false, both `approvals_whitelist_usernames` and `approvals_whitelist_teams` must be empty.\n"
+}
+
+// ValidateResource validates the configuration of the approval settings for a branch protection resource.
+// Decision Matrix:
+// - If 'enable_approvals_whitelist' is false, both 'approvals_whitelist_usernames' and 'approvals_whitelist_teams' must be empty.
+func (b branchProtectionResourceApprovalConfigValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var config branchProtectionResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	enableWhitelist := config.EnableApprovalsWhitelist
+	whitelistedUsernames := config.ApprovalsWhitelistUsernames
+	whitelistedTeams := config.ApprovalsWhitelistTeams
+
+	if enableWhitelist.IsUnknown() || whitelistedUsernames.IsUnknown() || whitelistedTeams.IsUnknown() {
+		return
+	}
+
+	opts := basetypes.CollectionLengthOptions{
+		UnhandledNullAsZero:    true,
+		UnhandledUnknownAsZero: true,
+	}
+
+	areWhitelistedUsernamesNotEmpty := whitelistedUsernames.Length(opts) > 0
+	areWhitelistedTeamsNotEmpty := whitelistedTeams.Length(opts) > 0
+
+	if !enableWhitelist.ValueBool() && (areWhitelistedUsernamesNotEmpty || areWhitelistedTeamsNotEmpty) {
+		response.Diagnostics.AddError(
+			"Approvals configuration is not valid when 'enable_approvals_whitelist' is false",
+			"Set 'enable_approvals_whitelist' to true if 'approvals_whitelist_usernames' or 'approvals_whitelist_teams' are used",
 		)
 	}
 }
