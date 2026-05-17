@@ -122,3 +122,65 @@ resource "forgejo_branch_protection" "test" {
 		},
 	})
 }
+
+func TestAccBranchProtectionValidationStatusCheckConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check status_check_enabled and status_check_contexts attributes
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name           = "main"
+	repository_id         = forgejo_repository.test.id
+	enable_status_check   = false
+	status_check_contexts = ["context1", "context2"]
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Cannot specify status check contexts without enabling status check"),
+			},
+			// Valid. status_check_enabled is false and contexts are empty
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name           = "main"
+	repository_id         = forgejo_repository.test.id
+	enable_status_check   = false
+	status_check_contexts = []
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			// Valid. status_check_enabled is enabled and contexts are set
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name           = "main"
+	repository_id         = forgejo_repository.test.id
+	enable_status_check   = true
+	status_check_contexts = ["*"]
+}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(1)),
+				},
+			},
+		},
+	})
+}
