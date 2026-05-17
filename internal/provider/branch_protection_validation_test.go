@@ -38,11 +38,11 @@ resource "forgejo_repository" "test" {
 	name = "test_repo_branch_protection"
 }
 resource "forgejo_branch_protection" "test" {
-	branch_name                = "main"
-	repository_id              = forgejo_repository.test.id
-	enable_push                = false
-	enable_push_whitelist      = false
-	push_whitelist_usernames   = ["user1", "user2"]
+	branch_name              = "main"
+	repository_id            = forgejo_repository.test.id
+	enable_push              = false
+	enable_push_whitelist    = false
+	push_whitelist_usernames = ["user1", "user2"]
 }`,
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile("Push Whitelist configuration is not valid when 'enable_push_whitelist' is false"),
@@ -54,11 +54,11 @@ resource "forgejo_repository" "test" {
 	name = "test_repo_branch_protection"
 }
 resource "forgejo_branch_protection" "test" {
-	branch_name                = "main"
-	repository_id              = forgejo_repository.test.id
-	enable_push                = false
-	enable_push_whitelist      = false
-	push_whitelist_teams       = ["team1", "team2"]
+	branch_name           = "main"
+	repository_id         = forgejo_repository.test.id
+	enable_push           = false
+	enable_push_whitelist = false
+	push_whitelist_teams  = ["team1", "team2"]
 }`,
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile("Push Whitelist configuration is not valid when 'enable_push_whitelist' is false"),
