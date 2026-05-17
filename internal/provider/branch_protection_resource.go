@@ -759,6 +759,7 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 func (r *branchProtectionResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		branchProtectionResourcePushConfigValidator{},
+		branchProtectionResourceStatusCheckConfigValidator{},
 	}
 }
 
