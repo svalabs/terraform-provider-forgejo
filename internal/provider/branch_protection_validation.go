@@ -9,6 +9,7 @@ import (
 
 var (
 	_ resource.ConfigValidator = &branchProtectionResourcePushConfigValidator{}
+	_ resource.ConfigValidator = &branchProtectionResourceStatusCheckConfigValidator{}
 )
 
 // branchProtectionResourcePushConfigValidator validates the configuration of branch protection push settings.
@@ -73,6 +74,50 @@ func (b branchProtectionResourcePushConfigValidator) ValidateResource(ctx contex
 		response.Diagnostics.AddError(
 			"Push Whitelist configuration is not valid when 'enable_push_whitelist' is false",
 			"Set 'enable_push_whitelist' to true if 'push_whitelist_teams', 'push_whitelist_teams' or 'push_whitelist_deploy_keys' are used",
+		)
+	}
+}
+
+// branchProtectionResourceStatusCheckConfigValidator validates the configuration of branch protection status check settings.
+type branchProtectionResourceStatusCheckConfigValidator struct {
+}
+
+// Description describes the validation in plain text formatting.
+func (b branchProtectionResourceStatusCheckConfigValidator) Description(_ context.Context) string {
+	return "Validates that 'enable_status_check' is true when 'status_check_contexts' is set."
+}
+
+// MarkdownDescription describes the validation in Markdown formatting.
+func (b branchProtectionResourceStatusCheckConfigValidator) MarkdownDescription(_ context.Context) string {
+	return "Validates that `enable_status_check` is true when `status_check_contexts` is set."
+}
+
+// ValidateResource validates the configuration of branch protection status check settings.
+// Decision Matrix:
+// - If 'enable_status_check' is false, 'status_check_contexts' must be empty.
+func (b branchProtectionResourceStatusCheckConfigValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var config branchProtectionResourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	enableStatusCheck := config.EnableStatusCheck
+	statusCheckContexts := config.StatusCheckContexts
+
+	if enableStatusCheck.IsUnknown() || statusCheckContexts.IsUnknown() {
+		return
+	}
+
+	opts := basetypes.CollectionLengthOptions{
+		UnhandledNullAsZero:    true,
+		UnhandledUnknownAsZero: true,
+	}
+
+	if !enableStatusCheck.ValueBool() && statusCheckContexts.Length(opts) > 0 {
+		response.Diagnostics.AddError(
+			"Cannot specify status check contexts without enabling status check",
+			"Set 'enable_status_check' to true if 'status_check_contexts' are used",
 		)
 	}
 }
