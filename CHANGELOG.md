@@ -1,3 +1,31 @@
+## 1.4.4 (May 17, 2026)
+
+ENHANCEMENTS:
+
+- `forgejo_branch_protection`: Document and validate attribute dependencies (fixes [#133](https://github.com/svalabs/terraform-provider-forgejo/issues/133))
+
+BUG FIXES:
+
+- `forgejo_branch_protection`: Correct null value handling for `protected_file_patterns`, `unprotected_file_patterns`, and `required_approvals`
+- `forgejo_branch_protection`: Correctly represent empty (non-null) lists
+- `forgejo_repository_action_secret`: Fix duplicate word in error message
+- `forgejo_repository`: Mark `issue_labels` as create-only attribute
+- `forgejo_ssh_key`: URLs may change outside of Terraform, so don't use state for unknown values
+- `forgejo_team`, `forgejo_organization_action_variable`: Represent organization ID as zero (non-null) value if organization name was defined
+
+DOCUMENTATION:
+
+- Add import script and import blocks
+
+DEPENDENCIES:
+
+- Update to Go 1.25.10
+- Update test environment to forgejo:15
+
+NEW CONTRIBUTORS 🎉:
+
+- [@mikebell](https://github.com/mikebell) — [#134: Add user import documentation](https://github.com/svalabs/terraform-provider-forgejo/pull/134)
+
 ## 1.4.3 (May 2, 2026)
 
 ENHANCEMENTS:
