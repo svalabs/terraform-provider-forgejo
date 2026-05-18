@@ -66,7 +66,7 @@ jobs:
             (echo; echo "Unexpected difference in directories after code generation. Run 'make generate' command and commit."; exit 1)
 
   # Run acceptance tests in a matrix with Terraform CLI versions
-  test:
+  test-terraform:
     name: Terraform Provider Acceptance Tests
     needs: build
     runs-on: ubuntu-latest
@@ -128,6 +128,81 @@ jobs:
 
       - name: Download Go modules
         run: go mod download
+      - name: Run acceptance tests
+        env:
+          TF_ACC: "1"
+          FORGEJO_API_TOKEN: ${{ steps.admin.outputs.token }}
+        run: go test -v -cover ./internal/provider/
+        timeout-minutes: 10
+
+  test-opentofu:
+    name: OpenTofu Provider Acceptance Tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # list whatever OpenTofu versions here you would like to support
+        opentofu:
+          - "1.12.*"
+          - "1.11.*"
+          - "1.10.*"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Set up OpenTofu
+        uses: opentofu/setup-opentofu@fc711fa910b93cba0f3fbecaafc9f42fd0c411cb # v2.0.0
+        with:
+          tofu_version: ${{ matrix.opentofu }}
+          tofu_wrapper: false
+
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@8cccb8c14b6500aaffebff1aa49c502c34d2e5e6 #v2.1.0
+
+      - name: Start Forgejo server
+        working-directory: ./docker
+        run: |
+          docker compose pull --quiet
+          docker compose up --no-start
+          docker run --rm -v docker_forgejo:/data alpine mkdir -p /data/gitea/conf
+          docker compose cp app.ini forgejo:/data/gitea/conf/app.ini
+          docker compose start
+
+      - name: Wait for 30 seconds
+        run: sleep 30s
+
+      - name: Create admin user
+        working-directory: ./docker
+        run: >
+          docker compose exec -u git forgejo
+          /usr/local/bin/forgejo admin user create
+          --username tfadmin
+          --email tfadmin@localhost
+          --random-password
+          --admin
+
+      - name: Generate admin token
+        id: admin
+        working-directory: ./docker
+        run: >
+          echo "token=$(docker compose exec -u git forgejo
+          /usr/local/bin/forgejo admin user generate-access-token
+          --username tfadmin
+          --scopes write:organization,write:repository,write:user,write:admin
+          --raw)" >> "$GITHUB_OUTPUT"
+
+      - name: Download Go modules
+        run: go mod download
+
       - name: Run acceptance tests
         env:
           TF_ACC: "1"
