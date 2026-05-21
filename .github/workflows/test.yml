@@ -33,8 +33,10 @@ jobs:
 
       - name: Download Go modules
         run: go mod download
+
       - name: Compile Go package
         run: go build -v .
+
       - name: Run linters
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
@@ -52,6 +54,7 @@ jobs:
         with:
           go-version-file: "go.mod"
           cache: true
+
       # We need the latest version of Terraform for our documentation generation to use
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
@@ -60,6 +63,7 @@ jobs:
 
       - name: Generate documentation
         run: make generate
+
       - name: Check for differences
         run: |
           git diff --compact-summary --exit-code || \
@@ -89,11 +93,13 @@ jobs:
         with:
           go-version-file: "go.mod"
           cache: true
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
+
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@8cccb8c14b6500aaffebff1aa49c502c34d2e5e6 #v2.1.0
 
@@ -105,8 +111,10 @@ jobs:
           docker run --rm -v docker_forgejo:/data alpine mkdir -p /data/gitea/conf
           docker compose cp app.ini forgejo:/data/gitea/conf/app.ini
           docker compose start
+
       - name: Wait for 30 seconds
         run: sleep 30s
+
       - name: Create admin user
         working-directory: ./docker
         run: >
@@ -116,6 +124,7 @@ jobs:
           --email tfadmin@localhost
           --random-password
           --admin
+
       - name: Generate admin token
         id: admin
         working-directory: ./docker
@@ -128,6 +137,7 @@ jobs:
 
       - name: Download Go modules
         run: go mod download
+
       - name: Run acceptance tests
         env:
           TF_ACC: "1"
