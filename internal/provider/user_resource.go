@@ -808,7 +808,7 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 	state.DeactivateOnDestroy = types.BoolValue(false)
 	state.MaxRepoCreation = types.Int64Value(-1)
 	state.MustChangePassword = types.BoolValue(true)
-	state.Password = types.StringValue("")
+	state.Password = types.StringNull()
 	state.SendNotify = types.BoolValue(true)
 
 	// Save data into Terraform state
