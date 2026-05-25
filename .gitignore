@@ -39,3 +39,9 @@ website/vendor
 
 # Exclude coverage files
 coverage.out
+
+# Exclude all markdown files except specific ones
+*.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!README.md
