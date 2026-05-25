@@ -1133,7 +1133,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			"owner":             data.Owner.ValueString(),
 			"clone_addr":        data.CloneAddr.ValueString(),
 			"service":           data.Service.ValueString(),
-			"auth_token":        data.AuthToken.ValueString(),
+			"auth_token":        strings.Repeat("*", len(data.AuthToken.ValueString())),
 			"mirror":            data.Mirror.ValueBool(),
 			"private":           data.Private.ValueBool(),
 			"description":       data.Description.ValueString(),
