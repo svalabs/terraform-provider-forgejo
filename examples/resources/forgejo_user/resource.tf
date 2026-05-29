@@ -35,5 +35,5 @@ resource "forgejo_user" "non_defaults" {
 # id follows the format: <login>
 import {
   id = "test_user_defaults"
-  to = "forgejo_user.defaults"
+  to = forgejo_user.defaults
 }

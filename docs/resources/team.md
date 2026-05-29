@@ -63,7 +63,7 @@ resource "forgejo_team" "custom_team" {
 # id follows the format: <org_name>/<team_name>
 import {
   id = "test_org/org_test_team_defaults"
-  to = "forgejo_team.default_team"
+  to = forgejo_team.default_team
 }
 ```
 
