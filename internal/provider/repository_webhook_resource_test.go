@@ -82,6 +82,13 @@ resource "forgejo_repository_webhook" "test" {
 				ExpectError: regexp.MustCompile(`Repository webhook with owner 'tfadmin', repo 'non-existent' and ID 1 not
 found`),
 			},
+			// Import testing (invalid ID)
+			{
+				ResourceName:  "forgejo_repository_webhook.test",
+				ImportState:   true,
+				ImportStateId: "tfadmin/test_repo/invalid",
+				ExpectError:   regexp.MustCompile("Failed to parse webhook ID"),
+			},
 			// Import testing (non-existent resource)
 			{
 				ResourceName:  "forgejo_repository_webhook.test",
