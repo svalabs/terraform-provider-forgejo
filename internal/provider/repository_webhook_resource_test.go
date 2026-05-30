@@ -71,21 +71,23 @@ resource "forgejo_repository_webhook" "test" {
 				ResourceName:  "forgejo_repository_webhook.test",
 				ImportState:   true,
 				ImportStateId: "invalid",
-				ExpectError:   regexp.MustCompile(`Expected import identifier with format: 'owner/name/webhookID', got:\s+'invalid'`),
+				ExpectError: regexp.MustCompile(`Expected import identifier with format: 'owner/name/webhookID', got:
+'invalid'`),
 			},
 			// Import testing (non-existent repo)
 			{
 				ResourceName:  "forgejo_repository_webhook.test",
 				ImportState:   true,
 				ImportStateId: "tfadmin/non-existent/1",
-				ExpectError:   regexp.MustCompile("Repository with owner 'tfadmin' and name 'non-existent' not found"),
+				ExpectError: regexp.MustCompile(`Repository webhook with owner 'tfadmin', repo 'non-existent' and ID 1 not
+found`),
 			},
 			// Import testing (non-existent resource)
 			{
 				ResourceName:  "forgejo_repository_webhook.test",
 				ImportState:   true,
 				ImportStateId: "tfadmin/test_repo/0",
-				ExpectError:   regexp.MustCompile("Repository webhook 'tfadmin/test_repo/0' not found"),
+				ExpectError:   regexp.MustCompile("Repository webhook with owner 'tfadmin', repo 'test_repo' and ID 0 not found"),
 			},
 			// Import testing
 			{

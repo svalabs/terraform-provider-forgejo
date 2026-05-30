@@ -100,7 +100,7 @@ func (r *repositoryWebhookResource) Metadata(_ context.Context, req resource.Met
 // Schema defines the schema for the resource.
 func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `Forgejo repository webhook resource.`,
+		MarkdownDescription: "Forgejo repository webhook resource.",
 
 		Attributes: map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{
@@ -134,8 +134,8 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 			},
 			"config": schema.MapAttribute{
 				Description: "Map of configuration settings.",
-				Required:    true,
 				ElementType: types.StringType,
+				Required:    true,
 			},
 			"created_at": schema.StringAttribute{
 				Description: "Time at which the webhook was created.",
@@ -193,7 +193,6 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 			"type": schema.StringAttribute{
 				Description: "Type of webhook. Changing this forces a new resource to be created.",
 				Required:    true,
-				Computed:    false,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -297,13 +296,13 @@ func (r *repositoryWebhookResource) Create(ctx context.Context, req resource.Cre
 
 	// Generate API request body from plan
 	opts := forgejo.CreateHookOption{
+		Type:                forgejo.HookType(data.Type.ValueString()),
+		Config:              config,
+		Events:              events,
+		BranchFilter:        data.BranchFilter.ValueString(),
 		Active:              data.Active.ValueBool(),
 		AuthorizationHeader: data.AuthorizationHeader.ValueString(),
-		BranchFilter:        data.BranchFilter.ValueString(),
-		Type:                forgejo.HookType(data.Type.ValueString()),
 	}
-	opts.Events = events
-	opts.Config = config
 
 	// Validate API request body
 	err := opts.Validate()
@@ -417,7 +416,7 @@ func (r *repositoryWebhookResource) Read(ctx context.Context, req resource.ReadR
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Repo webhook with repo owner %s repo name %s and webhook id %d not found: %s",
+					"Repository webhook with owner %s, repo %s and ID %d not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.WebhookID.ValueInt64(),
@@ -479,9 +478,17 @@ func (r *repositoryWebhookResource) Update(ctx context.Context, req resource.Upd
 	repo.from(rep)
 
 	var events []string
-	data.Events.ElementsAs(ctx, &events, false)
+	diags = data.Events.ElementsAs(ctx, &events, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	var config map[string]string
-	data.Config.ElementsAs(ctx, &config, false)
+	diags = data.Config.ElementsAs(ctx, &config, false)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Info(ctx, "Update repository webhook", map[string]any{
 		"active":               data.Active.ValueBool(),
@@ -521,7 +528,7 @@ func (r *repositoryWebhookResource) Update(ctx context.Context, req resource.Upd
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Repo webhook with repo owner %s repo name %s and webhook id %d not found: %s",
+					"Repository webhook with owner %s, repo %s and ID %d not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.WebhookID.ValueInt64(),
@@ -564,7 +571,7 @@ func (r *repositoryWebhookResource) Update(ctx context.Context, req resource.Upd
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Repo webhook with repo owner %s repo name %s and webhook id %d not found: %s",
+					"Repository webhook with owner %s, repo %s and ID %d not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.WebhookID.ValueInt64(),
@@ -632,7 +639,7 @@ func (r *repositoryWebhookResource) Delete(ctx context.Context, req resource.Del
 		"webhook_id": data.WebhookID.ValueInt64(),
 	})
 
-	// Use Forgejo client to delete existing deploy key
+	// Use Forgejo client to delete existing repository webhook
 	res, err := r.client.DeleteRepoHook(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),
@@ -650,7 +657,7 @@ func (r *repositoryWebhookResource) Delete(ctx context.Context, req resource.Del
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Repo webhook with repo owner %s repo name %s and webhook id %d forbidden: %s",
+					"Repository webhook with owner %s, repo %s and ID %d forbidden: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.WebhookID.ValueInt64(),
@@ -658,7 +665,7 @@ func (r *repositoryWebhookResource) Delete(ctx context.Context, req resource.Del
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Repo webhook with repo owner %s repo name %s and webhook id %d not found: %s",
+					"Repository webhook with owner %s, repo %s and ID %d not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.WebhookID.ValueInt64(),
@@ -676,7 +683,6 @@ func (r *repositoryWebhookResource) Delete(ctx context.Context, req resource.Del
 
 		return
 	}
-
 }
 
 // ImportState reads an existing resource and adds it to Terraform state on success.
@@ -695,38 +701,37 @@ func (r *repositoryWebhookResource) ImportState(ctx context.Context, req resourc
 				req.ID,
 			),
 		)
+
 		return
 	}
-	owner, repositoryName, webhookIDstr := cmp[0], cmp[1], cmp[2]
+	owner, repo, webhookIDstr := cmp[0], cmp[1], cmp[2]
 
+	// Parse webhook ID
 	webhookID, err := strconv.ParseInt(webhookIDstr, 10, 64)
 	if err != nil {
-		msg := fmt.Sprintf("Failed to parse webhook ID: %s", err)
-		resp.Diagnostics.AddError("Unable to import repository webhook", msg)
+		resp.Diagnostics.AddError(
+			"Unable to parse import identifier",
+			fmt.Sprintf(
+				"Failed to parse webhook ID: %s",
+				err,
+			),
+		)
 
 		return
 	}
 
 	tflog.Info(ctx, "Read repository webhook", map[string]any{
 		"owner":      owner,
-		"repo":       repositoryName,
+		"repo":       repo,
 		"webhook_id": webhookID,
 	})
 
-	// Use Forgejo client to get repository by name
-	rep, diags := getRepositoryByName(
-		ctx,
-		r.client,
-		owner,
-		repositoryName,
-	)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	// Use Forgejo client to get repository webhook
-	hook, res, err := r.client.GetRepoHook(owner, repositoryName, webhookID)
+	hook, res, err := r.client.GetRepoHook(
+		owner,
+		repo,
+		webhookID,
+	)
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -739,8 +744,10 @@ func (r *repositoryWebhookResource) ImportState(ctx context.Context, req resourc
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Repository webhook '%s' not found: %s",
-					req.ID,
+					"Repository webhook with owner '%s', repo '%s' and ID %d not found: %s",
+					owner,
+					repo,
+					webhookID,
 					err,
 				)
 			default:
@@ -756,19 +763,29 @@ func (r *repositoryWebhookResource) ImportState(ctx context.Context, req resourc
 		return
 	}
 
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByName(
+		ctx,
+		r.client,
+		owner,
+		repo,
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Map response body to model
+	state.RepositoryID = types.Int64Value(rep.ID)
 	diags = state.from(hook, ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.RepositoryID = types.Int64Value(rep.ID)
-
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
-
 }
 
 // NewRepositoryResource is a helper function to simplify the provider implementation.
