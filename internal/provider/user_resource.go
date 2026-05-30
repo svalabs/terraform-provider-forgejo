@@ -467,6 +467,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	// Create-then-edit: AdminCreateUser() supports only a subset of fields
 	tflog.Info(ctx, "Update user", map[string]any{
 		"source_id":                 data.SourceID.ValueInt64(),
 		"login_name":                data.LoginName.ValueString(),

@@ -1377,6 +1377,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Create-then-edit: Create*Repo() / MigrateRepo() support only a subset of fields
 	tflog.Info(ctx, "Update repository", map[string]any{
 		"owner":                             rep.Owner.UserName,
 		"name":                              data.Name.ValueString(),

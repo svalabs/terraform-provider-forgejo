@@ -279,6 +279,8 @@ func (r *teamResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	// Create-then-edit: CreateTeam() supports only a subset of fields
+
 	// Generate API request body from plan
 	opts := forgejo.EditTeamOption{}
 	diags = data.to(&opts, ctx)
