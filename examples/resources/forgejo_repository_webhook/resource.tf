@@ -27,3 +27,10 @@ resource "forgejo_repository_webhook" "example" {
     "url"          = "http://example.com/invoke"
   }
 }
+
+# Import repository webhook
+# id follows the format: <owner>/<repo>/<webhook_id>
+import {
+  id = "tfadmin/personal_test_repo/123"
+  to = forgejo_repository_webhook.example
+}
