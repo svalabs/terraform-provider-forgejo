@@ -542,6 +542,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"mirror": schema.BoolAttribute{
+				// Create-only attribute
 				Description: "Is the repository a mirror? Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Computed:    true,
@@ -916,6 +917,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Default:     stringdefault.StaticString(""),
 			},
 			"issue_labels": schema.StringAttribute{
+				// Create-only attribute
 				Description: "Issue Label set to use. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
@@ -925,6 +927,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"auto_init": schema.BoolAttribute{
+				// Create-only attribute
 				Description: "Whether the repository should be auto-intialized? Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
@@ -934,6 +937,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"gitignores": schema.StringAttribute{
+				// Create-only attribute
 				Description: "Gitignores to use. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
@@ -943,6 +947,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"license": schema.StringAttribute{
+				// Create-only attribute
 				Description: "License to use. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
@@ -952,6 +957,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"readme": schema.StringAttribute{
+				// Create-only attribute
 				Description: "Readme of the repository to create. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
@@ -961,6 +967,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"trust_model": schema.StringAttribute{
+				// Create-only attribute
 				Description: "TrustModel of the repository. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
@@ -978,6 +985,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"clone_addr": schema.StringAttribute{
+				// Create-only attribute
 				Description: "Migrate / clone from URL. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
@@ -997,6 +1005,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"lfs": schema.BoolAttribute{
+				// Create-only attribute
 				Description: "Whether to migrate LFS files. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Computed:    true,
@@ -1011,6 +1020,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"lfs_endpoint": schema.StringAttribute{
+				// Create-only attribute
 				Description: "LFS endpoint to use. Changing this forces a new resource to be created. **Note**: This setting is only effective if `lfs` is `true`.",
 				Optional:    true,
 				Computed:    true,
@@ -1025,6 +1035,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"milestones": schema.BoolAttribute{
+				// Create-only attribute
 				Description: "Whether to migrate milestones. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Computed:    true,
@@ -1039,6 +1050,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"labels": schema.BoolAttribute{
+				// Create-only attribute
 				Description: "Whether to migrate labels. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Computed:    true,
@@ -1053,6 +1065,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"service": schema.StringAttribute{
+				// Create-only attribute
 				Description: "Service to migrate from. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Computed:    true,

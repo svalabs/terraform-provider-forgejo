@@ -294,6 +294,7 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Default:     booldefault.StaticBool(true),
 			},
 			"send_notify": schema.BoolAttribute{
+				// Create-only attribute
 				Description: "Send notification to administrators? Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
