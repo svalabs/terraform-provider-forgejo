@@ -59,6 +59,8 @@ func (m *organizationResourceModel) from(o *forgejo.Organization) {
 	m.Website = types.StringValue(o.Website)
 	m.Location = types.StringValue(o.Location)
 	m.Visibility = types.StringValue(o.Visibility)
+
+	// RepoAdminChangeTeamAccess intentionally omitted (write-only)
 }
 
 // to is a helper function to save Terraform data model into an API struct.

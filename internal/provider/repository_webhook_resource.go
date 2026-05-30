@@ -70,6 +70,8 @@ func (m *repositoryWebhookResourceModel) from(h *forgejo.Hook, ctx context.Conte
 	m.Type = types.StringValue(h.Type)
 	m.UpdatedAt = types.StringValue(h.Updated.Format(time.RFC3339))
 
+	// Intentionally omitted (write-only): AuthorizationHeader, BranchFilter
+
 	return diags
 }
 
@@ -124,11 +126,13 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 				Default:     booldefault.StaticBool(false),
 			},
 			"authorization_header": schema.StringAttribute{
+				// Write-only attribute
 				Description: "Authorization header to send to the target.",
 				Optional:    true,
 				Sensitive:   true,
 			},
 			"branch_filter": schema.StringAttribute{
+				// Write-only attribute
 				Description: "List of allowed branches for push, branch creation and branch deletion events, specified as glob pattern. If empty or *, events for all branches are reported.",
 				Optional:    true,
 			},
@@ -782,6 +786,9 @@ func (r *repositoryWebhookResource) ImportState(ctx context.Context, req resourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Initialize sensitive write-only fields to null value
+	state.AuthorizationHeader = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)

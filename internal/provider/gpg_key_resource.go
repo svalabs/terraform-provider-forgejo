@@ -105,6 +105,8 @@ func (m *gpgKeyResourceModel) from(k *forgejo.GPGKey) (diags diag.Diagnostics) {
 	}
 	m.SubKeys = subkeys
 
+	// ArmoredPublicKey intentionally omitted (write-only)
+
 	return diags
 }
 
@@ -187,6 +189,7 @@ func (r *gpgKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 
 		Attributes: map[string]schema.Attribute{
 			"armored_public_key": schema.StringAttribute{
+				// Write-only attribute
 				Description: "Armored GPG public key. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{

@@ -186,6 +186,13 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 		m.AllowSquash = types.BoolValue(r.AllowSquash)
 		m.DefaultMergeStyle = types.StringValue(string(r.DefaultMergeStyle))
 	}
+
+	// Intentionally omitted (write-only): IssueLabels, AutoInit, Gitignores,
+	// License, Readme, TrustModel, AuthToken, LFS, LFSEndpoint, Milestones,
+	// Labels, Service, AllowManualMerge, AutodetectManualMerge,
+	// DefaultDeleteBranchAfterMerge, AllowFastForwardOnly, AllowRebaseUpdate,
+	// DefaultAllowMaintainerEdit, DefaultUpdateStyle, EnablePrune,
+	// GloballyEditableWiki, WikiBranch, ArchiveOnDestroy
 }
 
 // to is a helper function to save Terraform data model into an API struct.
@@ -851,42 +858,49 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"allow_manual_merge": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Allowed to manually merge pull requests? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"autodetect_manual_merge": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"default_delete_branch_after_merge": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Delete pull request branch after merge by default? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"allow_fast_forward_only_merge": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Allowed to fast-forward-only merge pull requests? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"allow_rebase_update": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Allowed to update pull request branch by rebase? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"default_allow_maintainer_edit": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Allow maintainer edits on pull requests by default? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"default_update_style": schema.StringAttribute{
+				// Write-only attribute
 				Description: "Default pull request update style of the repository. **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
@@ -899,18 +913,21 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"enable_prune": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Remove obsolete remote-tracking references when mirroring? **Note**: This setting is only effective if `mirror` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"globally_editable_wiki": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Is the repository wiki globally editable? **Note**: This setting is only effective if `has_wiki` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"wiki_branch": schema.StringAttribute{
+				// Write-only attribute
 				Description: "Branch used for the repository wiki. **Note**: This setting is only effective if `has_wiki` is `true`.",
 				Optional:    true,
 				Computed:    true,
@@ -995,6 +1012,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"auth_token": schema.StringAttribute{
+				// Write-only attribute
 				Description: "API token for authenticating with migrate / clone URL. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Sensitive:   true,
@@ -1088,6 +1106,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"archive_on_destroy": schema.BoolAttribute{
+				// Provider behavior flag
 				Description: "Archive the repo instead of delete?",
 				Optional:    true,
 				Computed:    true,
@@ -1818,6 +1837,9 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	state.Readme = types.StringValue("")
 	state.Service = types.StringValue("")
 	state.TrustModel = types.StringValue("default")
+
+	// Initialize sensitive write-only fields to null value
+	state.AuthToken = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)

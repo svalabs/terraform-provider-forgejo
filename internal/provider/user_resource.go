@@ -98,9 +98,14 @@ func (m *userResourceModel) from(u *forgejo.User) {
 	m.FollowerCount = types.Int64Value(int64(u.FollowerCount))
 	m.FollowingCount = types.Int64Value(int64(u.FollowingCount))
 	m.StarredRepoCount = types.Int64Value(int64(u.StarredRepoCount))
+
+	// Intentionally omitted (write-only): Password, MustChangePassword,
+	// SendNotify, AllowGitHook, AllowImportLocal, AllowCreateOrganization,
+	// MaxRepoCreation, DeactivateOnDestroy
 }
 
 // to is a helper function to save Terraform data model into an API struct.
+// m is desired (plan) state; s is prior state.
 func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) {
 	if o == nil {
 		return
@@ -283,11 +288,13 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				Computed:    true,
 			},
 			"password": schema.StringAttribute{
+				// Write-only attribute
 				Description: "Password of the user.",
 				Required:    true,
 				Sensitive:   true,
 			},
 			"must_change_password": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Require user to change password?",
 				Optional:    true,
 				Computed:    true,
@@ -304,30 +311,35 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				},
 			},
 			"allow_git_hook": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Allow user to create Git hooks?",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"allow_import_local": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Allow user to import local repositories?",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"allow_create_organization": schema.BoolAttribute{
+				// Write-only attribute
 				Description: "Allow user to create organizations?",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
 			},
 			"max_repo_creation": schema.Int64Attribute{
+				// Write-only attribute
 				Description: "Maximum number of repositories user can create. A value of -1 means no limit.",
 				Optional:    true,
 				Computed:    true,
 				Default:     int64default.StaticInt64(-1),
 			},
 			"deactivate_on_destroy": schema.BoolAttribute{
+				// Provider behavior flag
 				Description: "Deactivate the user instead of delete?",
 				Optional:    true,
 				Computed:    true,
@@ -809,8 +821,10 @@ func (r *userResource) ImportState(ctx context.Context, req resource.ImportState
 	state.DeactivateOnDestroy = types.BoolValue(false)
 	state.MaxRepoCreation = types.Int64Value(-1)
 	state.MustChangePassword = types.BoolValue(true)
-	state.Password = types.StringNull()
 	state.SendNotify = types.BoolValue(true)
+
+	// Initialize sensitive write-only fields to null value
+	state.Password = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)

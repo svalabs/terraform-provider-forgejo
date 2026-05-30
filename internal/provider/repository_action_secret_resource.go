@@ -49,6 +49,8 @@ func (m *repositoryActionSecretResourceModel) from(s *forgejo.Secret) {
 
 	// Name is omitted here, to maintain the user's configuration casing
 	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
+
+	// Data intentionally omitted (write-only)
 }
 
 // to is a helper function to save Terraform data model into an API struct.
@@ -90,6 +92,7 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 				},
 			},
 			"data": schema.StringAttribute{
+				// Write-only attribute
 				Description: "Data of the secret.",
 				Required:    true,
 				Sensitive:   true,
