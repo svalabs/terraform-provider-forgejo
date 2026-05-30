@@ -310,7 +310,7 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Deploy key with user %s repo %s and id %d not found: %s",
+					"Deploy key with user %s, repo %s and ID %d not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.KeyID.ValueInt64(),
@@ -401,7 +401,7 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Deploy key with owner %s repo %s and id %d forbidden: %s",
+					"Deploy key with owner %s, repo %s and ID %d forbidden: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.KeyID.ValueInt64(),
@@ -409,7 +409,7 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Deploy key with owner %s repo %s and id %d not found: %s",
+					"Deploy key with owner %s, repo %s and ID %d not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.KeyID.ValueInt64(),

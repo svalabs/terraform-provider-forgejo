@@ -185,7 +185,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					"Collaborator with user %s, repo %s and name %s forbidden: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),
@@ -193,7 +193,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s not found: %s",
+					"Collaborator with user %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),
@@ -273,7 +273,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					"Collaborator with user %s, repo %s and name %s forbidden: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),
@@ -281,7 +281,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s not found: %s",
+					"Collaborator with user %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),
@@ -376,7 +376,7 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					"Collaborator with user %s, repo %s and name %s forbidden: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),
@@ -384,7 +384,7 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s not found: %s",
+					"Collaborator with user %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),
@@ -464,7 +464,7 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 			switch res.StatusCode {
 			case 404:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s not found: %s",
+					"Collaborator with user %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),

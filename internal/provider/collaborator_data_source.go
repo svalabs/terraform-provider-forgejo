@@ -134,7 +134,7 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s forbidden: %s",
+					"Collaborator with user %s, repo %s and name %s forbidden: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),
@@ -142,7 +142,7 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Collaborator with user %s repo %s and name %s not found: %s",
+					"Collaborator with user %s, repo %s and name %s not found: %s",
 					repo.Owner.String(),
 					repo.Name.String(),
 					data.User.String(),

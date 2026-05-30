@@ -40,7 +40,7 @@ data "forgejo_deploy_key" "test" {
 	repository_id = forgejo_repository.test.id
 	title         = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("Deploy key with user \"" + forgejoTestUser + "\" repo \"test_repo\" and title \"non_existent\" not"),
+				ExpectError: regexp.MustCompile("Deploy key with user \"" + forgejoTestUser + "\", repo \"test_repo\" and title \"non_existent\" not"),
 			},
 			// Read testing
 			{

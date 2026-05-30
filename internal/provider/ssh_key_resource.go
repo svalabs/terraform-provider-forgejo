@@ -286,14 +286,14 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"SSH key with user %s and id %d forbidden: %s",
+					"SSH key with user %s and ID %d forbidden: %s",
 					data.User.String(),
 					data.KeyID.ValueInt64(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"SSH key with user %s and id %d not found: %s",
+					"SSH key with user %s and ID %d not found: %s",
 					data.User.String(),
 					data.KeyID.ValueInt64(),
 					err,
@@ -364,14 +364,14 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"SSH key with user %s and id %d forbidden: %s",
+					"SSH key with user %s and ID %d forbidden: %s",
 					data.User.String(),
 					data.KeyID.ValueInt64(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"SSH key with user %s and id %d not found: %s",
+					"SSH key with user %s and ID %d not found: %s",
 					data.User.String(),
 					data.KeyID.ValueInt64(),
 					err,
