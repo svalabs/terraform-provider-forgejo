@@ -26,14 +26,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+
+	forgejoBoolValidator "terraform-provider-forgejo/internal/provider/boolvalidator"
+	forgejoListValidator "terraform-provider-forgejo/internal/provider/listvalidator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource                     = &branchProtectionResource{}
-	_ resource.ResourceWithConfigure        = &branchProtectionResource{}
-	_ resource.ResourceWithImportState      = &branchProtectionResource{}
-	_ resource.ResourceWithConfigValidators = &branchProtectionResource{}
+	_ resource.Resource                = &branchProtectionResource{}
+	_ resource.ResourceWithConfigure   = &branchProtectionResource{}
+	_ resource.ResourceWithImportState = &branchProtectionResource{}
 )
 
 // branchProtectionResource is the resource implementation.
@@ -109,6 +111,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					boolvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_push"),
 					}...),
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("enable_push"),
+					}...),
 				},
 			},
 			"push_whitelist_usernames": schema.SetAttribute{
@@ -124,6 +129,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				),
 				Validators: []validator.Set{
 					setvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_push_whitelist"),
+					}...),
+					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
 				},
@@ -143,6 +151,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
+					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("enable_push_whitelist"),
+					}...),
 				},
 			},
 			"push_whitelist_deploy_keys": schema.BoolAttribute{
@@ -152,6 +163,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Default:     booldefault.StaticBool(false),
 				Validators: []validator.Bool{
 					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_push_whitelist"),
+					}...),
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
 				},
@@ -175,6 +189,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				),
 				Validators: []validator.List{
 					listvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_status_check"),
+					}...),
+					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_status_check"),
 					}...),
 				},
@@ -218,6 +235,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
+					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("enable_merge_whitelist"),
+					}...),
 				},
 			},
 			"merge_whitelist_teams": schema.SetAttribute{
@@ -233,6 +253,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				),
 				Validators: []validator.Set{
 					setvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_merge_whitelist"),
+					}...),
+					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
 				},
@@ -258,6 +281,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
+					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("enable_approvals_whitelist"),
+					}...),
 				},
 			},
 			"approvals_whitelist_teams": schema.SetAttribute{
@@ -273,6 +299,9 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				),
 				Validators: []validator.Set{
 					setvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("enable_approvals_whitelist"),
+					}...),
+					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
 				},
@@ -753,16 +782,6 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 	// Save data into Terraform state
 	diags = response.State.Set(ctx, &data)
 	response.Diagnostics.Append(diags...)
-}
-
-// ConfigValidators returns a list of configuration validators for the resource.
-func (r *branchProtectionResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		branchProtectionResourcePushConfigValidator{},
-		branchProtectionResourceStatusCheckConfigValidator{},
-		branchProtectionResourceMergeConfigValidator{},
-		branchProtectionResourceApprovalConfigValidator{},
-	}
 }
 
 // NewBranchProtectionResource is a helper function to simplify the provider implementation.
