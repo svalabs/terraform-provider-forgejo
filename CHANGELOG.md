@@ -1,3 +1,35 @@
+## 1.5.0 (May 31, 2026)
+
+FEATURES:
+
+- **New Resource**: `forgejo_repository_webhook` ([documentation](docs/resources/repository_webhook.md))
+
+ENHANCEMENTS:
+
+- Add OpenTofu to CI test matrix
+
+BUG FIXES:
+
+- `forgejo_branch_protection`: Change whitelist attributes from List to Set (fixes [#148](https://github.com/svalabs/terraform-provider-forgejo/issues/148))
+- `forgejo_repository`: Obfuscate `auth_token` in log output
+- `forgejo_user`: Initialize `password` as null value during import
+
+DEPENDENCIES:
+
+- Bump dessant/lock-threads from 6.0.0 to 6.0.2
+- Bump golangci/golangci-lint-action from 9.2.0 to 9.2.1
+- Bump goreleaser/goreleaser-action from 7.2.1 to 7.2.2
+- Bump hashicorp/setup-terraform from 4.0.0 to 4.0.1
+- Bump opentofu/setup-opentofu from 2.0.0 to 2.0.1
+
+DOCUMENTATION:
+
+- `forgejo_team`, `forgejo_user`: Correct import example syntax
+
+NEW CONTRIBUTORS 🎉:
+
+- [@edward-milkey](https://github.com/edward-milkey) — [#127: Add repository_webhook resource](https://github.com/svalabs/terraform-provider-forgejo/pull/127)
+
 ## 1.4.4 (May 17, 2026)
 
 ENHANCEMENTS:
@@ -11,7 +43,7 @@ BUG FIXES:
 - `forgejo_repository_action_secret`: Fix duplicate word in error message
 - `forgejo_repository`: Mark `issue_labels` as create-only attribute
 - `forgejo_ssh_key`: URLs may change outside of Terraform, so don't use state for unknown values
-- `forgejo_team`, `forgejo_organization_action_variable`: Represent organization ID as zero (non-null) value if organization name was defined
+- `forgejo_team`, `forgejo_organization_action_secret`, `forgejo_organization_action_variable`: Represent organization ID as zero (non-null) value if organization name was defined
 
 DOCUMENTATION:
 
