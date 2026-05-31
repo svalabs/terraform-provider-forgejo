@@ -16,6 +16,7 @@ import (
 var (
 	_ validator.Bool = &RequiresTrueIfConfiguredValidator{}
 	_ validator.List = &RequiresTrueIfConfiguredValidator{}
+	_ validator.Set  = &RequiresTrueIfConfiguredValidator{}
 )
 
 // RequiresTrueIfConfiguredValidator is the underlying type implementing RequiresTrueIfConfigured.
@@ -35,6 +36,28 @@ func (v RequiresTrueIfConfiguredValidator) MarkdownDescription(ctx context.Conte
 
 // ValidateList performs the validation logic for the validator if the attribute type is a List.
 func (v RequiresTrueIfConfiguredValidator) ValidateList(ctx context.Context, req validator.ListRequest, resp *validator.ListResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	opts := basetypes.CollectionLengthOptions{
+		UnhandledNullAsZero:    true,
+		UnhandledUnknownAsZero: true,
+	}
+	if req.ConfigValue.Length(opts) == 0 {
+		return
+	}
+
+	validateReq := requiresTrueIfConfiguredValidatorRequest{
+		Config:         req.Config,
+		Path:           req.Path,
+		PathExpression: req.PathExpression,
+	}
+
+	v.validate(ctx, validateReq, &resp.Diagnostics, fmt.Sprintf("If %s is not empty, %%s must also be 'true'", req.Path))
+}
+
+func (v RequiresTrueIfConfiguredValidator) ValidateSet(ctx context.Context, req validator.SetRequest, resp *validator.SetResponse) {
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
 	}
