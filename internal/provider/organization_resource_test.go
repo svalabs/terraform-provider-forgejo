@@ -127,6 +127,57 @@ resource "forgejo_organization" "test" {
 					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("repo_admin_change_team_access"), knownvalue.Bool(true)),
 				},
 			},
+			// Update and Read testing — private -> public regression
+			// for issue #141 ("Provider produced inconsistent result after
+			// apply" when changing visibility). EditOrg can silently ignore
+			// the visibility change; the AdminEditUser fallback in Update()
+			// ensures the state matches the plan.
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name        = "tftest1"
+	description = "Purely for testing... 456"
+	location    = "Mêlée Island"
+	visibility  = "public"
+	website     = "` + forgejoTestHost + `"
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("avatar_url"), knownvalue.StringRegexp(regexp.MustCompile("^"+forgejoTestHost+"/avatars/[0-9a-z]{32}$"))),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("description"), knownvalue.StringExact("Purely for testing... 456")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("full_name"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("location"), knownvalue.StringExact("Mêlée Island")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("name"), knownvalue.StringExact("tftest1")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("visibility"), knownvalue.StringExact("public")),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("website"), knownvalue.StringExact(forgejoTestHost)),
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("repo_admin_change_team_access"), knownvalue.Bool(true)),
+				},
+			},
+			// Update and Read testing — back to private so the state-for-
+			// unknown check in the next step still proves that behavior.
+			{
+				Config: providerConfig + `
+resource "forgejo_organization" "test" {
+	name        = "tftest1"
+	description = "Purely for testing... 456"
+	location    = "Mêlée Island"
+	visibility  = "private"
+	website     = "` + forgejoTestHost + `"
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_organization.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_organization.test", tfjsonpath.New("visibility"), knownvalue.StringExact("private")),
+				},
+			},
 			// Update and Read testing
 			{
 				Config: providerConfig + `
