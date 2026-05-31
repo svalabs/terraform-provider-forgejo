@@ -40,17 +40,48 @@ resource "forgejo_repository" "test_repo" {
   trust_model  = "collaborator"
 }
 
+
+# Branch protection with default settings
+resource "forgejo_branch_protection" "defaults" {
+  branch_name   = "main"
+  repository_id = forgejo_repository.test_repo.id
+}
+
+# Branch protection with custom settings
+resource "forgejo_branch_protection" "non_defaults" {
+  branch_name   = "main"
+  repository_id = forgejo_repository.test_repo.id
+
+  block_on_outdated_branch  = true
+  block_on_rejected_reviews = true
+  dismiss_stale_approvals   = true
+  required_approvals        = 1
+
+  enable_approvals_whitelist = true
+  approvals_whitelist_usernames = [
+    "alice",
+    "bob",
+  ]
+
+  enable_merge_whitelist = true
+  merge_whitelist_usernames = [
+    "alice",
+    "bob",
+  ]
+
+  enable_push           = true
+  enable_push_whitelist = true
+  push_whitelist_usernames = [
+    "alice",
+    "bob",
+  ]
+}
+
 # Example how to import existing branch protections
 # id follows the format: <owner>/<repo>/<branch>
 import {
   id = "tfadmin/personal_test_repo/main"
-  to = forgejo_branch_protection.main
-}
-
-# Branch protection on the main branch
-resource "forgejo_branch_protection" "main" {
-  branch_name   = "main"
-  repository_id = forgejo_repository.test_repo.id
+  to = forgejo_branch_protection.defaults
 }
 ```
 
@@ -64,8 +95,8 @@ resource "forgejo_branch_protection" "main" {
 
 ### Optional
 
-- `approvals_whitelist_teams` (List of String) Whitelisted teams for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
-- `approvals_whitelist_usernames` (List of String) Whitelisted users for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
+- `approvals_whitelist_teams` (Set of String) Whitelisted teams for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
+- `approvals_whitelist_usernames` (Set of String) Whitelisted users for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
 - `block_on_official_review_requests` (Boolean) Block merge on official review requests.
 - `block_on_outdated_branch` (Boolean) Block merge if pull request is outdated.
 - `block_on_rejected_reviews` (Boolean) Block merge on rejected reviews.
@@ -75,12 +106,12 @@ resource "forgejo_branch_protection" "main" {
 - `enable_push` (Boolean) Enable push to the branch.
 - `enable_push_whitelist` (Boolean) Restrict push to whitelisted users or teams. **Note**: This setting is only effective if `enable_push` is `true`.
 - `enable_status_check` (Boolean) Enable status check.
-- `merge_whitelist_teams` (List of String) Whitelisted teams for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.
-- `merge_whitelist_usernames` (List of String) Whitelisted users for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.
+- `merge_whitelist_teams` (Set of String) Whitelisted teams for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.
+- `merge_whitelist_usernames` (Set of String) Whitelisted users for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.
 - `protected_file_patterns` (String) Protected file patterns (separated using semicolon ';').
 - `push_whitelist_deploy_keys` (Boolean) Whitelist deploy keys with write access to push. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
-- `push_whitelist_teams` (List of String) Whitelisted teams for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
-- `push_whitelist_usernames` (List of String) Whitelisted users for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
+- `push_whitelist_teams` (Set of String) Whitelisted teams for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
+- `push_whitelist_usernames` (Set of String) Whitelisted users for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.
 - `require_signed_commits` (Boolean) Require signed commits.
 - `required_approvals` (Number) Number of required approvals.
 - `status_check_contexts` (List of String) Status check patterns. **Note**: This setting is only effective if `enable_status_check` is `true`.
@@ -92,5 +123,5 @@ Import is supported using the following syntax:
 
 ```shell
 # Import using the repo_owner/repo_name/branch.
-terraform import forgejo_branch_protection.main tfadmin/personal_test_repo/main
+terraform import forgejo_branch_protection.defaults tfadmin/personal_test_repo/main
 ```

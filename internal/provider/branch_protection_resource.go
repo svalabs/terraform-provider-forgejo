@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -45,8 +47,8 @@ type branchProtectionResourceModel struct {
 	BranchName                    types.String `tfsdk:"branch_name"`
 	EnablePush                    types.Bool   `tfsdk:"enable_push"`
 	EnablePushWhitelist           types.Bool   `tfsdk:"enable_push_whitelist"`
-	PushWhitelistUsernames        types.List   `tfsdk:"push_whitelist_usernames"`
-	PushWhitelistTeams            types.List   `tfsdk:"push_whitelist_teams"`
+	PushWhitelistUsernames        types.Set    `tfsdk:"push_whitelist_usernames"`
+	PushWhitelistTeams            types.Set    `tfsdk:"push_whitelist_teams"`
 	PushWhitelistDeployKeys       types.Bool   `tfsdk:"push_whitelist_deploy_keys"`
 	EnableStatusCheck             types.Bool   `tfsdk:"enable_status_check"`
 	StatusCheckContexts           types.List   `tfsdk:"status_check_contexts"`
@@ -54,11 +56,11 @@ type branchProtectionResourceModel struct {
 	ProtectedFilePatterns         types.String `tfsdk:"protected_file_patterns"`
 	UnprotectedFilePatterns       types.String `tfsdk:"unprotected_file_patterns"`
 	EnableMergeWhitelist          types.Bool   `tfsdk:"enable_merge_whitelist"`
-	MergeWhitelistUsernames       types.List   `tfsdk:"merge_whitelist_usernames"`
-	MergeWhitelistTeams           types.List   `tfsdk:"merge_whitelist_teams"`
+	MergeWhitelistUsernames       types.Set    `tfsdk:"merge_whitelist_usernames"`
+	MergeWhitelistTeams           types.Set    `tfsdk:"merge_whitelist_teams"`
 	EnableApprovalsWhitelist      types.Bool   `tfsdk:"enable_approvals_whitelist"`
-	ApprovalsWhitelistUsernames   types.List   `tfsdk:"approvals_whitelist_usernames"`
-	ApprovalsWhitelistTeams       types.List   `tfsdk:"approvals_whitelist_teams"`
+	ApprovalsWhitelistUsernames   types.Set    `tfsdk:"approvals_whitelist_usernames"`
+	ApprovalsWhitelistTeams       types.Set    `tfsdk:"approvals_whitelist_teams"`
 	RequiredApprovals             types.Int64  `tfsdk:"required_approvals"`
 	BlockOnRejectedReviews        types.Bool   `tfsdk:"block_on_rejected_reviews"`
 	BlockOnOfficialReviewRequests types.Bool   `tfsdk:"block_on_official_review_requests"`
@@ -108,36 +110,36 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					}...),
 				},
 			},
-			"push_whitelist_usernames": schema.ListAttribute{
+			"push_whitelist_usernames": schema.SetAttribute{
 				Description: "Whitelisted users for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(
+				Default: setdefault.StaticValue(
+					types.SetValueMust(
 						types.StringType,
 						[]attr.Value{},
 					),
 				),
-				Validators: []validator.List{
-					listvalidator.AlsoRequires(path.Expressions{
+				Validators: []validator.Set{
+					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
 				},
 			},
-			"push_whitelist_teams": schema.ListAttribute{
+			"push_whitelist_teams": schema.SetAttribute{
 				Description: "Whitelisted teams for pushing. **Note**: This setting is only effective if `enable_push_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(
+				Default: setdefault.StaticValue(
+					types.SetValueMust(
 						types.StringType,
 						[]attr.Value{},
 					),
 				),
-				Validators: []validator.List{
-					listvalidator.AlsoRequires(path.Expressions{
+				Validators: []validator.Set{
+					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
 				},
@@ -200,36 +202,36 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
-			"merge_whitelist_usernames": schema.ListAttribute{
+			"merge_whitelist_usernames": schema.SetAttribute{
 				Description: "Whitelisted users for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(
+				Default: setdefault.StaticValue(
+					types.SetValueMust(
 						types.StringType,
 						[]attr.Value{},
 					),
 				),
-				Validators: []validator.List{
-					listvalidator.AlsoRequires(path.Expressions{
+				Validators: []validator.Set{
+					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
 				},
 			},
-			"merge_whitelist_teams": schema.ListAttribute{
+			"merge_whitelist_teams": schema.SetAttribute{
 				Description: "Whitelisted teams for merging. **Note**: This setting is only effective if `enable_merge_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(
+				Default: setdefault.StaticValue(
+					types.SetValueMust(
 						types.StringType,
 						[]attr.Value{},
 					),
 				),
-				Validators: []validator.List{
-					listvalidator.AlsoRequires(path.Expressions{
+				Validators: []validator.Set{
+					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
 				},
@@ -240,36 +242,36 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
-			"approvals_whitelist_usernames": schema.ListAttribute{
+			"approvals_whitelist_usernames": schema.SetAttribute{
 				Description: "Whitelisted users for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(
+				Default: setdefault.StaticValue(
+					types.SetValueMust(
 						types.StringType,
 						[]attr.Value{},
 					),
 				),
-				Validators: []validator.List{
-					listvalidator.AlsoRequires(path.Expressions{
+				Validators: []validator.Set{
+					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
 				},
 			},
-			"approvals_whitelist_teams": schema.ListAttribute{
+			"approvals_whitelist_teams": schema.SetAttribute{
 				Description: "Whitelisted teams for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(
+				Default: setdefault.StaticValue(
+					types.SetValueMust(
 						types.StringType,
 						[]attr.Value{},
 					),
 				),
-				Validators: []validator.List{
-					listvalidator.AlsoRequires(path.Expressions{
+				Validators: []validator.Set{
+					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
 				},
@@ -953,25 +955,25 @@ func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, da
 
 	// Handle Lists
 	var d diag.Diagnostics
-	data.PushWhitelistUsernames, d = r.stringSliceToList(protection.PushWhitelistUsernames)
+	data.PushWhitelistUsernames, d = r.stringSliceToSet(protection.PushWhitelistUsernames)
 	diags.Append(d...)
 
-	data.PushWhitelistTeams, d = r.stringSliceToList(protection.PushWhitelistTeams)
+	data.PushWhitelistTeams, d = r.stringSliceToSet(protection.PushWhitelistTeams)
 	diags.Append(d...)
 
 	data.StatusCheckContexts, d = r.stringSliceToList(protection.StatusCheckContexts)
 	diags.Append(d...)
 
-	data.MergeWhitelistUsernames, d = r.stringSliceToList(protection.MergeWhitelistUsernames)
+	data.MergeWhitelistUsernames, d = r.stringSliceToSet(protection.MergeWhitelistUsernames)
 	diags.Append(d...)
 
-	data.MergeWhitelistTeams, d = r.stringSliceToList(protection.MergeWhitelistTeams)
+	data.MergeWhitelistTeams, d = r.stringSliceToSet(protection.MergeWhitelistTeams)
 	diags.Append(d...)
 
-	data.ApprovalsWhitelistUsernames, d = r.stringSliceToList(protection.ApprovalsWhitelistUsernames)
+	data.ApprovalsWhitelistUsernames, d = r.stringSliceToSet(protection.ApprovalsWhitelistUsernames)
 	diags.Append(d...)
 
-	data.ApprovalsWhitelistTeams, d = r.stringSliceToList(protection.ApprovalsWhitelistTeams)
+	data.ApprovalsWhitelistTeams, d = r.stringSliceToSet(protection.ApprovalsWhitelistTeams)
 	diags.Append(d...)
 
 	return diags
@@ -984,4 +986,12 @@ func (r *branchProtectionResource) stringSliceToList(slice []string) (types.List
 	}
 
 	return types.ListValue(types.StringType, elements)
+}
+func (r *branchProtectionResource) stringSliceToSet(slice []string) (types.Set, diag.Diagnostics) {
+	elements := make([]attr.Value, len(slice))
+	for i, v := range slice {
+		elements[i] = types.StringValue(v)
+	}
+
+	return types.SetValue(types.StringType, elements)
 }
