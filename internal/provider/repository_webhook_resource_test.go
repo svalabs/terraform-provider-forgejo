@@ -58,7 +58,7 @@ resource "forgejo_repository_webhook" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("webhook_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("active"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("branch_filter"), knownvalue.Null()),
+					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("branch_filter"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("authorization_header"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("type"), knownvalue.StringExact("forgejo")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("events").AtSliceIndex(0), knownvalue.StringExact("push")),
