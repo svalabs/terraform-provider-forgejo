@@ -29,6 +29,7 @@ import (
 
 	forgejoBoolValidator "terraform-provider-forgejo/internal/provider/boolvalidator"
 	forgejoListValidator "terraform-provider-forgejo/internal/provider/listvalidator"
+	forgejoSetValidator "terraform-provider-forgejo/internal/provider/setvalidator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -131,7 +132,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
-					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+					forgejoSetValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
 				},
@@ -151,7 +152,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
-					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+					forgejoSetValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_push_whitelist"),
 					}...),
 				},
@@ -235,7 +236,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
-					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+					forgejoSetValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
 				},
@@ -255,7 +256,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
-					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+					forgejoSetValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_merge_whitelist"),
 					}...),
 				},
@@ -281,7 +282,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
-					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+					forgejoSetValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
 				},
@@ -301,7 +302,7 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 					setvalidator.AlsoRequires(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
-					forgejoListValidator.RequiresTrueIfConfigured(path.Expressions{
+					forgejoSetValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("enable_approvals_whitelist"),
 					}...),
 				},
