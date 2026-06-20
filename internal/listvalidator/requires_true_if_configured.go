@@ -1,4 +1,4 @@
-package boolvalidator
+package listvalidator
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -8,10 +8,11 @@ import (
 )
 
 // RequiresTrueIfConfigured checks that any Bool values in the paths described by the
-// path.Expression are true if the current attribute value is configured to 'true'.
-// If you require the value described the the path.Expression to be set,
+// path.Expression are true if the current attribute value is configured to a non-empty
+// list.
+// If you require the value described by the path.Expression to be set,
 // combine this validator with the "AlsoRequires" validator.
-func RequiresTrueIfConfigured(expressions ...path.Expression) validator.Bool {
+func RequiresTrueIfConfigured(expressions ...path.Expression) validator.List {
 	return &schemavalidator.RequiresTrueIfConfiguredValidator{
 		Expressions: expressions,
 	}

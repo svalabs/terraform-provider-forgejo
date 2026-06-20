@@ -530,7 +530,7 @@ resource "forgejo_branch_protection" "test" {
 	enable_push_whitelist = true
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If enable_push_whitelist is 'true', enable_push must also be 'true'"),
+				ExpectError: regexp.MustCompile("If enable_push_whitelist is 'true', enable_push must be 'true'"),
 			},
 			// Check push_whitelist_usernames attribute
 			{
@@ -546,7 +546,7 @@ resource "forgejo_branch_protection" "test" {
 	push_whitelist_usernames = ["user1", "user2"]
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If push_whitelist_usernames is not empty, enable_push_whitelist must also be\n'true'"),
+				ExpectError: regexp.MustCompile("If push_whitelist_usernames is not empty, enable_push_whitelist must be\n'true'"),
 			},
 			// Check push_whitelist_teams attribute
 			{
@@ -562,7 +562,7 @@ resource "forgejo_branch_protection" "test" {
 	push_whitelist_teams  = ["team1", "team2"]
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If push_whitelist_teams is not empty, enable_push_whitelist must also be\n'true'"),
+				ExpectError: regexp.MustCompile("If push_whitelist_teams is not empty, enable_push_whitelist must be 'true'"),
 			},
 			// Check push_whitelist_deploy_keys attribute
 			{
@@ -578,7 +578,7 @@ resource "forgejo_branch_protection" "test" {
 	push_whitelist_deploy_keys = true
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is 'true', enable_push_whitelist must also be\n'true'"),
+				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is 'true', enable_push_whitelist must be 'true'"),
 			},
 			// enabling push, but not push_whitelist while configuring whitelist attributes ought to also error
 			{
@@ -594,7 +594,7 @@ resource "forgejo_branch_protection" "test" {
 	push_whitelist_deploy_keys = true
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is 'true', enable_push_whitelist must also be\n'true'"),
+				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is 'true', enable_push_whitelist must be 'true'"),
 			},
 			// successful push configuration with push_whitelist
 			{
@@ -615,10 +615,25 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.ListSizeExact(1)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(true)),
-				},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
 			},
 		},
 	})
@@ -642,7 +657,7 @@ resource "forgejo_branch_protection" "test" {
 	status_check_contexts = ["context1", "context2"]
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If status_check_contexts is not empty, enable_status_check must also be\n'true'"),
+				ExpectError: regexp.MustCompile("If status_check_contexts is not empty, enable_status_check must be 'true'"),
 			},
 			// Valid. status_check_enabled is false and contexts are empty
 			{
@@ -659,9 +674,27 @@ resource "forgejo_branch_protection" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(0)),
-				},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
 			},
 			// Valid. status_check_enabled is enabled and contexts are set
 			{
@@ -678,9 +711,27 @@ resource "forgejo_branch_protection" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(1)),
-				},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
 			},
 		},
 	})
@@ -704,7 +755,7 @@ resource "forgejo_branch_protection" "test" {
 	merge_whitelist_usernames = ["` + forgejoTestUser + `"]
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If merge_whitelist_usernames is not empty, enable_merge_whitelist must also\nbe 'true'"),
+				ExpectError: regexp.MustCompile("If merge_whitelist_usernames is not empty, enable_merge_whitelist must be\n'true'"),
 			},
 			// Valid. merge_whitelist_usernames is set
 			{
@@ -721,9 +772,27 @@ resource "forgejo_branch_protection" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.ListSizeExact(1)),
-				},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
 			},
 			// Valid. merge configuration is disabled
 			{
@@ -740,9 +809,27 @@ resource "forgejo_branch_protection" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.ListSizeExact(0)),
-				},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
 			},
 		},
 	})
@@ -766,7 +853,7 @@ resource "forgejo_branch_protection" "test" {
 	approvals_whitelist_usernames = ["` + forgejoTestUser + `"]
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If approvals_whitelist_usernames is not empty, enable_approvals_whitelist\nmust also be 'true'"),
+				ExpectError: regexp.MustCompile("If approvals_whitelist_usernames is not empty, enable_approvals_whitelist\nmust be 'true'"),
 			},
 			// Valid. approvals_whitelist_usernames is set
 			{
@@ -783,9 +870,27 @@ resource "forgejo_branch_protection" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(true)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.ListSizeExact(1)),
-				},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
 			},
 			// Valid. merge configuration is disabled
 			{
@@ -802,9 +907,27 @@ resource "forgejo_branch_protection" "test" {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs("forgejo_branch_protection.test", tfjsonpath.New("repository_id"), "forgejo_repository.test", tfjsonpath.New("id"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("branch_name"), knownvalue.StringExact("main")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("push_whitelist_deploy_keys"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_status_check"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("status_check_contexts"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("protected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("unprotected_file_patterns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_merge_whitelist"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("merge_whitelist_teams"), knownvalue.SetSizeExact(0)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_approvals_whitelist"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.ListSizeExact(0)),
-				},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_usernames"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("approvals_whitelist_teams"), knownvalue.SetSizeExact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("required_approvals"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
 			},
 		},
 	})
