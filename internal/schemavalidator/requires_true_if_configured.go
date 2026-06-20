@@ -26,7 +26,7 @@ type RequiresTrueIfConfiguredValidator struct {
 
 // Description returns a plaintext string describing the validator.
 func (v RequiresTrueIfConfiguredValidator) Description(_ context.Context) string {
-	return fmt.Sprintf("If configured, must be 'true' if %s attributes are configured", v.Expressions)
+	return "If this attribute is configured, the attribute(s) at the given path(s) must be set to 'true'."
 }
 
 // MarkdownDescription returns a Markdown-formatted string describing the validator.
@@ -54,9 +54,15 @@ func (v RequiresTrueIfConfiguredValidator) ValidateList(ctx context.Context, req
 		PathExpression: req.PathExpression,
 	}
 
-	v.validate(ctx, validateReq, &resp.Diagnostics, fmt.Sprintf("If %s is not empty, %%s must also be 'true'", req.Path))
+	v.validate(
+		ctx,
+		validateReq,
+		&resp.Diagnostics,
+		fmt.Sprintf("If %s is not empty, %%s must be 'true'", req.Path),
+	)
 }
 
+// ValidateSet performs the validation logic for the validator if the attribute type is a Set.
 func (v RequiresTrueIfConfiguredValidator) ValidateSet(ctx context.Context, req validator.SetRequest, resp *validator.SetResponse) {
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
@@ -76,9 +82,15 @@ func (v RequiresTrueIfConfiguredValidator) ValidateSet(ctx context.Context, req 
 		PathExpression: req.PathExpression,
 	}
 
-	v.validate(ctx, validateReq, &resp.Diagnostics, fmt.Sprintf("If %s is not empty, %%s must also be 'true'", req.Path))
+	v.validate(
+		ctx,
+		validateReq,
+		&resp.Diagnostics,
+		fmt.Sprintf("If %s is not empty, %%s must be 'true'", req.Path),
+	)
 }
 
+// ValidateBool performs the validation logic for the validator if the attribute type is a Bool.
 func (v RequiresTrueIfConfiguredValidator) ValidateBool(ctx context.Context, req validator.BoolRequest, resp *validator.BoolResponse) {
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
@@ -94,9 +106,15 @@ func (v RequiresTrueIfConfiguredValidator) ValidateBool(ctx context.Context, req
 		PathExpression: req.PathExpression,
 	}
 
-	v.validate(ctx, validateReq, &resp.Diagnostics, fmt.Sprintf("If %s is '%t', %%s must also be 'true'", req.Path, req.ConfigValue.ValueBool()))
+	v.validate(
+		ctx,
+		validateReq,
+		&resp.Diagnostics,
+		fmt.Sprintf("If %s is '%t', %%s must be 'true'", req.Path, req.ConfigValue.ValueBool()),
+	)
 }
 
+// validate is the shared validation function for the validator.
 func (v RequiresTrueIfConfiguredValidator) validate(ctx context.Context, req requiresTrueIfConfiguredValidatorRequest, diags *diag.Diagnostics, messageFmt string) {
 	for _, expression := range req.PathExpression.MergeExpressions(v.Expressions...) {
 		matchedPaths, d := req.Config.PathMatches(ctx, expression)
@@ -108,7 +126,11 @@ func (v RequiresTrueIfConfiguredValidator) validate(ctx context.Context, req req
 		for _, matchedPath := range matchedPaths {
 			var matchedPathValue attr.Value
 
-			diags.Append(req.Config.GetAttribute(ctx, matchedPath, &matchedPathValue)...)
+			diags.Append(req.Config.GetAttribute(
+				ctx,
+				matchedPath,
+				&matchedPathValue,
+			)...)
 			if diags.HasError() {
 				continue
 			}
@@ -118,7 +140,11 @@ func (v RequiresTrueIfConfiguredValidator) validate(ctx context.Context, req req
 			}
 
 			var matchedPathConfig types.Bool
-			diags.Append(tfsdk.ValueAs(ctx, matchedPathValue, &matchedPathConfig)...)
+			diags.Append(tfsdk.ValueAs(
+				ctx,
+				matchedPathValue,
+				&matchedPathConfig,
+			)...)
 			if diags.HasError() {
 				continue
 			}
@@ -126,7 +152,7 @@ func (v RequiresTrueIfConfiguredValidator) validate(ctx context.Context, req req
 			if !matchedPathConfig.ValueBool() {
 				diags.AddAttributeError(
 					matchedPath,
-					"Invalid Attribute Value",
+					"Invalid Attribute Combination",
 					fmt.Sprintf(messageFmt, matchedPath.String()),
 				)
 			}
