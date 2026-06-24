@@ -118,6 +118,7 @@ resource "forgejo_repository_webhook" "test" {
     config = {
         "content_type" = "json"
         "url"          = "http://example.com/abc12345"
+        "secret"       = "supersecret"
     }
     active               = true
     authorization_header = "Bearer token123456"
@@ -140,6 +141,10 @@ resource "forgejo_repository_webhook" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("events").AtSliceIndex(0), knownvalue.StringExact("push")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("content_type"), knownvalue.StringExact("json")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("url"), knownvalue.StringExact("http://example.com/abc12345")),
+					// The webhook secret is write-only: the API never returns it,
+					// so the provider must preserve it from the plan to keep the
+					// applied config consistent. See from() in the resource.
+					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("secret"), knownvalue.StringExact("supersecret")),
 				},
 			},
 			// Recreate and Read testing
