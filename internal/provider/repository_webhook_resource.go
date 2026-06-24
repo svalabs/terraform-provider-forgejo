@@ -53,6 +53,14 @@ type repositoryWebhookResourceModel struct {
 	UpdatedAt           types.String `tfsdk:"updated_at"`
 }
 
+// writeOnlyConfigKeys lists keys within the webhook "config" map that the
+// Forgejo API accepts on create/update but never returns in responses (a GET
+// on the hook only echoes back e.g. "url" and "content_type"). They must be
+// preserved from the prior plan/state value, otherwise the applied "config"
+// drops the key and Terraform fails its post-apply consistency check with
+// "provider produced an unexpected new value: .config".
+var writeOnlyConfigKeys = []string{"secret"}
+
 // from is a helper function to load an API struct into Terraform data model.
 func (m *repositoryWebhookResourceModel) from(h *forgejo.Hook, ctx context.Context) (diags diag.Diagnostics) {
 	if h == nil {
@@ -61,9 +69,29 @@ func (m *repositoryWebhookResourceModel) from(h *forgejo.Hook, ctx context.Conte
 
 	var d diag.Diagnostics
 
+	// The API response never includes write-only config keys (e.g. "secret"),
+	// so carry them over from the prior model value (the plan on create/update,
+	// the prior state on read) to keep the applied config consistent.
+	config := make(map[string]string, len(h.Config))
+	for k, v := range h.Config {
+		config[k] = v
+	}
+	if !m.Config.IsNull() && !m.Config.IsUnknown() {
+		var priorConfig map[string]string
+		d = m.Config.ElementsAs(ctx, &priorConfig, false)
+		diags.Append(d...)
+		for _, key := range writeOnlyConfigKeys {
+			if v, ok := priorConfig[key]; ok {
+				if _, present := config[key]; !present {
+					config[key] = v
+				}
+			}
+		}
+	}
+
 	m.WebhookID = types.Int64Value(h.ID)
 	m.Active = types.BoolValue(h.Active)
-	m.Config, d = types.MapValueFrom(ctx, types.StringType, h.Config)
+	m.Config, d = types.MapValueFrom(ctx, types.StringType, config)
 	diags.Append(d...)
 	m.CreatedAt = types.StringValue(h.Created.Format(time.RFC3339))
 	m.Events, d = types.SetValueFrom(ctx, types.StringType, h.Events)

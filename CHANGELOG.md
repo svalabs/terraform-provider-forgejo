@@ -1,3 +1,9 @@
+## Unreleased
+
+BUG FIXES:
+
+- `forgejo_repository_webhook`: Preserve write-only `config.secret` from configuration so managing the webhook secret no longer causes "Provider produced inconsistent result after apply"
+
 ## 1.5.2 (August 2, 2026)
 
 ENHANCEMENTS:
