@@ -21,7 +21,17 @@ const (
 	// test configuration so the Forgejo client is properly configured.
 	// It is also possible to use the FORGEJO_ environment variables instead,
 	// such as updating the Makefile and running the testing through that tool.
-	providerConfig = `provider "forgejo" { host = "` + forgejoTestHost + `" }
+	providerConfig = `provider "forgejo" {
+		host     = "` + forgejoTestHost + `"
+		username = ""
+		password = ""
+	}
+`
+	providerBasicAuthConfig = `provider "forgejo" {
+		alias     = "basicAuth"
+		host      = "` + forgejoTestHost + `"
+		api_token = ""
+	}
 `
 )
 
@@ -41,5 +51,11 @@ func testAccPreCheck(t *testing.T) {
 	// function.
 	if v := os.Getenv("FORGEJO_API_TOKEN"); v == "" {
 		t.Fatal("FORGEJO_API_TOKEN must be set for acceptance tests")
+	}
+	if v := os.Getenv("FORGEJO_USERNAME"); v == "" {
+		t.Fatal("FORGEJO_USERNAME must be set for acceptance tests")
+	}
+	if v := os.Getenv("FORGEJO_PASSWORD"); v == "" {
+		t.Fatal("FORGEJO_PASSWORD must be set for acceptance tests")
 	}
 }
