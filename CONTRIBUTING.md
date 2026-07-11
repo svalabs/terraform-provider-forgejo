@@ -4,9 +4,10 @@
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.0
-- [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.6
-- [Go](https://golang.org/doc/install) >= 1.23
+- [Forgejo](https://forgejo.org/docs/latest/admin/installation/) >= 15.0
+- [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.13
+- [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.10
+- [Go](https://golang.org/doc/install) >= 1.25
 
 ## Building the Provider
 
