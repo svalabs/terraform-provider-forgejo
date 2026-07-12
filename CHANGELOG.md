@@ -1,3 +1,26 @@
+## 1.5.1 (July 12, 2026)
+
+ENHANCEMENTS:
+
+- `forgejo_branch_protection`:  Add plan-time validation for interdependent push, status check, merge, and approval attributes (partially fixes [#59](https://github.com/svalabs/terraform-provider-forgejo/issues/59))
+
+DOCUMENTATION:
+
+- Add guidelines for AI-assisted contributions
+
+DEPENDENCIES:
+
+- Bump actions/checkout from 6.0.2 to 7.0.0
+- Bump actions/setup-go from 6.4.0 to 6.5.0
+- Bump docker/setup-compose-action from 2.1.0 to 2.3.0
+- Bump go.mongodb.org/mongo-driver from 1.17.6 to 1.17.7
+- Bump golang.org/x/crypto from 0.45.0 to 0.52.0 in /tools
+- Bump golang.org/x/crypto from 0.51.0 to 0.52.0
+- Bump golang.org/x/net from 0.52.0 to 0.55.0
+- Bump golangci/golangci-lint-action from 9.2.1 to 9.3.0
+- Bump goreleaser/goreleaser-action from 7.2.2 to 7.2.3
+- Bump opentofu/setup-opentofu from 2.0.1 to 2.0.2
+
 ## 1.5.0 (May 31, 2026)
 
 FEATURES:
@@ -11,8 +34,13 @@ ENHANCEMENTS:
 BUG FIXES:
 
 - `forgejo_branch_protection`: Change whitelist attributes from List to Set (fixes [#148](https://github.com/svalabs/terraform-provider-forgejo/issues/148))
+- `forgejo_branch_protection`: Default `branch_filter` to empty (non-null) string
 - `forgejo_repository`: Obfuscate `auth_token` in log output
 - `forgejo_user`: Initialize `password` as null value during import
+
+DOCUMENTATION:
+
+- `forgejo_team`, `forgejo_user`: Correct import example syntax
 
 DEPENDENCIES:
 
@@ -21,10 +49,6 @@ DEPENDENCIES:
 - Bump goreleaser/goreleaser-action from 7.2.1 to 7.2.2
 - Bump hashicorp/setup-terraform from 4.0.0 to 4.0.1
 - Bump opentofu/setup-opentofu from 2.0.0 to 2.0.1
-
-DOCUMENTATION:
-
-- `forgejo_team`, `forgejo_user`: Correct import example syntax
 
 NEW CONTRIBUTORS 🎉:
 
