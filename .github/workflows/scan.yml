@@ -61,6 +61,9 @@ jobs:
       - name: Compile Go package
         run: go build -v .
 
+      - name: Compile Go test files
+        run: go vet .
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4.36.3
         with:
