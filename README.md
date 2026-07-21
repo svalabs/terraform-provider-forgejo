@@ -193,13 +193,14 @@ Some resources support import into Terraform state.
 Importing is useful for bringing existing, manually created resources under Terraform management.
 Each resource defines its own import identifier, which uniquely identifies the resource to be imported:
 
-| Resource                     | Import Identifier                                   |
-| ---------------------------- | --------------------------------------------------- |
-| `forgejo_repository`         | `<<<repo_owner>>>/<<<repo_name>>>`                  |
-| `forgejo_repository_webhook` | `<<<repo_owner>>>/<<<repo_name>>>/<<<webhook_id>>>` |
-| `forgejo_branch_protection`  | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>`     |
-| `forgejo_user`               | `<<<login>>>`                                       |
-| `forgejo_team`               | `<<<org_name>>>/<<<team_name>>>`                    |
+| Resource                     | Import Identifier                                       |
+| ---------------------------- | ------------------------------------------------------- |
+| `forgejo_repository`         | `<<<repo_owner>>>/<<<repo_name>>>`                      |
+| `forgejo_repository_webhook` | `<<<repo_owner>>>/<<<repo_name>>>/<<<webhook_id>>>`     |
+| `forgejo_branch_protection`  | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>`         |
+| `forgejo_user`               | `<<<login>>>`                                           |
+| `forgejo_team`               | `<<<org_name>>>/<<<team_name>>>`                        |
+| `forgejo_team_repository`    | `<<<org_name>>>/<<<team_name>>>/<<<repo_name>>>`        |
 
 Refer to the `examples/` directory for more import examples.
 
