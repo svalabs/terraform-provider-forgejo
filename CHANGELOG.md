@@ -1,3 +1,9 @@
+## Unreleased
+
+BUG FIXES:
+
+- All list-then-search lookups: Page through every result instead of relying on `Page: -1`, which only returns the first page
+
 ## 1.5.1 (July 12, 2026)
 
 ENHANCEMENTS:

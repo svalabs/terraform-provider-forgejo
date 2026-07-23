@@ -449,60 +449,72 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, org, n
 		"name": name,
 	})
 
-	// Use Forgejo client to list organization action secrets
-	secrets, res, err := r.client.ListOrgActionSecret(
-		org,
-		forgejo.ListOrgActionSecretOption{
-			ListOptions: forgejo.ListOptions{
-				Page: -1,
+	// Page through all secrets explicitly: ListOptions{Page: -1} only returns
+	// the server's default first page (~30), so a secret past page 1 would be
+	// missed and Read would fail with "not found" for a secret that exists.
+	const pageSize = 50
+	for page := 1; ; page++ {
+		secrets, res, err := r.client.ListOrgActionSecret(
+			org,
+			forgejo.ListOrgActionSecretOption{
+				ListOptions: forgejo.ListOptions{
+					Page:     page,
+					PageSize: pageSize,
+				},
 			},
-		},
-	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Action secrets with organization '%s' not found: %s",
-					org,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		diags.AddError("Unable to list organization action secrets", msg)
-
-		return nil, diags
-	}
-
-	// Search for organization action secrets with given name
-	idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
-		return strings.EqualFold(s.Name, name)
-	})
-	if idx == -1 {
-		diags.AddError(
-			"Unable to find organization action secret by name",
-			fmt.Sprintf(
-				"Action secret with organization '%s' and name '%s' not found",
-				org,
-				name,
-			),
 		)
+		if err != nil {
+			var msg string
+			if res == nil {
+				msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+			} else {
+				tflog.Error(ctx, "Error", map[string]any{
+					"status": res.Status,
+				})
 
-		return nil, diags
+				switch res.StatusCode {
+				case 404:
+					msg = fmt.Sprintf(
+						"Action secrets with organization '%s' not found: %s",
+						org,
+						err,
+					)
+				default:
+					msg = fmt.Sprintf(
+						"Unknown error (status %d): %s",
+						res.StatusCode,
+						err,
+					)
+				}
+			}
+			diags.AddError("Unable to list organization action secrets", msg)
+
+			return nil, diags
+		}
+
+		// Search this page for an organization action secret with the given name.
+		idx := slices.IndexFunc(secrets, func(s *forgejo.Secret) bool {
+			return strings.EqualFold(s.Name, name)
+		})
+		if idx != -1 {
+			return secrets[idx], diags
+		}
+
+		// Only an empty page proves this was the last page. The server caps
+		// the page size at MAX_RESPONSE_ITEMS, so a short page is no proof.
+		if len(secrets) == 0 {
+			break
+		}
 	}
 
-	return secrets[idx], diags
+	diags.AddError(
+		"Unable to find organization action secret by name",
+		fmt.Sprintf(
+			"Action secret with organization '%s' and name '%s' not found",
+			org,
+			name,
+		),
+	)
+
+	return nil, diags
 }

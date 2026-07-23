@@ -160,56 +160,68 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, id int64) 
 		"id": id,
 	})
 
-	// Use Forgejo client to list organizations
-	orgs, res, err := client.ListMyOrgs(
-		forgejo.ListOrgsOptions{
-			ListOptions: forgejo.ListOptions{
-				Page: -1,
+	// Page through all organizations explicitly: ListOptions{Page: -1} only
+	// returns the server's default first page (~30), so an org past page 1
+	// would be missed.
+	const pageSize = 50
+	for page := 1; ; page++ {
+		orgs, res, err := client.ListMyOrgs(
+			forgejo.ListOrgsOptions{
+				ListOptions: forgejo.ListOptions{
+					Page:     page,
+					PageSize: pageSize,
+				},
 			},
-		},
-	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 403:
-				msg = fmt.Sprintf(
-					"Listing organizations forbidden: %s",
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		diags.AddError("Unable to list organizations", msg)
-
-		return nil, diags
-	}
-
-	// Search for organization with given ID
-	idx := slices.IndexFunc(orgs, func(o *forgejo.Organization) bool {
-		return o.ID == id
-	})
-	if idx == -1 {
-		diags.AddError(
-			"Unable to find organization by ID",
-			fmt.Sprintf("Organization with ID %d not found", id),
 		)
+		if err != nil {
+			var msg string
+			if res == nil {
+				msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+			} else {
+				tflog.Error(ctx, "Error", map[string]any{
+					"status": res.Status,
+				})
 
-		return nil, diags
+				switch res.StatusCode {
+				case 403:
+					msg = fmt.Sprintf(
+						"Listing organizations forbidden: %s",
+						err,
+					)
+				default:
+					msg = fmt.Sprintf(
+						"Unknown error (status %d): %s",
+						res.StatusCode,
+						err,
+					)
+				}
+			}
+			diags.AddError("Unable to list organizations", msg)
+
+			return nil, diags
+		}
+
+		// Search this page for an organization with the given ID.
+		idx := slices.IndexFunc(orgs, func(o *forgejo.Organization) bool {
+			return o.ID == id
+		})
+		if idx != -1 {
+			return orgs[idx], diags
+		}
+
+		// Only an empty page proves this was the last page. The server caps
+		// the page size at MAX_RESPONSE_ITEMS, so a short page is no proof.
+		if len(orgs) == 0 {
+			break
+		}
 	}
 
-	return orgs[idx], diags
+	diags.AddError(
+		"Unable to find organization by ID",
+		fmt.Sprintf("Organization with ID %d not found", id),
+	)
+
+	return nil, diags
 }
 
 // getOrganizationByName fetches an organization by its name and handles errors consistently.
