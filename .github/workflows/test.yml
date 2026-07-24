@@ -116,17 +116,18 @@ jobs:
         run: sleep 30s
 
       - name: Create admin user
+        id: admin
         working-directory: ./docker
         run: >
-          docker compose exec -u git forgejo
+          echo "password=$(docker compose exec -u git forgejo
           /usr/local/bin/forgejo admin user create
           --username tfadmin
           --email tfadmin@localhost
           --random-password
-          --admin
+          --admin | grep 'generated' | cut -d ' ' -f 5 | tr -d \')" >> "$GITHUB_OUTPUT"
 
       - name: Generate admin token
-        id: admin
+        id: token
         working-directory: ./docker
         run: >
           echo "token=$(docker compose exec -u git forgejo
@@ -141,7 +142,9 @@ jobs:
       - name: Run acceptance tests
         env:
           TF_ACC: "1"
-          FORGEJO_API_TOKEN: ${{ steps.admin.outputs.token }}
+          TF_VAR_FORGEJO_BASIC_AUTH_USERNAME: tfadmin
+          TF_VAR_FORGEJO_BASIC_AUTH_PASSWORD: ${{ steps.admin.outputs.password }}
+          FORGEJO_API_TOKEN: ${{ steps.token.outputs.token }}
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
 
@@ -191,17 +194,18 @@ jobs:
         run: sleep 30s
 
       - name: Create admin user
+        id: admin
         working-directory: ./docker
         run: >
-          docker compose exec -u git forgejo
+          echo "password=$(docker compose exec -u git forgejo
           /usr/local/bin/forgejo admin user create
           --username tfadmin
           --email tfadmin@localhost
           --random-password
-          --admin
+          --admin | grep 'generated' | cut -d ' ' -f 5 | tr -d \')" >> "$GITHUB_OUTPUT"
 
       - name: Generate admin token
-        id: admin
+        id: token
         working-directory: ./docker
         run: >
           echo "token=$(docker compose exec -u git forgejo
@@ -216,6 +220,8 @@ jobs:
       - name: Run acceptance tests
         env:
           TF_ACC: "1"
-          FORGEJO_API_TOKEN: ${{ steps.admin.outputs.token }}
+          TF_VAR_FORGEJO_BASIC_AUTH_USERNAME: tfadmin
+          TF_VAR_FORGEJO_BASIC_AUTH_PASSWORD: ${{ steps.admin.outputs.password }}
+          FORGEJO_API_TOKEN: ${{ steps.token.outputs.token }}
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
