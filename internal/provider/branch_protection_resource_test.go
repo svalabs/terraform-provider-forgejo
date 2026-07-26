@@ -530,7 +530,24 @@ resource "forgejo_branch_protection" "test" {
 	enable_push_whitelist = true
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If enable_push_whitelist is 'true', enable_push must be 'true'"),
+				ExpectError: regexp.MustCompile("If enable_push_whitelist is configured, enable_push must be 'true'"),
+			},
+			// Configuring enable_push_whitelist as false while enable_push is
+			// false must also error, since the dependent attribute must not be
+			// configured at all while the feature is disabled.
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_branch_protection"
+}
+resource "forgejo_branch_protection" "test" {
+	branch_name           = "main"
+	repository_id         = forgejo_repository.test.id
+	enable_push           = false
+	enable_push_whitelist = false
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If enable_push_whitelist is configured, enable_push must be 'true'"),
 			},
 			// Check push_whitelist_usernames attribute
 			{
@@ -578,7 +595,7 @@ resource "forgejo_branch_protection" "test" {
 	push_whitelist_deploy_keys = true
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is 'true', enable_push_whitelist must be 'true'"),
+				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is configured, enable_push_whitelist must be\n'true'"),
 			},
 			// enabling push, but not push_whitelist while configuring whitelist attributes ought to also error
 			{
@@ -594,7 +611,7 @@ resource "forgejo_branch_protection" "test" {
 	push_whitelist_deploy_keys = true
 }`,
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is 'true', enable_push_whitelist must be 'true'"),
+				ExpectError: regexp.MustCompile("If push_whitelist_deploy_keys is configured, enable_push_whitelist must be\n'true'"),
 			},
 			// successful push configuration with push_whitelist
 			{

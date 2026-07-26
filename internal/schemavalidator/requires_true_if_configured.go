@@ -14,9 +14,11 @@ import (
 )
 
 var (
-	_ validator.Bool = &RequiresTrueIfConfiguredValidator{}
-	_ validator.List = &RequiresTrueIfConfiguredValidator{}
-	_ validator.Set  = &RequiresTrueIfConfiguredValidator{}
+	_ validator.Bool   = &RequiresTrueIfConfiguredValidator{}
+	_ validator.List   = &RequiresTrueIfConfiguredValidator{}
+	_ validator.Set    = &RequiresTrueIfConfiguredValidator{}
+	_ validator.String = &RequiresTrueIfConfiguredValidator{}
+	_ validator.Object = &RequiresTrueIfConfiguredValidator{}
 )
 
 // RequiresTrueIfConfiguredValidator is the underlying type implementing RequiresTrueIfConfigured.
@@ -26,7 +28,10 @@ type RequiresTrueIfConfiguredValidator struct {
 
 // Description returns a plaintext string describing the validator.
 func (v RequiresTrueIfConfiguredValidator) Description(_ context.Context) string {
-	return "If this attribute is configured, the attribute(s) at the given path(s) must be set to 'true'."
+	return "If this attribute is configured with an effective value (a non-null, " +
+		"non-empty value for collections and strings; any non-null value, " +
+		"including 'false', for bools and objects), the attribute(s) at the " +
+		"given path(s) must be set to 'true'."
 }
 
 // MarkdownDescription returns a Markdown-formatted string describing the validator.
@@ -96,7 +101,27 @@ func (v RequiresTrueIfConfiguredValidator) ValidateBool(ctx context.Context, req
 		return
 	}
 
-	if !req.ConfigValue.ValueBool() {
+	validateReq := requiresTrueIfConfiguredValidatorRequest{
+		Config:         req.Config,
+		Path:           req.Path,
+		PathExpression: req.PathExpression,
+	}
+
+	v.validate(
+		ctx,
+		validateReq,
+		&resp.Diagnostics,
+		fmt.Sprintf("If %s is configured, %%s must be 'true'", req.Path),
+	)
+}
+
+// ValidateString performs the validation logic for the validator if the attribute type is a String.
+func (v RequiresTrueIfConfiguredValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if req.ConfigValue.ValueString() == "" {
 		return
 	}
 
@@ -110,7 +135,27 @@ func (v RequiresTrueIfConfiguredValidator) ValidateBool(ctx context.Context, req
 		ctx,
 		validateReq,
 		&resp.Diagnostics,
-		fmt.Sprintf("If %s is '%t', %%s must be 'true'", req.Path, req.ConfigValue.ValueBool()),
+		fmt.Sprintf("If %s is not empty, %%s must be 'true'", req.Path),
+	)
+}
+
+// ValidateObject performs the validation logic for the validator if the attribute type is an Object.
+func (v RequiresTrueIfConfiguredValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	validateReq := requiresTrueIfConfiguredValidatorRequest{
+		Config:         req.Config,
+		Path:           req.Path,
+		PathExpression: req.PathExpression,
+	}
+
+	v.validate(
+		ctx,
+		validateReq,
+		&resp.Diagnostics,
+		fmt.Sprintf("If %s is configured, %%s must be 'true'", req.Path),
 	)
 }
 
