@@ -27,6 +27,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+
+	forgejoBoolValidator "terraform-provider-forgejo/internal/boolvalidator"
+	forgejoObjectValidator "terraform-provider-forgejo/internal/objectvalidator"
+	forgejoStringValidator "terraform-provider-forgejo/internal/stringvalidator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -691,6 +695,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					objectvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("external_tracker"),
 					}...),
+					forgejoObjectValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_issues"),
+					}...),
 				},
 			},
 			"external_tracker": schema.SingleNestedAttribute{
@@ -730,6 +737,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					objectvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("internal_tracker"),
 					}...),
+					forgejoObjectValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_issues"),
+					}...),
 				},
 			},
 			"has_wiki": schema.BoolAttribute{
@@ -748,6 +758,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Description: "Settings for external wiki. **Note**: This setting is only effective if `has_wiki` is `true`.",
 				Optional:    true,
 				Computed:    true,
+				Validators: []validator.Object{
+					forgejoObjectValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_wiki"),
+					}...),
+				},
 			},
 			"has_pull_requests": schema.BoolAttribute{
 				Description: "Are repository pull requests enabled?",
@@ -784,30 +799,55 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"allow_merge_commits": schema.BoolAttribute{
 				Description: "Allowed to create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"allow_rebase": schema.BoolAttribute{
 				Description: "Allowed to rebase then fast-forward? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"allow_rebase_explicit": schema.BoolAttribute{
 				Description: "Allowed to rebase then create merge commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"allow_squash_merge": schema.BoolAttribute{
 				Description: "Allowed to create squash commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.",
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"avatar_url": schema.StringAttribute{
 				Description: "Avatar URL of the repository.",
@@ -827,14 +867,15 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Computed:    true,
 				// No static default value, because DEFAULT_INTERVAL controls server setting
 				Validators: []validator.String{
-					stringvalidator.All(
-						stringvalidator.AlsoRequires(path.Expressions{
-							path.MatchRoot("mirror"),
-						}...),
-						stringvalidator.RegexMatches(
-							regexp.MustCompile("^(0|[1-9][0-9]*)h[1-5]?[0-9]m[1-5]?[0-9]s$"),
-							"must follow '23h59m59s' format",
-						),
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("mirror"),
+					}...),
+					forgejoStringValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("mirror"),
+					}...),
+					stringvalidator.RegexMatches(
+						regexp.MustCompile("^(0|[1-9][0-9]*)h[1-5]?[0-9]m[1-5]?[0-9]s$"),
+						"must follow '23h59m59s' format",
 					),
 				},
 			},
@@ -855,6 +896,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 						"rebase-merge",
 						"squash",
 					),
+					forgejoStringValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
 				},
 			},
 			"allow_manual_merge": schema.BoolAttribute{
@@ -863,6 +907,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"autodetect_manual_merge": schema.BoolAttribute{
 				// Write-only attribute
@@ -870,6 +919,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"default_delete_branch_after_merge": schema.BoolAttribute{
 				// Write-only attribute
@@ -877,6 +931,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"allow_fast_forward_only_merge": schema.BoolAttribute{
 				// Write-only attribute
@@ -884,6 +943,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"allow_rebase_update": schema.BoolAttribute{
 				// Write-only attribute
@@ -891,6 +955,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(true),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"default_allow_maintainer_edit": schema.BoolAttribute{
 				// Write-only attribute
@@ -898,6 +967,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
+				},
 			},
 			"default_update_style": schema.StringAttribute{
 				// Write-only attribute
@@ -910,6 +984,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 						"merge",
 						"rebase",
 					),
+					forgejoStringValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_pull_requests"),
+					}...),
 				},
 			},
 			"enable_prune": schema.BoolAttribute{
@@ -918,6 +995,14 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					boolvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("mirror"),
+					}...),
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("mirror"),
+					}...),
+				},
 			},
 			"globally_editable_wiki": schema.BoolAttribute{
 				// Write-only attribute
@@ -925,6 +1010,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
+				Validators: []validator.Bool{
+					forgejoBoolValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_wiki"),
+					}...),
+				},
 			},
 			"wiki_branch": schema.StringAttribute{
 				// Write-only attribute
@@ -932,6 +1022,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					forgejoStringValidator.RequiresTrueIfConfigured(path.Expressions{
+						path.MatchRoot("has_wiki"),
+					}...),
+				},
 			},
 			"issue_labels": schema.StringAttribute{
 				// Create-only attribute
@@ -1048,6 +1143,9 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("lfs"),
+					}...),
+					forgejoStringValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("lfs"),
 					}...),
 				},

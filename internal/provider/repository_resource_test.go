@@ -2146,3 +2146,181 @@ import {
 		},
 	})
 }
+
+func TestAccRepositoryValidationPullRequestConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check allow_squash_merge attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name               = "test_repo_pr_validation"
+	has_pull_requests  = false
+	allow_squash_merge = true
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If allow_squash_merge is configured, has_pull_requests must be 'true'"),
+			},
+			// Configuring allow_merge_commits as false while has_pull_requests is
+			// false must also error, since the dependent attribute must not be
+			// configured at all while the feature is disabled.
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name                = "test_repo_pr_validation"
+	has_pull_requests   = false
+	allow_merge_commits = false
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If allow_merge_commits is configured, has_pull_requests must be 'true'"),
+			},
+			// Check default_merge_style attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name                = "test_repo_pr_validation"
+	has_pull_requests   = false
+	default_merge_style = "rebase"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If default_merge_style is not empty, has_pull_requests must be 'true'"),
+			},
+			// Check default_update_style attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name                 = "test_repo_pr_validation"
+	has_pull_requests    = false
+	default_update_style = "rebase"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If default_update_style is not empty, has_pull_requests must be 'true'"),
+			},
+		},
+	})
+}
+
+func TestAccRepositoryValidationIssueTrackerConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check internal_tracker attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name       = "test_repo_issue_tracker_validation"
+	has_issues = false
+	internal_tracker = {}
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If internal_tracker is configured, has_issues must be 'true'"),
+			},
+			// Check external_tracker attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name       = "test_repo_issue_tracker_validation"
+	has_issues = false
+	external_tracker = {
+		external_tracker_url    = "https://some.tracker"
+		external_tracker_format = "https://some.tracker/{user}/{repo}/{index}"
+	}
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If external_tracker is configured, has_issues must be 'true'"),
+			},
+		},
+	})
+}
+
+func TestAccRepositoryValidationWikiConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check external_wiki attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name     = "test_repo_wiki_validation"
+	has_wiki = false
+	external_wiki = {
+		external_wiki_url = "https://some.wiki"
+	}
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If external_wiki is configured, has_wiki must be 'true'"),
+			},
+			// Check globally_editable_wiki attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name                   = "test_repo_wiki_validation"
+	has_wiki               = false
+	globally_editable_wiki = true
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If globally_editable_wiki is configured, has_wiki must be 'true'"),
+			},
+			// Check wiki_branch attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name        = "test_repo_wiki_validation"
+	has_wiki    = false
+	wiki_branch = "develop"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If wiki_branch is not empty, has_wiki must be 'true'"),
+			},
+		},
+	})
+}
+
+func TestAccRepositoryValidationMirrorConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check mirror_interval attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name            = "test_repo_mirror_validation"
+	clone_addr      = "https://example.com/repo.git"
+	mirror          = false
+	mirror_interval = "8h0m0s"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If mirror_interval is not empty, mirror must be 'true'"),
+			},
+			// Check enable_prune attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name         = "test_repo_mirror_validation"
+	clone_addr   = "https://example.com/repo.git"
+	mirror       = false
+	enable_prune = true
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If enable_prune is configured, mirror must be 'true'"),
+			},
+			// Check lfs_endpoint attribute
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name         = "test_repo_mirror_validation"
+	clone_addr   = "https://example.com/repo.git"
+	lfs          = false
+	lfs_endpoint = "https://lfs.example.com"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("If lfs_endpoint is not empty, lfs must be 'true'"),
+			},
+		},
+	})
+}
