@@ -130,49 +130,66 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		"user": data.User.ValueString(),
 	})
 
-	// Use Forgejo client to list SSH keys
-	keys, res, err := d.client.ListPublicKeys(
-		data.User.ValueString(),
-		forgejo.ListPublicKeysOptions{
-			ListOptions: forgejo.ListOptions{
-				Page: -1,
+	// Page through all SSH keys explicitly: ListOptions{Page: -1} only
+	// returns the server's default first page (~30), so a key past page 1
+	// would be missed.
+	const pageSize = 50
+	var key *forgejo.PublicKey
+	for page := 1; ; page++ {
+		keys, res, err := d.client.ListPublicKeys(
+			data.User.ValueString(),
+			forgejo.ListPublicKeysOptions{
+				ListOptions: forgejo.ListOptions{
+					Page:     page,
+					PageSize: pageSize,
+				},
 			},
-		},
-	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
+		)
+		if err != nil {
+			var msg string
+			if res == nil {
+				msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+			} else {
+				tflog.Error(ctx, "Error", map[string]any{
+					"status": res.Status,
+				})
 
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"SSH keys for user %s not found: %s",
-					data.User.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
+				switch res.StatusCode {
+				case 404:
+					msg = fmt.Sprintf(
+						"SSH keys for user %s not found: %s",
+						data.User.String(),
+						err,
+					)
+				default:
+					msg = fmt.Sprintf(
+						"Unknown error (status %d): %s",
+						res.StatusCode,
+						err,
+					)
+				}
 			}
+			resp.Diagnostics.AddError("Unable to list SSH keys", msg)
+
+			return
 		}
-		resp.Diagnostics.AddError("Unable to list SSH keys", msg)
 
-		return
+		// Search this page for an SSH key with the given title.
+		idx := slices.IndexFunc(keys, func(k *forgejo.PublicKey) bool {
+			return k.Title == data.Title.ValueString()
+		})
+		if idx != -1 {
+			key = keys[idx]
+			break
+		}
+
+		// Only an empty page proves this was the last page. The server caps
+		// the page size at MAX_RESPONSE_ITEMS, so a short page is no proof.
+		if len(keys) == 0 {
+			break
+		}
 	}
-
-	// Search for SSH key with given title
-	idx := slices.IndexFunc(keys, func(k *forgejo.PublicKey) bool {
-		return k.Title == data.Title.ValueString()
-	})
-	if idx == -1 {
+	if key == nil {
 		resp.Diagnostics.AddError(
 			"Unable to find SSH key by title",
 			fmt.Sprintf(
@@ -186,14 +203,14 @@ func (d *sshKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	// Map response body to model
-	data.KeyID = types.Int64Value(keys[idx].ID)
-	data.Key = types.StringValue(keys[idx].Key)
-	data.URL = types.StringValue(keys[idx].URL)
-	data.Title = types.StringValue(keys[idx].Title)
-	data.Fingerprint = types.StringValue(keys[idx].Fingerprint)
-	data.Created = types.StringValue(keys[idx].Created.Format(time.RFC3339))
-	data.ReadOnly = types.BoolValue(keys[idx].ReadOnly)
-	data.KeyType = types.StringValue(keys[idx].KeyType)
+	data.KeyID = types.Int64Value(key.ID)
+	data.Key = types.StringValue(key.Key)
+	data.URL = types.StringValue(key.URL)
+	data.Title = types.StringValue(key.Title)
+	data.Fingerprint = types.StringValue(key.Fingerprint)
+	data.Created = types.StringValue(key.Created.Format(time.RFC3339))
+	data.ReadOnly = types.BoolValue(key.ReadOnly)
+	data.KeyType = types.StringValue(key.KeyType)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)

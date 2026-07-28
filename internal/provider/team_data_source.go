@@ -255,56 +255,69 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, org, name str
 		"name":         name,
 	})
 
-	// Use Forgejo client to list teams in organization
-	teams, res, err := client.ListOrgTeams(
-		org,
-		forgejo.ListTeamsOptions{
-			ListOptions: forgejo.ListOptions{
-				Page: -1,
+	// Page through all teams in the organization. ListOptions{Page: -1} does
+	// NOT return every team - it sends the server's default first page (30
+	// teams), so an org with more teams than that would never find a team past
+	// the first page. Walk the pages explicitly instead.
+	const pageSize = 50
+	for page := 1; ; page++ {
+		teams, res, err := client.ListOrgTeams(
+			org,
+			forgejo.ListTeamsOptions{
+				ListOptions: forgejo.ListOptions{
+					Page:     page,
+					PageSize: pageSize,
+				},
 			},
-		},
-	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name '%s' not found: %s",
-					org,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
-		}
-		diags.AddError("Unable to list teams", msg)
-
-		return nil, diags
-	}
-
-	// Search for team with given name
-	idx := slices.IndexFunc(teams, func(t *forgejo.Team) bool {
-		return t.Name == name
-	})
-	if idx == -1 {
-		diags.AddError(
-			"Unable to find team by name",
-			fmt.Sprintf("Team with name '%s' not found", name),
 		)
+		if err != nil {
+			var msg string
+			if res == nil {
+				msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+			} else {
+				tflog.Error(ctx, "Error", map[string]any{
+					"status": res.Status,
+				})
 
-		return nil, diags
+				switch res.StatusCode {
+				case 404:
+					msg = fmt.Sprintf(
+						"Organization with name '%s' not found: %s",
+						org,
+						err,
+					)
+				default:
+					msg = fmt.Sprintf(
+						"Unknown error (status %d): %s",
+						res.StatusCode,
+						err,
+					)
+				}
+			}
+			diags.AddError("Unable to list teams", msg)
+
+			return nil, diags
+		}
+
+		// Search this page for a team with the given name.
+		idx := slices.IndexFunc(teams, func(t *forgejo.Team) bool {
+			return t.Name == name
+		})
+		if idx != -1 {
+			return teams[idx], diags
+		}
+
+		// Only an empty page proves this was the last page. The server caps
+		// the page size at MAX_RESPONSE_ITEMS, so a short page is no proof.
+		if len(teams) == 0 {
+			break
+		}
 	}
 
-	return teams[idx], diags
+	diags.AddError(
+		"Unable to find team by name",
+		fmt.Sprintf("Team with name '%s' not found", name),
+	)
+
+	return nil, diags
 }

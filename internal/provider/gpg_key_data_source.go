@@ -153,66 +153,85 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		"user": data.User.ValueString(),
 	})
 
-	var (
-		keys []*forgejo.GPGKey
-		res  *forgejo.Response
-		err  error
-	)
+	// Page through all GPG keys explicitly: ListOptions{Page: -1} only
+	// returns the server's default first page (~30), so a key past page 1
+	// would be missed.
+	const pageSize = 50
+	var key *forgejo.GPGKey
+	for page := 1; ; page++ {
+		var (
+			keys []*forgejo.GPGKey
+			res  *forgejo.Response
+			err  error
+		)
 
-	// Use Forgejo client to list GPG keys
-	if data.User.ValueString() != "" {
-		keys, res, err = d.client.ListGPGKeys(
-			data.User.ValueString(),
-			forgejo.ListGPGKeysOptions{
-				ListOptions: forgejo.ListOptions{
-					Page: -1,
+		// Use Forgejo client to list GPG keys
+		if data.User.ValueString() != "" {
+			keys, res, err = d.client.ListGPGKeys(
+				data.User.ValueString(),
+				forgejo.ListGPGKeysOptions{
+					ListOptions: forgejo.ListOptions{
+						Page:     page,
+						PageSize: pageSize,
+					},
 				},
-			},
-		)
-	} else {
-		keys, res, err = d.client.ListMyGPGKeys(
-			&forgejo.ListGPGKeysOptions{
-				ListOptions: forgejo.ListOptions{
-					Page: -1,
-				},
-			},
-		)
-	}
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+			)
 		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
-
-			switch res.StatusCode {
-			case 404:
-				// If the user was not provided, we should never get a 404, so the message here should always have a user.
-				msg = fmt.Sprintf(
-					"GPG keys for user %s not found: %s",
-					data.User.String(),
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
+			keys, res, err = d.client.ListMyGPGKeys(
+				&forgejo.ListGPGKeysOptions{
+					ListOptions: forgejo.ListOptions{
+						Page:     page,
+						PageSize: pageSize,
+					},
+				},
+			)
 		}
-		resp.Diagnostics.AddError("Unable to list GPG keys", msg)
+		if err != nil {
+			var msg string
+			if res == nil {
+				msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+			} else {
+				tflog.Error(ctx, "Error", map[string]any{
+					"status": res.Status,
+				})
 
-		return
+				switch res.StatusCode {
+				case 404:
+					// If the user was not provided, we should never get a 404, so the message here should always have a user.
+					msg = fmt.Sprintf(
+						"GPG keys for user %s not found: %s",
+						data.User.String(),
+						err,
+					)
+				default:
+					msg = fmt.Sprintf(
+						"Unknown error (status %d): %s",
+						res.StatusCode,
+						err,
+					)
+				}
+			}
+			resp.Diagnostics.AddError("Unable to list GPG keys", msg)
+
+			return
+		}
+
+		// Search this page for a GPG key with the given ID.
+		idx := slices.IndexFunc(keys, func(k *forgejo.GPGKey) bool {
+			return strings.EqualFold(k.KeyID, data.KeyID.ValueString())
+		})
+		if idx != -1 {
+			key = keys[idx]
+			break
+		}
+
+		// Only an empty page proves this was the last page. The server caps
+		// the page size at MAX_RESPONSE_ITEMS, so a short page is no proof.
+		if len(keys) == 0 {
+			break
+		}
 	}
-
-	// Search for GPG key with given title
-	idx := slices.IndexFunc(keys, func(k *forgejo.GPGKey) bool {
-		return strings.EqualFold(k.KeyID, data.KeyID.ValueString())
-	})
-	if idx == -1 {
+	if key == nil {
 		var msg string
 		if data.User.ValueString() != "" {
 			msg = fmt.Sprintf(
@@ -232,21 +251,21 @@ func (d *gpgKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	// Map response body to model
-	data.ID = types.Int64Value(keys[idx].ID)
-	data.KeyID = types.StringValue(keys[idx].KeyID)
-	data.PrimaryKeyID = types.StringValue(keys[idx].PrimaryKeyID)
-	data.PublicKey = types.StringValue(keys[idx].PublicKey)
-	data.CanSign = types.BoolValue(keys[idx].CanSign)
-	data.CanEncryptComms = types.BoolValue(keys[idx].CanEncryptComms)
-	data.CanEncryptStorage = types.BoolValue(keys[idx].CanEncryptStorage)
-	data.CanCertify = types.BoolValue(keys[idx].CanCertify)
-	data.Created = types.StringValue(keys[idx].Created.Format(time.RFC3339))
-	data.Expires = types.StringValue(keys[idx].Expires.Format(time.RFC3339))
+	data.ID = types.Int64Value(key.ID)
+	data.KeyID = types.StringValue(key.KeyID)
+	data.PrimaryKeyID = types.StringValue(key.PrimaryKeyID)
+	data.PublicKey = types.StringValue(key.PublicKey)
+	data.CanSign = types.BoolValue(key.CanSign)
+	data.CanEncryptComms = types.BoolValue(key.CanEncryptComms)
+	data.CanEncryptStorage = types.BoolValue(key.CanEncryptStorage)
+	data.CanCertify = types.BoolValue(key.CanCertify)
+	data.Created = types.StringValue(key.Created.Format(time.RFC3339))
+	data.Expires = types.StringValue(key.Expires.Format(time.RFC3339))
 
-	data.Emails, diags = getEmails(keys[idx])
+	data.Emails, diags = getEmails(key)
 	resp.Diagnostics.Append(diags...)
 
-	data.Subkeys, diags = getSubkeys(keys[idx])
+	data.Subkeys, diags = getSubkeys(key)
 	resp.Diagnostics.Append(diags...)
 
 	// Save data into Terraform state
