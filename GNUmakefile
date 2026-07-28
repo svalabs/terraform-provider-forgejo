@@ -16,9 +16,11 @@ fmt:
 	gofmt -s -w -e .
 
 test:
-	go test -v -cover -timeout=10m -coverprofile=coverage.out -parallel=10 ./internal/provider
+	go test -v -cover -timeout 10m -coverprofile=coverage.out ./internal/schemavalidator
+	go test -v -cover -timeout 10m -coverprofile=coverage.out ./internal/provider
 
 testacc:
+	TF_ACC=1 go test -v -cover -timeout 10m -coverprofile=coverage.out ./internal/schemavalidator
 	TF_ACC=1 go test -v -cover -timeout 10m -coverprofile=coverage.out ./internal/provider
 
 .PHONY: fmt lint test testacc build install generate

@@ -6,9 +6,13 @@ name: Tests
 on:
   pull_request:
     paths-ignore:
+      - "CHANGELOG.md"
+      - "CONTRIBUTING.md"
       - "README.md"
   push:
     paths-ignore:
+      - "CHANGELOG.md"
+      - "CONTRIBUTING.md"
       - "README.md"
 
 # Testing only needs permissions to read the repository contents.
