@@ -1,8 +1,21 @@
+## 1.5.2 (August 2, 2026)
+
+ENHANCEMENTS:
+
+- `forgejo_repository`: Add plan-time validation for interdependent pull request, issue tracker, wiki, and mirror/LFS attributes (fixes [#59](https://github.com/svalabs/terraform-provider-forgejo/issues/59))
+
+DEPENDENCIES:
+
+- Bump actions/checkout from 7.0.0 to 7.0.1
+- Bump actions/setup-go from 6.5.0 to 7.0.0
+- Bump github/codeql-action from 4.36.3 to 4.37.3
+- Bump google.golang.org/grpc from 1.79.3 to 1.82.1
+
 ## 1.5.1 (July 12, 2026)
 
 ENHANCEMENTS:
 
-- `forgejo_branch_protection`:  Add plan-time validation for interdependent push, status check, merge, and approval attributes (partially fixes [#59](https://github.com/svalabs/terraform-provider-forgejo/issues/59))
+- `forgejo_branch_protection`: Add plan-time validation for interdependent push, status check, merge, and approval attributes (partially fixes [#59](https://github.com/svalabs/terraform-provider-forgejo/issues/59))
 
 DOCUMENTATION:
 
