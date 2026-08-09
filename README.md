@@ -2,7 +2,7 @@
 
 ![Tests](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/test.yml/badge.svg)
 ![Release](https://github.com/svalabs/terraform-provider-forgejo/actions/workflows/release.yml/badge.svg)
-![Test Coverage](https://img.shields.io/badge/Coverage-74.4%25-brightgreen?logo=go)
+![Test Coverage](https://img.shields.io/badge/Coverage-74.7%25-brightgreen?logo=go)
 ![Version](https://img.shields.io/github/v/release/svalabs/terraform-provider-forgejo?logo=terraform&label=Version)
 ![License](https://img.shields.io/github/license/svalabs/terraform-provider-forgejo?logo=github&label=License)
 
@@ -24,6 +24,7 @@ Resources:
 - `forgejo_organization` ([documentation](docs/resources/organization.md))
 - `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 - `forgejo_organization_action_variable` ([documentation](docs/resources/organization_action_variable.md))
+- `forgejo_personal_access_token` ([documentation](docs/resources/personal_access_token.md))
 - `forgejo_repository` ([documentation](docs/resources/repository.md))
 - `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
 - `forgejo_repository_action_variable` ([documentation](docs/resources/repository_action_variable.md))
@@ -40,6 +41,7 @@ Data Sources:
 - `forgejo_gpg_key` ([documentation](docs/data-sources/gpg_key.md))
 - `forgejo_organization` ([documentation](docs/data-sources/organization.md))
 - `forgejo_organization_action_variable` ([documentation](docs/data-sources/organization_action_variable.md))
+- `forgejo_personal_access_token` ([documentation](docs/data-sources/personal_access_token.md))
 - `forgejo_repository` ([documentation](docs/data-sources/repository.md))
 - `forgejo_repository_action_variable` ([documentation](docs/data-sources/repository_action_variable.md))
 - `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))

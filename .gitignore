@@ -45,3 +45,4 @@ coverage.out
 !CHANGELOG.md
 !CONTRIBUTING.md
 !README.md
+!docs/**/*.md
