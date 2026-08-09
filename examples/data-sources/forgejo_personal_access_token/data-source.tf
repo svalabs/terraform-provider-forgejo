@@ -17,6 +17,6 @@ data "forgejo_user" "test_user" {
 
 # Existing personal access token
 data "forgejo_personal_access_token" "test_token" {
-  user_id = data.forgejo_user.test_user.id
-  name    = "test token"
+  user = data.forgejo_user.test_user.login
+  name = "test token"
 }

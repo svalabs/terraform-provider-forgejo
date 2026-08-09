@@ -21,8 +21,8 @@ resource "forgejo_user" "test_user" {
 }
 
 resource "forgejo_personal_access_token" "test_token" {
-  user_id = forgejo_user.test_user.id
-  name    = "test token"
+  user = forgejo_user.test_user.login
+  name = "test token"
   scopes = [
     "read:repository"
   ]

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -26,7 +27,7 @@ type personalAccessTokenDataSource struct {
 }
 
 // personalAccessTokenDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateAccessTokenOption
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#AccessToken
 type personalAccessTokenDataSourceModel struct {
 	User           types.String `tfsdk:"user"`
 	ID             types.Int64  `tfsdk:"id"`
@@ -120,6 +121,9 @@ func (d *personalAccessTokenDataSource) Read(ctx context.Context, req datasource
 	data.TokenLastEight = types.StringValue(token.TokenLastEight)
 	data.Scopes, diags = types.SetValueFrom(ctx, types.StringType, token.Scopes)
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -159,13 +163,13 @@ func getPersonalAccessToken(
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"Personal access tokens from user %s forbidden: %s",
+					"Personal access tokens for user '%s' forbidden: %s",
 					user,
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"Personal access tokens from user %s not found: %s",
+					"Personal access tokens for user '%s' not found: %s",
 					user,
 					err,
 				)
@@ -178,18 +182,19 @@ func getPersonalAccessToken(
 			}
 		}
 		diags.AddError("Unable to list personal access tokens", msg)
+
 		return nil, diags
 	}
 
 	// Search for personal access token with given name
 	idx := slices.IndexFunc(tokens, func(t *forgejo.AccessToken) bool {
-		return t.Name == tokenName
+		return strings.EqualFold(t.Name, tokenName)
 	})
 	if idx == -1 {
 		diags.AddError(
 			"Unable to find personal access token by name",
 			fmt.Sprintf(
-				"Personal access token from user %s and name %s not found",
+				"Personal access token with user '%s' and name '%s' not found",
 				user,
 				tokenName,
 			),

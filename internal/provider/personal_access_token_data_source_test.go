@@ -23,7 +23,7 @@ data "forgejo_personal_access_token" "test" {
 	user = "non_existing_user"
 	name = "tftest"
 }`,
-				ExpectError: regexp.MustCompile("Personal access tokens from user non_existing_user not found"),
+				ExpectError: regexp.MustCompile("Personal access tokens for user 'non_existing_user' not found"),
 			},
 			// Read testing (non-existent resource)
 			{
@@ -37,7 +37,7 @@ data "forgejo_personal_access_token" "test" {
 	user = forgejo_user.test.login
 	name = "non_existent"
 }`,
-				ExpectError: regexp.MustCompile("Personal access token from user test_user and name non_existent not found"),
+				ExpectError: regexp.MustCompile("Personal access token with user 'test_user' and name 'non_existent' not found"),
 			},
 			// Read testing
 			{

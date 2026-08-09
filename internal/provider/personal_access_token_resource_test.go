@@ -24,7 +24,7 @@ resource "forgejo_personal_access_token" "test" {
 	name   = "tftest"
 	scopes = ["all"]
 }`,
-				ExpectError: regexp.MustCompile("User \"non_existing_user\" not found"),
+				ExpectError: regexp.MustCompile("Personal access token for user \"non_existing_user\" not found"),
 			},
 			// Create and Read testing
 			{

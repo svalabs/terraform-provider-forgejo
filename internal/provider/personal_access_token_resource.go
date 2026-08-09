@@ -56,6 +56,8 @@ func (m *personalAccessTokenResourceModel) from(ctx context.Context, t *forgejo.
 	m.Scopes, d = types.SetValueFrom(ctx, types.StringType, t.Scopes)
 	diags.Append(d...)
 
+	// Token intentionally omitted (API only returns it once during initial creation)
+
 	return diags
 }
 
@@ -84,9 +86,9 @@ func (r *personalAccessTokenResource) Metadata(_ context.Context, req resource.M
 // Schema defines the schema for the resource.
 func (r *personalAccessTokenResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `Forgejo repository personal access token resource.
+		MarkdownDescription: `Forgejo personal access token resource.
 
-**Note**: Due to an upstream limitation, one cannot create access tokens when authorised with access tokens. Use basic-auth instead.`,
+**Note**: Due to an upstream limitation, one cannot create access tokens when authorized with access tokens. Use basic-auth instead.`,
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{
@@ -245,18 +247,18 @@ func (r *personalAccessTokenResource) Create(ctx context.Context, req resource.C
 				)
 			case 401:
 				msg = fmt.Sprintf(
-					"Authentication method is not allowed, use basic-auth: %s",
+					"Authentication method not allowed, use basic-auth: %s",
 					err,
 				)
 			case 403:
 				msg = fmt.Sprintf(
-					"User %s forbidden: %s",
+					"Personal access token for user %s forbidden: %s",
 					data.User.String(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"User %s not found: %s",
+					"Personal access token for user %s not found: %s",
 					data.User.String(),
 					err,
 				)
@@ -280,7 +282,7 @@ func (r *personalAccessTokenResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	// The actual token is only returned on creation.
+	// The actual token is only returned once during initial creation
 	data.Token = types.StringValue(token.Token)
 
 	// Save data into Terraform state
@@ -302,7 +304,12 @@ func (r *personalAccessTokenResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	// Use Forgejo client to get personal access token
-	token, diags := getPersonalAccessToken(ctx, r.client, data.User.ValueString(), data.Name.ValueString())
+	token, diags := getPersonalAccessToken(
+		ctx,
+		r.client,
+		data.User.ValueString(),
+		data.Name.ValueString(),
+	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -368,14 +375,16 @@ func (r *personalAccessTokenResource) Delete(ctx context.Context, req resource.D
 		switch res.StatusCode {
 		case 403:
 			msg = fmt.Sprintf(
-				"User %s forbidden: %s",
+				"Personal access token with user %s and ID %d forbidden: %s",
 				data.User.String(),
+				data.ID.ValueInt64(),
 				err,
 			)
 		case 404:
 			msg = fmt.Sprintf(
-				"User %s not found: %s",
+				"Personal access token with user %s and ID %d not found: %s",
 				data.User.String(),
+				data.ID.ValueInt64(),
 				err,
 			)
 		case 422:
@@ -388,7 +397,7 @@ func (r *personalAccessTokenResource) Delete(ctx context.Context, req resource.D
 			)
 		}
 	}
-	resp.Diagnostics.AddError("Unable to delete deploy key", msg)
+	resp.Diagnostics.AddError("Unable to delete personal access token", msg)
 }
 
 // NewpersonalAccessTokenResource is a helper function to simplify the provider implementation.
