@@ -55,7 +55,6 @@ resource "forgejo_team" "test_by_id" {
 	can_create_org_repo       = true
 	description               = "Test team."
 	includes_all_repositories = false
-	permission                = "read"
 
 	units_map = {
 		"repo.issues" = "read"
@@ -67,7 +66,6 @@ resource "forgejo_team" "test_by_name" {
 	can_create_org_repo       = true
 	description               = "Test team."
 	includes_all_repositories = false
-	permission                = "read"
 
 	units_map = {
 		"repo.issues" = "read"
@@ -116,7 +114,6 @@ resource "forgejo_team" "test_by_id" {
 	can_create_org_repo       = true
 	description               = "Test team."
 	includes_all_repositories = false
-	permission                = "read"
 
 	units_map = {
 		"repo.issues" = "read"
@@ -126,7 +123,6 @@ resource "forgejo_team" "test_by_id2" {
 	# Make sure this second team is created later.
 	name            = forgejo_team.test_by_id.name
 	organization_id = forgejo_organization.test.id
-	permission      = "write"
 
 	units_map = {
 		"repo.issues" = "read"
@@ -138,7 +134,6 @@ resource "forgejo_team" "test_by_name" {
 	can_create_org_repo       = true
 	description               = "Test team."
 	includes_all_repositories = false
-	permission                = "read"
 
 	units_map = {
 		"repo.issues" = "read"
@@ -148,7 +143,6 @@ resource "forgejo_team" "test_by_name2" {
 	# Make sure this second team is created later.
 	name         = forgejo_team.test_by_name.name
 	organization = forgejo_organization.test.name
-	permission   = "write"
 
 	units_map = {
 		"repo.issues" = "read"
@@ -204,7 +198,6 @@ resource "forgejo_team" "test_by_id" {
 	can_create_org_repo       = false
 	description               = "Updated test team."
 	includes_all_repositories = true
-	permission                = "write"
 
 	units_map = {
 		"repo.issues" = "write"
@@ -216,7 +209,6 @@ resource "forgejo_team" "test_by_name" {
 	can_create_org_repo       = false
 	description               = "Updated test team."
 	includes_all_repositories = true
-	permission                = "write"
 
 	units_map = {
 		"repo.issues" = "write"
@@ -263,7 +255,6 @@ resource "forgejo_team" "test_by_id" {
 	name            = "renamed_test_team_by_id"
 	organization_id = forgejo_organization.test.id
 	description     = "Updated test team."
-	permission      = "write"
 
 	units_map = {
 		"repo.issues" = "write"
@@ -273,7 +264,6 @@ resource "forgejo_team" "test_by_name" {
 	name         = "renamed_test_team_by_name"
 	organization = forgejo_organization.test.name
 	description  = "Updated test team."
-	permission   = "write"
 
 	units_map = {
 		"repo.issues" = "write"
@@ -322,7 +312,6 @@ resource "forgejo_organization" "new_test" {
 resource "forgejo_team" "test_by_id" {
 	name            = "renamed_test_team_by_id"
 	organization_id = forgejo_organization.new_test.id
-	permission      = "write"
 
 	units_map = {
 		"repo.issues" = "write"
@@ -331,7 +320,6 @@ resource "forgejo_team" "test_by_id" {
 resource "forgejo_team" "test_by_name" {
 	name         = "renamed_test_team_by_name"
 	organization = forgejo_organization.new_test.name
-	permission   = "write"
 
 	units_map = {
 		"repo.issues" = "write"
@@ -378,37 +366,11 @@ resource "forgejo_team" "test_by_id" {
 	name            = "renamed_test_team_by_id"
 	organization_id = forgejo_organization.new_test.id
 	permission      = "admin"
-
-	units_map = {
-		"repo.code"       = "admin"
-		"repo.issues"     = "admin"
-		"repo.pulls"      = "admin"
-		"repo.ext_issues" = "admin"
-		"repo.wiki"       = "admin"
-		"repo.ext_wiki"   = "admin"
-		"repo.releases"   = "admin"
-		"repo.projects"   = "admin"
-		"repo.packages"   = "admin"
-		"repo.actions"    = "admin"
-	}
 }
 resource "forgejo_team" "test_by_name" {
 	name         = "renamed_test_team_by_name"
 	organization = forgejo_organization.new_test.name
 	permission   = "admin"
-
-	units_map = {
-		"repo.code"       = "admin"
-		"repo.issues"     = "admin"
-		"repo.pulls"      = "admin"
-		"repo.ext_issues" = "admin"
-		"repo.wiki"       = "admin"
-		"repo.ext_wiki"   = "admin"
-		"repo.releases"   = "admin"
-		"repo.projects"   = "admin"
-		"repo.packages"   = "admin"
-		"repo.actions"    = "admin"
-	}
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
