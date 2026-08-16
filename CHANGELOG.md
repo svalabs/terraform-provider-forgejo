@@ -1,8 +1,25 @@
-## Unreleased
+## 1.6.0 (August 16, 2026)
+
+FEATURES:
+
+- **New Resource**: `forgejo_personal_access_token` ([documentation](docs/resources/personal_access_token.md)) (fixes [#96](https://github.com/svalabs/terraform-provider-forgejo/issues/96))
+- **New Data Source**: `forgejo_personal_access_token` ([documentation](docs/data-sources/personal_access_token.md)) (fixes [#96](https://github.com/svalabs/terraform-provider-forgejo/issues/96))
 
 BUG FIXES:
 
-- `forgejo_repository_webhook`: Preserve write-only `config.secret` from configuration so managing the webhook secret no longer causes "Provider produced inconsistent result after apply"
+- `forgejo_repository_webhook`: Preserve write-only `config.secret` from configuration so managing the webhook secret no longer causes "Provider produced inconsistent result after apply" (fixes [#158](https://github.com/svalabs/terraform-provider-forgejo/issues/158))
+- `forgejo_repository_webhook`: Obfuscate values for write-only `config` keys in log output
+
+DEPENDENCIES:
+
+- Update to Go 1.25.12
+- Bump github/codeql-action/analyze from 4.37.3 to 4.37.6
+- Bump github/codeql-action/init from 4.37.3 to 4.37.6
+- Bump github.com/hashicorp/terraform-plugin-log from 0.10.0 to 0.11.0
+
+NEW CONTRIBUTORS 🎉:
+
+- [@trent-hord](https://github.com/trent-hord) — [#159: Preserve write-only config.secret](https://github.com/svalabs/terraform-provider-forgejo/pull/159)
 
 ## 1.5.2 (August 2, 2026)
 
