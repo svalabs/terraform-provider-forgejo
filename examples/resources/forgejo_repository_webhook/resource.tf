@@ -25,9 +25,7 @@ resource "forgejo_repository_webhook" "example" {
   config = {
     "content_type" = "json"
     "url"          = "http://example.com/invoke"
-    # The "secret" key is write-only: Forgejo accepts it on create/update but
-    # never returns it. The provider preserves it from configuration so that
-    # managing it here does not cause "inconsistent result after apply" errors.
+    # The "secret" key is write-only: never read back from the API.
     "secret" = "supersecret"
   }
 }
