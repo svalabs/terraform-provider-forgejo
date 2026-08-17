@@ -243,7 +243,7 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	o.EnablePrune = m.EnablePrune.ValueBoolPointer()
 	o.GloballyEditableWiki = m.GloballyEditableWiki.ValueBoolPointer()
 
-	if !m.WikiBranch.IsNull() && !m.WikiBranch.IsUnknown() {
+	if !m.WikiBranch.IsNull() && !m.WikiBranch.IsUnknown() && m.WikiBranch.ValueString() != "" {
 		o.WikiBranch = m.WikiBranch.ValueStringPointer()
 	}
 
