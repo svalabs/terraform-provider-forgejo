@@ -493,7 +493,7 @@ func (d *repositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.AllowSquash = types.BoolValue(rep.AllowSquash)
 	data.AvatarURL = types.StringValue(rep.AvatarURL)
 	data.Internal = types.BoolValue(rep.Internal)
-	data.MirrorInterval = types.StringValue(rep.MirrorInterval)
+	data.MirrorInterval = types.StringValue(canonicalizeMirrorInterval(rep.MirrorInterval))
 	data.MirrorUpdated = types.StringValue(rep.MirrorUpdated.Format(time.RFC3339))
 	data.DefaultMergeStyle = types.StringValue(string(rep.DefaultMergeStyle))
 
