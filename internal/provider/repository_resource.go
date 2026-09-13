@@ -242,7 +242,10 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 	o.DefaultUpdateStyle = m.DefaultUpdateStyle.ValueStringPointer()
 	o.EnablePrune = m.EnablePrune.ValueBoolPointer()
 	o.GloballyEditableWiki = m.GloballyEditableWiki.ValueBoolPointer()
-	o.WikiBranch = m.WikiBranch.ValueStringPointer()
+
+	if !m.WikiBranch.IsNull() && !m.WikiBranch.IsUnknown() && m.WikiBranch.ValueString() != "" {
+		o.WikiBranch = m.WikiBranch.ValueStringPointer()
+	}
 
 	ms := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
 	o.DefaultMergeStyle = &ms
