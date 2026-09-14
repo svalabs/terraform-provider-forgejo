@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
-	"github.com/neticdk/terraform-provider-forgejo/internal/schemavalidator"
+	"terraform-provider-forgejo/internal/schemavalidator"
 )
 
 // RequiresTrueIfConfigured checks that any Bool values in the paths described by the

@@ -1,4 +1,4 @@
-module github.com/neticdk/terraform-provider-forgejo
+module terraform-provider-forgejo
 
 go 1.25.12
 

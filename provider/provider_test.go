@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
-	"github.com/neticdk/terraform-provider-forgejo/provider"
+	"terraform-provider-forgejo/provider"
 )
 
 const (
