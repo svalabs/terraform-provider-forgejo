@@ -620,7 +620,7 @@ func getRepositoryByID(ctx context.Context, client *forgejo.Client, id int64) (*
 			)
 		}
 	}
-	diags.AddError("Unable to read repository", msg)
+	addReadError(&diags, res, "Unable to read repository", msg)
 
 	return nil, diags
 }
@@ -665,7 +665,7 @@ func getRepositoryByName(ctx context.Context, client *forgejo.Client, owner, nam
 			)
 		}
 	}
-	diags.AddError("Unable to read repository", msg)
+	addReadError(&diags, res, "Unable to read repository", msg)
 
 	return nil, diags
 }

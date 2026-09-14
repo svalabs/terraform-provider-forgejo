@@ -430,6 +430,15 @@ func (r *gpgKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 				)
 			}
 		}
+
+		if res != nil && res.Response != nil && res.StatusCode == 404 {
+			// The GPG key is gone: drop it from state so the next plan
+			// creates it again instead of failing the read.
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+
 		resp.Diagnostics.AddError("Unable to read GPG key", msg)
 
 		return

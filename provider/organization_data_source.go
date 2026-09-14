@@ -201,10 +201,10 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, id int64) 
 		return o.ID == id
 	})
 	if idx == -1 {
-		diags.AddError(
+		diags.Append(newNotFoundDiagnostic(
 			"Unable to find organization by ID",
 			fmt.Sprintf("Organization with ID %d not found", id),
-		)
+		))
 
 		return nil, diags
 	}
@@ -250,7 +250,7 @@ func getOrganizationByName(ctx context.Context, client *forgejo.Client, name str
 			)
 		}
 	}
-	diags.AddError("Unable to read organization", msg)
+	addReadError(&diags, res, "Unable to read organization", msg)
 
 	return nil, diags
 }

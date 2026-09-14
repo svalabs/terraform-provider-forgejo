@@ -260,6 +260,14 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 		r.client,
 		data.RepositoryID.ValueInt64(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -275,6 +283,14 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 		repo.Name.ValueString(),
 		data.Name.ValueString(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -511,7 +527,7 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 				)
 			}
 		}
-		diags.AddError("Unable to list repository action secrets", msg)
+		addReadError(&diags, res, "Unable to list repository action secrets", msg)
 
 		return nil, diags
 	}
@@ -521,7 +537,7 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 		return strings.EqualFold(s.Name, name)
 	})
 	if idx == -1 {
-		diags.AddError(
+		diags.Append(newNotFoundDiagnostic(
 			"Unable to find repository action secret by name",
 			fmt.Sprintf(
 				"Action secret with owner '%s' repo '%s' and name '%s' not found",
@@ -529,7 +545,7 @@ func (r *repositoryActionSecretResource) getSecret(ctx context.Context, owner, r
 				repo,
 				name,
 			),
-		)
+		))
 
 		return nil, diags
 	}

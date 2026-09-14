@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	"terraform-provider-forgejo/internal/provider"
+	"github.com/neticdk/terraform-provider-forgejo/provider"
 )
 
 var (

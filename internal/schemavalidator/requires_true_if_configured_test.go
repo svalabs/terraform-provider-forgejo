@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
-	"terraform-provider-forgejo/internal/schemavalidator"
+	"github.com/neticdk/terraform-provider-forgejo/internal/schemavalidator"
 )
 
 func TestRequiresTrueIfConfiguredValidatorValidateBool(t *testing.T) {

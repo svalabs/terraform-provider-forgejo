@@ -241,7 +241,7 @@ func getOrgTeamByID(ctx context.Context, client *forgejo.Client, id int64) (*for
 			)
 		}
 	}
-	diags.AddError("Unable to read team", msg)
+	addReadError(&diags, res, "Unable to read team", msg)
 
 	return nil, diags
 }
@@ -288,7 +288,7 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, org, name str
 				)
 			}
 		}
-		diags.AddError("Unable to list teams", msg)
+		addReadError(&diags, res, "Unable to list teams", msg)
 
 		return nil, diags
 	}
@@ -298,10 +298,10 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, org, name str
 		return t.Name == name
 	})
 	if idx == -1 {
-		diags.AddError(
+		diags.Append(newNotFoundDiagnostic(
 			"Unable to find team by name",
 			fmt.Sprintf("Team with name '%s' not found", name),
-		)
+		))
 
 		return nil, diags
 	}

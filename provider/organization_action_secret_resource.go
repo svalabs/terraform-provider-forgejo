@@ -279,6 +279,14 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -482,7 +490,7 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, org, n
 				)
 			}
 		}
-		diags.AddError("Unable to list organization action secrets", msg)
+		addReadError(&diags, res, "Unable to list organization action secrets", msg)
 
 		return nil, diags
 	}
@@ -492,14 +500,14 @@ func (r *organizationActionSecretResource) getSecret(ctx context.Context, org, n
 		return strings.EqualFold(s.Name, name)
 	})
 	if idx == -1 {
-		diags.AddError(
+		diags.Append(newNotFoundDiagnostic(
 			"Unable to find organization action secret by name",
 			fmt.Sprintf(
 				"Action secret with organization '%s' and name '%s' not found",
 				org,
 				name,
 			),
-		)
+		))
 
 		return nil, diags
 	}

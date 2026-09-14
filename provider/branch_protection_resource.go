@@ -27,9 +27,9 @@ import (
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 
-	forgejoBoolValidator "terraform-provider-forgejo/internal/boolvalidator"
-	forgejoListValidator "terraform-provider-forgejo/internal/listvalidator"
-	forgejoSetValidator "terraform-provider-forgejo/internal/setvalidator"
+	forgejoBoolValidator "github.com/neticdk/terraform-provider-forgejo/internal/boolvalidator"
+	forgejoListValidator "github.com/neticdk/terraform-provider-forgejo/internal/listvalidator"
+	forgejoSetValidator "github.com/neticdk/terraform-provider-forgejo/internal/setvalidator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -502,6 +502,14 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 		r.client,
 		data.RepositoryID.ValueInt64(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -517,6 +525,14 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 		repo.Name.ValueString(),
 		data.BranchName.ValueString(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -836,7 +852,7 @@ func (r *branchProtectionResource) getBranchProtection(ctx context.Context, owne
 			)
 		}
 	}
-	diags.AddError("Unable to read branch protection", msg)
+	addReadError(&diags, res, "Unable to read branch protection", msg)
 
 	return nil, diags
 }

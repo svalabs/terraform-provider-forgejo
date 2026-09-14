@@ -151,7 +151,7 @@ func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, 
 			)
 		}
 	}
-	diags.AddError("Unable to read team member", msg)
+	addReadError(&diags, res, "Unable to read team member", msg)
 
 	return diags
 }

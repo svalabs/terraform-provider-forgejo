@@ -135,6 +135,14 @@ func (r *teamMemberResource) Read(ctx context.Context, req resource.ReadRequest,
 		data.TeamID.ValueInt64(),
 		data.User.ValueString(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

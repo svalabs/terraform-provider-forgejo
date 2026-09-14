@@ -250,6 +250,14 @@ func (r *repositoryActionVariableResource) Read(ctx context.Context, req resourc
 		r.client,
 		data.RepositoryID.ValueInt64(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -265,6 +273,14 @@ func (r *repositoryActionVariableResource) Read(ctx context.Context, req resourc
 		repo.Name.ValueString(),
 		data.Name.ValueString(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -516,7 +532,7 @@ func (r *repositoryActionVariableResource) getVariable(ctx context.Context, owne
 			)
 		}
 	}
-	diags.AddError("Unable to read repository action variable", msg)
+	addReadError(&diags, res, "Unable to read repository action variable", msg)
 
 	return nil, diags
 }

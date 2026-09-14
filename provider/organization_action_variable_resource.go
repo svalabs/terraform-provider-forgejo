@@ -268,6 +268,14 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 		data.Organization.ValueString(),
 		data.Name.ValueString(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -476,7 +484,7 @@ func (r *organizationActionVariableResource) getVariable(ctx context.Context, or
 			)
 		}
 	}
-	diags.AddError("Unable to read organization action variable", msg)
+	addReadError(&diags, res, "Unable to read organization action variable", msg)
 
 	return nil, diags
 }

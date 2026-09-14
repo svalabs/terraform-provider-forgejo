@@ -19,31 +19,30 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &sshKeyResource{}
-	_ resource.ResourceWithConfigure = &sshKeyResource{}
+	_ resource.Resource              = &deployKeyResource{}
+	_ resource.ResourceWithConfigure = &deployKeyResource{}
 )
 
-// sshKeyResource is the resource implementation.
-type sshKeyResource struct {
+// deployKeyResource is the resource implementation.
+type deployKeyResource struct {
 	client *forgejo.Client
 }
 
-// sshKeyResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#PublicKey
-type sshKeyResourceModel struct {
-	User        types.String `tfsdk:"user"`
-	KeyID       types.Int64  `tfsdk:"key_id"`
-	Key         types.String `tfsdk:"key"`
-	URL         types.String `tfsdk:"url"`
-	Title       types.String `tfsdk:"title"`
-	Fingerprint types.String `tfsdk:"fingerprint"`
-	Created     types.String `tfsdk:"created_at"`
-	ReadOnly    types.Bool   `tfsdk:"read_only"`
-	KeyType     types.String `tfsdk:"key_type"`
+// deployKeyResourceModel maps the resource schema data.
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#DeployKey
+type deployKeyResourceModel struct {
+	RepositoryID types.Int64  `tfsdk:"repository_id"`
+	KeyID        types.Int64  `tfsdk:"key_id"`
+	Key          types.String `tfsdk:"key"`
+	URL          types.String `tfsdk:"url"`
+	Title        types.String `tfsdk:"title"`
+	Fingerprint  types.String `tfsdk:"fingerprint"`
+	Created      types.String `tfsdk:"created_at"`
+	ReadOnly     types.Bool   `tfsdk:"read_only"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
-func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
+func (m *deployKeyResourceModel) from(k *forgejo.DeployKey) {
 	if k == nil {
 		return
 	}
@@ -55,43 +54,39 @@ func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
 	m.Fingerprint = types.StringValue(k.Fingerprint)
 	m.Created = types.StringValue(k.Created.Format(time.RFC3339))
 	m.ReadOnly = types.BoolValue(k.ReadOnly)
-	m.KeyType = types.StringValue(k.KeyType)
 }
 
 // to is a helper function to save Terraform data model into an API struct.
-func (m *sshKeyResourceModel) to(o *forgejo.CreateKeyOption) {
+func (m *deployKeyResourceModel) to(o *forgejo.CreateKeyOption) {
 	if o == nil {
 		return
 	}
 
-	o.Key = m.Key.ValueString()
 	o.Title = m.Title.ValueString()
-	// As of version 15.0.1, Forgejo ignores read_only
-	// o.ReadOnly = m.ReadOnly.ValueBool()
+	o.Key = m.Key.ValueString()
+	o.ReadOnly = m.ReadOnly.ValueBool()
 }
 
 // Metadata returns the resource type name.
-func (r *sshKeyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_ssh_key"
+func (r *deployKeyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_deploy_key"
 }
 
 // Schema defines the schema for the resource.
-func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *deployKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `Forgejo user SSH key resource.
-
-**Note**: Managing user SSH keys requires administrative privileges!`,
+		Description: "Forgejo repository deploy key resource.",
 
 		Attributes: map[string]schema.Attribute{
-			"user": schema.StringAttribute{
-				Description: "Name of the user. Changing this forces a new resource to be created.",
+			"repository_id": schema.Int64Attribute{
+				Description: "Numeric identifier of the repository. Changing this forces a new resource to be created.",
 				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
 				},
 			},
 			"key_id": schema.Int64Attribute{
-				Description: "Numeric identifier of the SSH key.",
+				Description: "Numeric identifier of the deploy key.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
@@ -105,26 +100,26 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"url": schema.StringAttribute{
-				Description: "URL of the SSH key.",
+				Description: "URL of the deploy key.",
 				Computed:    true,
 				// URLs may change outside of Terraform, so no UseStateForUnknown()
 			},
 			"title": schema.StringAttribute{
-				Description: "Title of the SSH key. Changing this forces a new resource to be created.",
+				Description: "Title of the deploy key. Changing this forces a new resource to be created.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"fingerprint": schema.StringAttribute{
-				Description: "Fingerprint of the SSH key.",
+				Description: "Fingerprint of the deploy key.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"created_at": schema.StringAttribute{
-				Description: "Time at which the SSH key was created.",
+				Description: "Time at which the deploy key was created.",
 				Computed:    true,
 				// 6b66d9e: standardize on formatting temporal data in RFC3339 format
 				// PlanModifiers: []planmodifier.String{
@@ -132,17 +127,10 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				// },
 			},
 			"read_only": schema.BoolAttribute{
-				Description: "Does the key have only read access?",
-				Computed:    true,
+				Description: "Does the key have only read access? Changing this forces a new resource to be created.",
+				Required:    true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"key_type": schema.StringAttribute{
-				Description: "Type of the SSH key.",
-				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -150,7 +138,7 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 }
 
 // Configure adds the provider configured client to the resource.
-func (r *sshKeyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *deployKeyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -173,10 +161,13 @@ func (r *sshKeyResource) Configure(_ context.Context, req resource.ConfigureRequ
 }
 
 // Create creates the resource and sets the initial Terraform state.
-func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	defer un(trace(ctx, "Create SSH key resource"))
+func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	defer un(trace(ctx, "Create deploy key resource"))
 
-	var data sshKeyResourceModel
+	var (
+		repo repositoryResourceModel
+		data deployKeyResourceModel
+	)
 
 	// Read Terraform plan data into model
 	diags := req.Plan.Get(ctx, &data)
@@ -185,8 +176,23 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	tflog.Info(ctx, "Create SSH key", map[string]any{
-		"user":      data.User.ValueString(),
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Map response body to model
+	repo.from(rep)
+
+	tflog.Info(ctx, "Create deploy key", map[string]any{
+		"user":      repo.Owner.ValueString(),
+		"repo":      repo.Name.ValueString(),
 		"title":     data.Title.ValueString(),
 		"key":       data.Key.ValueString(),
 		"read_only": data.ReadOnly.ValueBool(),
@@ -204,9 +210,10 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	// 	return
 	// }
 
-	// Use Forgejo client to create new SSH key
-	key, res, err := r.client.AdminCreateUserPublicKey(
-		data.User.ValueString(),
+	// Use Forgejo client to create new deploy key
+	key, res, err := r.client.CreateDeployKey(
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
 		opts,
 	)
 	if err != nil {
@@ -219,16 +226,11 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 			})
 
 			switch res.StatusCode {
-			case 403:
-				msg = fmt.Sprintf(
-					"SSH key with user %s forbidden: %s",
-					data.User.String(),
-					err,
-				)
 			case 404:
 				msg = fmt.Sprintf(
-					"SSH key with user %s not found: %s",
-					data.User.String(),
+					"Repository with owner %s and name %s not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					err,
 				)
 			case 422:
@@ -241,7 +243,7 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 				)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to create SSH key", msg)
+		resp.Diagnostics.AddError("Unable to create deploy key", msg)
 
 		return
 	}
@@ -255,10 +257,13 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 // Read refreshes the Terraform state with the latest data.
-func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	defer un(trace(ctx, "Read SSH key resource"))
+func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	defer un(trace(ctx, "Read deploy key resource"))
 
-	var data sshKeyResourceModel
+	var (
+		repo repositoryResourceModel
+		data deployKeyResourceModel
+	)
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -267,13 +272,40 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	tflog.Info(ctx, "Read SSH key", map[string]any{
-		"user":   data.User.ValueString(),
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Map response body to model
+	repo.from(rep)
+
+	tflog.Info(ctx, "Read deploy key", map[string]any{
+		"user":   repo.Owner.ValueString(),
+		"repo":   repo.Name.ValueString(),
 		"key_id": data.KeyID.ValueInt64(),
 	})
 
-	// Use Forgejo client to get SSH key
-	key, res, err := r.client.GetPublicKey(data.KeyID.ValueInt64())
+	// Use Forgejo client to get deploy key
+	key, res, err := r.client.GetDeployKey(
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
+		data.KeyID.ValueInt64(),
+	)
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -284,17 +316,11 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			})
 
 			switch res.StatusCode {
-			case 403:
-				msg = fmt.Sprintf(
-					"SSH key with user %s and ID %d forbidden: %s",
-					data.User.String(),
-					data.KeyID.ValueInt64(),
-					err,
-				)
 			case 404:
 				msg = fmt.Sprintf(
-					"SSH key with user %s and ID %d not found: %s",
-					data.User.String(),
+					"Deploy key with user %s, repo %s and ID %d not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					data.KeyID.ValueInt64(),
 					err,
 				)
@@ -306,7 +332,16 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 				)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to read SSH key", msg)
+
+		if res != nil && res.Response != nil && res.StatusCode == 404 {
+			// The deploy key is gone: drop it from state so the next plan
+			// creates it again instead of failing the read.
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+
+		resp.Diagnostics.AddError("Unable to read deploy key", msg)
 
 		return
 	}
@@ -320,20 +355,23 @@ func (r *sshKeyResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
-func (r *sshKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	defer un(trace(ctx, "Update SSH key resource"))
+func (r *deployKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	defer un(trace(ctx, "Update deploy key resource"))
 
 	/*
-	 * SSH keys can not be updated in-place. All writable attributes have
+	 * Deploy keys can not be updated in-place. All writable attributes have
 	 * 'RequiresReplace' plan modifier set.
 	 */
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
-func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	defer un(trace(ctx, "Delete SSH key resource"))
+func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	defer un(trace(ctx, "Delete deploy key resource"))
 
-	var data sshKeyResourceModel
+	var (
+		repo repositoryResourceModel
+		data deployKeyResourceModel
+	)
 
 	// Read Terraform prior state data into the model
 	diags := req.State.Get(ctx, &data)
@@ -342,15 +380,31 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	tflog.Info(ctx, "Delete SSH key", map[string]any{
-		"user":   data.User.ValueString(),
+	// Use Forgejo client to get repository
+	rep, diags := getRepositoryByID(
+		ctx,
+		r.client,
+		data.RepositoryID.ValueInt64(),
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Map response body to model
+	repo.from(rep)
+
+	tflog.Info(ctx, "Delete deploy key", map[string]any{
+		"owner":  repo.Owner.ValueString(),
+		"repo":   repo.Name.ValueString(),
 		"key_id": data.KeyID.ValueInt64(),
 	})
 
-	// Use Forgejo client to delete existing SSH key
-	res, err := r.client.AdminDeleteUserPublicKey(
-		data.User.ValueString(),
-		int(data.KeyID.ValueInt64()),
+	// Use Forgejo client to delete existing deploy key
+	res, err := r.client.DeleteDeployKey(
+		repo.Owner.ValueString(),
+		repo.Name.ValueString(),
+		data.KeyID.ValueInt64(),
 	)
 	if err != nil {
 		var msg string
@@ -364,15 +418,17 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"SSH key with user %s and ID %d forbidden: %s",
-					data.User.String(),
+					"Deploy key with owner %s, repo %s and ID %d forbidden: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					data.KeyID.ValueInt64(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"SSH key with user %s and ID %d not found: %s",
-					data.User.String(),
+					"Deploy key with owner %s, repo %s and ID %d not found: %s",
+					repo.Owner.String(),
+					repo.Name.String(),
 					data.KeyID.ValueInt64(),
 					err,
 				)
@@ -384,13 +440,13 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 				)
 			}
 		}
-		resp.Diagnostics.AddError("Unable to delete SSH key", msg)
+		resp.Diagnostics.AddError("Unable to delete deploy key", msg)
 
 		return
 	}
 }
 
-// NewSSHKeyResource is a helper function to simplify the provider implementation.
-func NewSSHKeyResource() resource.Resource {
-	return &sshKeyResource{}
+// NewDeployKeyResource is a helper function to simplify the provider implementation.
+func NewDeployKeyResource() resource.Resource {
+	return &deployKeyResource{}
 }

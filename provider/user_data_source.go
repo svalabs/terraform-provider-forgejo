@@ -274,7 +274,7 @@ func getUserByID(ctx context.Context, client *forgejo.Client, id int64) (*forgej
 			)
 		}
 	}
-	diags.AddError("Unable to read user", msg)
+	addReadError(&diags, res, "Unable to read user", msg)
 
 	return nil, diags
 }
@@ -317,7 +317,7 @@ func getUserByName(ctx context.Context, client *forgejo.Client, name string) (*f
 			)
 		}
 	}
-	diags.AddError("Unable to read user", msg)
+	addReadError(&diags, res, "Unable to read user", msg)
 
 	return nil, diags
 }

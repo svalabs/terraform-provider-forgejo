@@ -28,9 +28,9 @@ import (
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 
-	forgejoBoolValidator "terraform-provider-forgejo/internal/boolvalidator"
-	forgejoObjectValidator "terraform-provider-forgejo/internal/objectvalidator"
-	forgejoStringValidator "terraform-provider-forgejo/internal/stringvalidator"
+	forgejoBoolValidator "github.com/neticdk/terraform-provider-forgejo/internal/boolvalidator"
+	forgejoObjectValidator "github.com/neticdk/terraform-provider-forgejo/internal/objectvalidator"
+	forgejoStringValidator "github.com/neticdk/terraform-provider-forgejo/internal/stringvalidator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -1613,6 +1613,14 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 		r.client,
 		data.ID.ValueInt64(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

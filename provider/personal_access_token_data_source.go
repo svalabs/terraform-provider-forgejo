@@ -181,7 +181,7 @@ func getPersonalAccessToken(
 				)
 			}
 		}
-		diags.AddError("Unable to list personal access tokens", msg)
+		addReadError(&diags, res, "Unable to list personal access tokens", msg)
 
 		return nil, diags
 	}
@@ -191,14 +191,14 @@ func getPersonalAccessToken(
 		return strings.EqualFold(t.Name, tokenName)
 	})
 	if idx == -1 {
-		diags.AddError(
+		diags.Append(newNotFoundDiagnostic(
 			"Unable to find personal access token by name",
 			fmt.Sprintf(
 				"Personal access token with user '%s' and name '%s' not found",
 				user,
 				tokenName,
 			),
-		)
+		))
 
 		return nil, diags
 	}

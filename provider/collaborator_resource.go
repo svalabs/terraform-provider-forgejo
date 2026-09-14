@@ -241,6 +241,14 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 		r.client,
 		data.RepositoryID.ValueInt64(),
 	)
+	if isNotFound(diags) {
+		// Gone on the Forgejo side: drop it from state so the next plan
+		// creates it again instead of failing the read.
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
+
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -295,6 +303,15 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 				)
 			}
 		}
+
+		if res != nil && res.Response != nil && res.StatusCode == 404 {
+			// The collaborator is gone: drop it from state so the next plan
+			// creates it again instead of failing the read.
+			resp.State.RemoveResource(ctx)
+
+			return
+		}
+
 		resp.Diagnostics.AddError("Unable to read collaborator", msg)
 
 		return
