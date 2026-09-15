@@ -74,10 +74,17 @@ func (m *teamResourceModel) to(o *forgejo.EditTeamOption, ctx context.Context) (
 
 	o.Name = m.Name.ValueString()
 	o.Description = m.Description.ValueStringPointer()
-	o.Permission = forgejo.AccessMode(m.Permission.ValueString())
+
+	if !m.Permission.IsNull() {
+		o.Permission = forgejo.AccessMode(m.Permission.ValueString())
+	}
+
 	o.CanCreateOrgRepo = m.CanCreateOrgRepo.ValueBoolPointer()
 	o.IncludesAllRepositories = m.IncludesAllRepositories.ValueBoolPointer()
-	diags = m.UnitsMap.ElementsAs(ctx, &o.UnitsMap, false)
+
+	if !m.UnitsMap.IsNull() {
+		diags = m.UnitsMap.ElementsAs(ctx, &o.UnitsMap, false)
+	}
 
 	return diags
 }
@@ -155,24 +162,28 @@ func (r *teamResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 				},
 			},
 			"permission": schema.StringAttribute{
-				Description: "Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set the correct `units_map`.",
+				Description: "Permissions within the owning organization. **Note**: Exactly one of `units_map` or `permission` must be defined.",
 				Computed:    true,
 				Optional:    true,
-				Default:     stringdefault.StaticString("read"),
 				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("units_map"),
+					}...),
 					stringvalidator.OneOf(
-						"read",
-						"write",
 						"admin",
 						"owner",
 					),
 				},
 			},
 			"units_map": schema.MapAttribute{
-				Description: "Map of access units. **Note**: If the `permission` is `admin` or `owner` all units must be set to `admin` as well.",
+				Description: "Map of access units. **Note**: Exactly one of `permission` or `units_map` must be defined.",
 				ElementType: types.StringType,
-				Required:    true,
+				Computed:    true,
+				Optional:    true,
 				Validators: []validator.Map{
+					mapvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("permission"),
+					}...),
 					mapvalidator.KeysAre(
 						stringvalidator.OneOf(
 							"repo.code",
