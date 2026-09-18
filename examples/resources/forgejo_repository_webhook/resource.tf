@@ -25,6 +25,8 @@ resource "forgejo_repository_webhook" "example" {
   config = {
     "content_type" = "json"
     "url"          = "http://example.com/invoke"
+    # The "secret" key is write-only: never read back from the API.
+    "secret" = "supersecret"
   }
 }
 

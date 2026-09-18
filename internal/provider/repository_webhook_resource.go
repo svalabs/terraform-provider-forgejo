@@ -53,6 +53,28 @@ type repositoryWebhookResourceModel struct {
 	UpdatedAt           types.String `tfsdk:"updated_at"`
 }
 
+// repositoryWebhookWriteOnlyConfigKeys lists keys within the webhook "config"
+// map that the Forgejo API accepts on create/update but never returns in
+// responses (a GET on the hook only echoes back e.g. "url" and
+// "content_type").
+var repositoryWebhookWriteOnlyConfigKeys = []string{"secret"}
+
+// redactRepositoryWebhookConfig returns a copy of a webhook "config" map with
+// the values of all write-only keys obfuscated, for safe use in log output.
+func redactRepositoryWebhookConfig(config map[string]string) map[string]string {
+	redacted := make(map[string]string, len(config))
+	for k, v := range config {
+		redacted[k] = v
+	}
+	for _, key := range repositoryWebhookWriteOnlyConfigKeys {
+		if v, ok := redacted[key]; ok {
+			redacted[key] = strings.Repeat("*", len(v))
+		}
+	}
+
+	return redacted
+}
+
 // from is a helper function to load an API struct into Terraform data model.
 func (m *repositoryWebhookResourceModel) from(h *forgejo.Hook, ctx context.Context) (diags diag.Diagnostics) {
 	if h == nil {
@@ -61,9 +83,29 @@ func (m *repositoryWebhookResourceModel) from(h *forgejo.Hook, ctx context.Conte
 
 	var d diag.Diagnostics
 
+	// The API response never includes write-only config keys (e.g. "secret").
+	// Strip any value it might echo back (e.g. a masked placeholder) and
+	// restore the value from the prior model (the plan on create/update, the
+	// prior state on read), so the applied config matches what was planned.
+	config := make(map[string]string, len(h.Config))
+	for k, v := range h.Config {
+		config[k] = v
+	}
+	var priorConfig map[string]string
+	if !m.Config.IsNull() && !m.Config.IsUnknown() {
+		d = m.Config.ElementsAs(ctx, &priorConfig, false)
+		diags.Append(d...)
+	}
+	for _, key := range repositoryWebhookWriteOnlyConfigKeys {
+		delete(config, key)
+		if v, ok := priorConfig[key]; ok {
+			config[key] = v
+		}
+	}
+
 	m.WebhookID = types.Int64Value(h.ID)
 	m.Active = types.BoolValue(h.Active)
-	m.Config, d = types.MapValueFrom(ctx, types.StringType, h.Config)
+	m.Config, d = types.MapValueFrom(ctx, types.StringType, config)
 	diags.Append(d...)
 	m.CreatedAt = types.StringValue(h.Created.Format(time.RFC3339))
 	m.Events, d = types.SetValueFrom(ctx, types.StringType, h.Events)
@@ -140,7 +182,7 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 				Default:     stringdefault.StaticString(""),
 			},
 			"config": schema.MapAttribute{
-				Description: "Map of configuration settings.",
+				Description: "Map of configuration settings, e.g. \"content_type\" and \"url\". The \"secret\" key is write-only: Forgejo accepts it on create/update but never returns it, so the provider preserves the configured value instead of reading it back, and cannot detect changes made outside of Terraform.",
 				ElementType: types.StringType,
 				Required:    true,
 			},
@@ -295,7 +337,7 @@ func (r *repositoryWebhookResource) Create(ctx context.Context, req resource.Cre
 		"active":               data.Active.ValueBool(),
 		"authorization_header": strings.Repeat("*", len(data.AuthorizationHeader.ValueString())),
 		"branch_filter":        data.BranchFilter.ValueString(),
-		"config":               config,
+		"config":               redactRepositoryWebhookConfig(config),
 		"events":               events,
 		"repo":                 repo.Name.ValueString(),
 		"type":                 data.Type.ValueString(),
@@ -501,7 +543,7 @@ func (r *repositoryWebhookResource) Update(ctx context.Context, req resource.Upd
 		"active":               data.Active.ValueBool(),
 		"authorization_header": strings.Repeat("*", len(data.AuthorizationHeader.ValueString())),
 		"branch_filter":        data.BranchFilter.ValueString(),
-		"config":               config,
+		"config":               redactRepositoryWebhookConfig(config),
 		"events":               events,
 		"owner":                repo.Owner.ValueString(),
 		"repo":                 repo.Name.ValueString(),

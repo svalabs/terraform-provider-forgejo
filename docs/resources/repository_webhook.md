@@ -40,6 +40,8 @@ resource "forgejo_repository_webhook" "example" {
   config = {
     "content_type" = "json"
     "url"          = "http://example.com/invoke"
+    # The "secret" key is write-only: never read back from the API.
+    "secret" = "supersecret"
   }
 }
 
@@ -56,7 +58,7 @@ import {
 
 ### Required
 
-- `config` (Map of String) Map of configuration settings.
+- `config` (Map of String) Map of configuration settings, e.g. "content_type" and "url". The "secret" key is write-only: Forgejo accepts it on create/update but never returns it, so the provider preserves the configured value instead of reading it back, and cannot detect changes made outside of Terraform.
 - `repository_id` (Number) Numeric identifier of the repository. Changing this forces a new resource to be created.
 - `type` (String) Type of webhook. Changing this forces a new resource to be created.
 

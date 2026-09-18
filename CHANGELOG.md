@@ -1,3 +1,25 @@
+## 1.6.0 (August 16, 2026)
+
+FEATURES:
+
+- **New Resource**: `forgejo_personal_access_token` ([documentation](docs/resources/personal_access_token.md)) (fixes [#96](https://github.com/svalabs/terraform-provider-forgejo/issues/96))
+- **New Data Source**: `forgejo_personal_access_token` ([documentation](docs/data-sources/personal_access_token.md)) (fixes [#96](https://github.com/svalabs/terraform-provider-forgejo/issues/96))
+
+BUG FIXES:
+
+- `forgejo_repository_webhook`: Preserve write-only `config.secret` from configuration so managing the webhook secret no longer causes "Provider produced inconsistent result after apply" (fixes [#158](https://github.com/svalabs/terraform-provider-forgejo/issues/158))
+- `forgejo_repository_webhook`: Obfuscate values for write-only `config` keys in log output
+
+DEPENDENCIES:
+
+- Update to Go 1.25.12
+- Bump github/codeql-action from 4.37.3 to 4.37.6
+- Bump github.com/hashicorp/terraform-plugin-log from 0.10.0 to 0.11.0
+
+NEW CONTRIBUTORS 🎉:
+
+- [@trent-hord](https://github.com/trent-hord) — [#159: Preserve write-only config.secret](https://github.com/svalabs/terraform-provider-forgejo/pull/159)
+
 ## 1.5.2 (August 2, 2026)
 
 ENHANCEMENTS:
@@ -164,12 +186,11 @@ BUG FIXES:
 - `forgejo_organization`, `forgejo_team`: Remove intermediate state write to prevent partially-populated state
 - `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Obfuscate action secret data in log output
 - `forgejo_repository`, `forgejo_user`: Initialize write-only fields to their default values during import
-- `forgejo_branch_protection`, `forgejo_repository`, `foregejo_user`: Add additional test cases for import testing
+- `forgejo_branch_protection`, `forgejo_repository`, `forgejo_user`: Add additional test cases for import testing
 - `forgejo_team_member`: Correct documentation format
 
 DEPENDENCIES:
 
-- Update to Go 1.25.7
 - Bump actions/setup-go from 6.3.0 to 6.4.0
 - Bump codeberg.org/mvdkleijn/forgejo-sdk from 2.2.0 to 3.0.0
 - Bump github.com/hashicorp/terraform-plugin-framework from 1.18.0 to 1.19.0
@@ -244,10 +265,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-- `forgejo_user`: initialize write-only fields to their default values during import
-- `forgejo_user`: obfuscate password in log output
-- `forgejo_user`: only send 'visibility' to API if present in config
-- `forgejo_organization`, `forgejo_user`: save state immediately after initial creation to prevent "ghost" resources
+- `forgejo_user`: Initialize write-only fields to their default values during import
+- `forgejo_user`: Obfuscate password in log output
+- `forgejo_user`: Only send 'visibility' to API if present in config
+- `forgejo_organization`, `forgejo_user`: Save state immediately after initial creation to prevent "ghost" resources
 - Resource / data source schema consistency
 
 DEPENDENCIES:
@@ -264,12 +285,12 @@ FEATURES:
 
 - **New Resource**: `forgejo_gpg_key` ([documentation](docs/resources/gpg_key.md))
 - **New Data Source**: `forgejo_gpg_key` ([documentation](docs/data-sources/gpg_key.md))
-- `forgejo_user`: implement resource import
+- `forgejo_user`: Implement resource import
 
 ENHANCEMENTS:
 
-- `forgejo_repository`: add `fast-forward-only` to allowed attribute values for `default_merge_style`
-- `forgejo_repository`: allow archiving on destroy
+- `forgejo_repository`: Add `fast-forward-only` to allowed attribute values for `default_merge_style`
+- `forgejo_repository`: Allow archiving on destroy
 - Standardize on formatting temporal data in RFC3339 format
 
 DEPENDENCIES:
@@ -328,7 +349,7 @@ FEATURES:
 
 - **New Resource**: `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - **New Data Source**: `forgejo_ssh_key` ([documentation](docs/data-sources/ssh_key.md))
-- `forgejo_repository`: implement resource import
+- `forgejo_repository`: Implement resource import
 
 ENHANCEMENTS:
 
@@ -357,48 +378,48 @@ NEW CONTRIBUTORS 🎉:
 
 BUG FIXES:
 
-- `forgejo_collaborator`: load correct result field into data model
-- `forgejo_deploy_key`, `forgejo_repository`: mark "sticky" attributes, to minimize number of unknown values during plan
-- `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: add missing `created_at` attribute ([documentation](docs/resources/organization_action_secret.md))
-- `forgejo_organization`: add missing `repo_admin_change_team_access` attribute ([documentation](docs/resources/organization.md))
-- `forgejo_user`: only update password if it has changed, to not trigger false notifications
-- `forgejo_user`: rename `created` attribute for consistency
+- `forgejo_collaborator`: Load correct result field into data model
+- `forgejo_deploy_key`, `forgejo_repository`: Mark "sticky" attributes, to minimize number of unknown values during plan
+- `forgejo_organization_action_secret`, `forgejo_repository_action_secret`: Add missing `created_at` attribute ([documentation](docs/resources/organization_action_secret.md))
+- `forgejo_organization`: Add missing `repo_admin_change_team_access` attribute ([documentation](docs/resources/organization.md))
+- `forgejo_user`: Only update password if it has changed, to not trigger false notifications
+- `forgejo_user`: Rename `created` attribute for consistency
 
 ## 0.5.3 (October 20, 2025)
 
 BUG FIXES:
 
-- `forgejo_repository`: mark create-only attributes as requiring resource replacement only if configuration value is not null
-- `forgejo_user`: add remaining attributes ([documentation](docs/resources/user.md))
+- `forgejo_repository`: Mark create-only attributes as requiring resource replacement only if configuration value is not null
+- `forgejo_user`: Add remaining attributes ([documentation](docs/resources/user.md))
 
 ## 0.5.2 (October 19, 2025)
-
-BUG FIXES:
-
-- `forgejo_repository`: add `regexp` to allowed attribute values for `external_tracker_style`
 
 ENHANCEMENTS:
 
 - Update local test environment to forgejo:11
 - Include Terraform 1.13 and exclude Terraform 1.10 from acceptance tests
 
-DEPENDENCIES:
-
-- Update to go 1.24.9
-
-## 0.5.1 (October 18, 2025)
-
 BUG FIXES:
 
-- `forgejo_repository`: add remaining attributes ([documentation](docs/resources/repository.md))
-- `forgejo_repository`: flag create-only attributes with `RequiresReplace`
-- `forgejo_repository`: only update pull request settings if PRs are enabled
-- `forgejo_repository`: remove default value for `default_branch` attribute, to allow for mirroring repos with non-default branch
+- `forgejo_repository`: Add `regexp` to allowed attribute values for `external_tracker_style`
+
+DEPENDENCIES:
+
+- Update to Go 1.24.9
+
+## 0.5.1 (October 18, 2025)
 
 ENHANCEMENTS:
 
 - Improve documentation and test cases
-- `forgejo_repository`: document dependencies for feature settings ([documentation](docs/resources/repository.md))
+- `forgejo_repository`: Document dependencies for feature settings ([documentation](docs/resources/repository.md))
+
+BUG FIXES:
+
+- `forgejo_repository`: Add remaining attributes ([documentation](docs/resources/repository.md))
+- `forgejo_repository`: Flag create-only attributes with `RequiresReplace`
+- `forgejo_repository`: Only update pull request settings if PRs are enabled
+- `forgejo_repository`: Remove default value for `default_branch` attribute, to allow for mirroring repos with non-default branch
 
 DEPENDENCIES:
 
@@ -411,14 +432,14 @@ FEATURES:
 - **New Resource**: `forgejo_repository_action_secret` ([documentation](docs/resources/repository_action_secret.md))
 - **New Resource**: `forgejo_organization_action_secret` ([documentation](docs/resources/organization_action_secret.md))
 
-BUG FIXES:
-
-- `forgejo_repository`: improve schema validation for tracker and wiki attributes ([documentation](docs/resources/repository.md))
-
 ENHANCEMENTS:
 
 - Add more test cases
 - Improve documentation
+
+BUG FIXES:
+
+- `forgejo_repository`: Improve schema validation for tracker and wiki attributes ([documentation](docs/resources/repository.md))
 
 DEPENDENCIES:
 
@@ -445,11 +466,11 @@ DEPENDENCIES:
 
 FEATURES:
 
-- `forgejo_repository`: add token authentication for repository migrations (clone & pull mirror repos) ([documentation](docs/resources/repository.md))
+- `forgejo_repository`: Add token authentication for repository migrations (clone & pull mirror repos) ([documentation](docs/resources/repository.md))
 
 DEPENDENCIES:
 
-- Update to go 1.23.10
+- Update to Go 1.23.10
 - Bump codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v2 from 2.1.0 to 2.2.0
 - Bump github.com/cloudflare/circl from 1.6.0 to 1.6.1
 - Bump github.com/cloudflare/circl from 1.3.7 to 1.6.1 in /tools
@@ -459,7 +480,7 @@ DEPENDENCIES:
 
 FEATURES:
 
-- `forgejo_repository`: add support for repository migration (clone & pull mirror repos) ([documentation](docs/resources/repository.md))
+- `forgejo_repository`: Add support for repository migration (clone & pull mirror repos) ([documentation](docs/resources/repository.md))
 
 ENHANCEMENTS:
 

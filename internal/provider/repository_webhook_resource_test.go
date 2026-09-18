@@ -45,6 +45,7 @@ resource "forgejo_repository_webhook" "test" {
     config        = {
         "content_type" = "json"
         "url"          = "http://example.com/abc12345"
+        "secret"       = "supersecret"
     }
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -62,8 +63,11 @@ resource "forgejo_repository_webhook" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("authorization_header"), knownvalue.Null()),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("type"), knownvalue.StringExact("forgejo")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("events").AtSliceIndex(0), knownvalue.StringExact("push")),
-					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("content_type"), knownvalue.StringExact("json")),
-					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("url"), knownvalue.StringExact("http://example.com/abc12345")),
+					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"content_type": knownvalue.StringExact("json"),
+						"url":          knownvalue.StringExact("http://example.com/abc12345"),
+						"secret":       knownvalue.StringExact("supersecret"),
+					})),
 				},
 			},
 			// Import testing (invalid identifier)
@@ -104,6 +108,7 @@ found`),
 				ImportStateIdPrefix:                  "tfadmin/test_repo/",
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "webhook_id",
+				ImportStateVerifyIgnore:              []string{"config.secret", "config.%"},
 			},
 			// Update and Read testing
 			{
@@ -118,6 +123,7 @@ resource "forgejo_repository_webhook" "test" {
     config = {
         "content_type" = "json"
         "url"          = "http://example.com/abc12345"
+        "secret"       = "rotatedsecret"
     }
     active               = true
     authorization_header = "Bearer token123456"
@@ -138,8 +144,11 @@ resource "forgejo_repository_webhook" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("authorization_header"), knownvalue.StringExact("Bearer token123456")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("type"), knownvalue.StringExact("forgejo")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("events").AtSliceIndex(0), knownvalue.StringExact("push")),
-					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("content_type"), knownvalue.StringExact("json")),
-					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("url"), knownvalue.StringExact("http://example.com/abc12345")),
+					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"content_type": knownvalue.StringExact("json"),
+						"url":          knownvalue.StringExact("http://example.com/abc12345"),
+						"secret":       knownvalue.StringExact("rotatedsecret"),
+					})),
 				},
 			},
 			// Recreate and Read testing
@@ -175,8 +184,10 @@ resource "forgejo_repository_webhook" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("authorization_header"), knownvalue.StringExact("Bearer token123456")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("type"), knownvalue.StringExact("gitea")),
 					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("events").AtSliceIndex(0), knownvalue.StringExact("push")),
-					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("content_type"), knownvalue.StringExact("json")),
-					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config").AtMapKey("url"), knownvalue.StringExact("http://example.com/abc12345")),
+					statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("config"), knownvalue.MapExact(map[string]knownvalue.Check{
+						"content_type": knownvalue.StringExact("json"),
+						"url":          knownvalue.StringExact("http://example.com/abc12345"),
+					})),
 				},
 			},
 		},
