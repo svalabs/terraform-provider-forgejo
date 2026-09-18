@@ -50,8 +50,7 @@ func (m *collaboratorResourceModel) to(o *forgejo.AddCollaboratorOption) {
 		return
 	}
 
-	am := forgejo.AccessMode(m.Permission.ValueString())
-	o.Permission = &am
+	o.Permission = new(forgejo.AccessMode(m.Permission.ValueString()))
 }
 
 // Metadata returns the resource type name.
