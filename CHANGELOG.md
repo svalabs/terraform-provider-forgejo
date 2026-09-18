@@ -1,3 +1,19 @@
+## 1.6.1 (September 18, 2026)
+
+BUG FIXES:
+
+- `forgejo_repository`: Only send `wiki_branch` to the API when it has a non-empty value, fixing HTTP 500 errors when updating repositories (fixes [#169](https://github.com/svalabs/terraform-provider-forgejo/issues/169))
+
+DEPENDENCIES:
+
+- Update to Go 1.25.14
+- Bump github/codeql-action from 4.37.6 to 4.38.0
+- Bump google.golang.org/grpc from 1.82.1 to 1.83.2
+
+NEW CONTRIBUTORS 🎉:
+
+- [@misl-smlz](https://github.com/misl-smlz) — [#188: Do not set the wiki always](https://github.com/svalabs/terraform-provider-forgejo/pull/188)
+
 ## 1.6.0 (August 16, 2026)
 
 FEATURES:
@@ -195,7 +211,7 @@ DEPENDENCIES:
 - Bump codeberg.org/mvdkleijn/forgejo-sdk from 2.2.0 to 3.0.0
 - Bump github.com/hashicorp/terraform-plugin-framework from 1.18.0 to 1.19.0
 - Bump github.com/hashicorp/terraform-plugin-go from 0.30.0 to 0.31.0
-- Bump github.com/hashicorp/terraform-plugin-testing from 1.18.0 to 1.19.0
+- Bump github.com/hashicorp/terraform-plugin-testing from 1.14.0 to 1.15.0
 - Bump google.golang.org/grpc from 1.79.1 to 1.79.3
 
 ## 1.3.1 (March 8, 2026)
