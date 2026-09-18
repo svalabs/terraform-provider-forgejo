@@ -159,7 +159,7 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Create repository action secret", map[string]any{
 		"user": repo.Owner.ValueString(),
@@ -266,7 +266,7 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	// Use Forgejo client to get repository action secret
 	// SDK offers no secret lookup at all; list-then-filter is the only option
@@ -321,7 +321,7 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Update repository action secret", map[string]any{
 		"user": repo.Owner.ValueString(),
@@ -414,7 +414,7 @@ func (r *repositoryActionSecretResource) Delete(ctx context.Context, req resourc
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Delete repository action secret", map[string]any{
 		"user": repo.Owner.ValueString(),

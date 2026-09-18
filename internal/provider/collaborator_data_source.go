@@ -108,7 +108,7 @@ func (d *collaboratorDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Read collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),

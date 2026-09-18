@@ -136,7 +136,7 @@ func (d *deployKeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "List deploy keys", map[string]any{
 		"user": repo.Owner.ValueString(),

@@ -1,6 +1,9 @@
 package provider
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestCanonicalizeMirrorInterval(t *testing.T) {
 	tests := map[string]string{
@@ -16,7 +19,7 @@ func TestCanonicalizeMirrorInterval(t *testing.T) {
 
 	for input, expected := range tests {
 		t.Run(input, func(t *testing.T) {
-			if actual := canonicalizeMirrorInterval(input); actual != expected {
+			if actual := canonicalizeMirrorInterval(context.Background(), input); actual != expected {
 				t.Fatalf("canonicalizeMirrorInterval(%q) = %q, want %q", input, actual, expected)
 			}
 		})

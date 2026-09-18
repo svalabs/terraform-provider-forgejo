@@ -318,7 +318,7 @@ func (r *repositoryWebhookResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	var events []string
 	diags = data.Events.ElementsAs(ctx, &events, false)
@@ -439,7 +439,7 @@ func (r *repositoryWebhookResource) Read(ctx context.Context, req resource.ReadR
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Read repository webhook", map[string]any{
 		"owner":      repo.Owner.ValueString(),
@@ -524,7 +524,7 @@ func (r *repositoryWebhookResource) Update(ctx context.Context, req resource.Upd
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	var events []string
 	diags = data.Events.ElementsAs(ctx, &events, false)
@@ -680,7 +680,7 @@ func (r *repositoryWebhookResource) Delete(ctx context.Context, req resource.Del
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Delete repository webhook", map[string]any{
 		"owner":      repo.Owner.ValueString(),

@@ -109,7 +109,7 @@ func (d *repositoryActionVariableDataSource) Read(ctx context.Context, req datas
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Read repository action variable", map[string]any{
 		"repository_id": data.RepositoryID.ValueInt64(),
