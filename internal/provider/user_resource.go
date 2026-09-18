@@ -134,12 +134,10 @@ func (m *userResourceModel) to(s *userResourceModel, o *forgejo.EditUserOption) 
 	o.Restricted = m.Restricted.ValueBoolPointer()
 
 	if !m.Visibility.IsNull() && !m.Visibility.IsUnknown() {
-		vt := forgejo.VisibleType(m.Visibility.ValueString())
-		o.Visibility = &vt
+		o.Visibility = new(forgejo.VisibleType(m.Visibility.ValueString()))
 	}
 
-	mrc := int(m.MaxRepoCreation.ValueInt64())
-	o.MaxRepoCreation = &mrc
+	o.MaxRepoCreation = new(int(m.MaxRepoCreation.ValueInt64()))
 }
 
 // Metadata returns the resource type name.
@@ -410,8 +408,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	if !data.Visibility.IsNull() && !data.Visibility.IsUnknown() {
-		vt := forgejo.VisibleType(data.Visibility.ValueString())
-		copts.Visibility = &vt
+		copts.Visibility = new(forgejo.VisibleType(data.Visibility.ValueString()))
 	}
 
 	// Validate API request body
@@ -738,9 +735,8 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			"name": data.Name.ValueString(),
 		})
 
-		active := false
 		opts := forgejo.EditUserOption{
-			Active: &active,
+			Active: new(false),
 		}
 
 		// Use Forgejo client to deactivate existing user

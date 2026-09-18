@@ -247,8 +247,7 @@ func (m *repositoryResourceModel) to(o *forgejo.EditRepoOption) {
 		o.WikiBranch = m.WikiBranch.ValueStringPointer()
 	}
 
-	ms := forgejo.MergeStyle(m.DefaultMergeStyle.ValueString())
-	o.DefaultMergeStyle = &ms
+	o.DefaultMergeStyle = new(forgejo.MergeStyle(m.DefaultMergeStyle.ValueString()))
 }
 
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Permission
@@ -1808,9 +1807,8 @@ func (r *repositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 			"name":  data.Name.ValueString(),
 		})
 
-		archive := true
 		opts := forgejo.EditRepoOption{
-			Archived: &archive,
+			Archived: new(true),
 		}
 
 		// Use Forgejo client to archive existing repository
