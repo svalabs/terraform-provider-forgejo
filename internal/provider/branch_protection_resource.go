@@ -392,7 +392,7 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	// Generate API request body from plan
 	opts := r.toCreateOption(ctx, &data)
@@ -508,7 +508,7 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	// Use Forgejo client to get branch protection
 	protection, diags := r.getBranchProtection(
@@ -562,7 +562,7 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	// Convert model to API request
 	opts := r.toEditOption(ctx, &data)
@@ -679,7 +679,7 @@ func (r *branchProtectionResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Delete branch protection", map[string]any{
 		"repository_id":    data.RepositoryID.ValueInt64(),

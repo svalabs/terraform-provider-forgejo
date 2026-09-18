@@ -188,7 +188,7 @@ func (r *deployKeyResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Create deploy key", map[string]any{
 		"user":      repo.Owner.ValueString(),
@@ -284,7 +284,7 @@ func (r *deployKeyResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Read deploy key", map[string]any{
 		"user":   repo.Owner.ValueString(),
@@ -375,7 +375,7 @@ func (r *deployKeyResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Delete deploy key", map[string]any{
 		"owner":  repo.Owner.ValueString(),

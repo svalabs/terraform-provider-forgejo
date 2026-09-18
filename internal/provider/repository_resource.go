@@ -122,7 +122,7 @@ type repositoryResourceModel struct {
 }
 
 // from is a helper function to load an API struct into Terraform data model.
-func (m *repositoryResourceModel) from(r *forgejo.Repository) {
+func (m *repositoryResourceModel) from(ctx context.Context, r *forgejo.Repository) {
 	if r == nil {
 		return
 	}
@@ -178,7 +178,7 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.HasActions = types.BoolValue(r.HasActions)
 	m.AvatarURL = types.StringValue(r.AvatarURL)
 	m.Internal = types.BoolValue(r.Internal)
-	m.MirrorInterval = types.StringValue(canonicalizeMirrorInterval(r.MirrorInterval))
+	m.MirrorInterval = types.StringValue(canonicalizeMirrorInterval(ctx, r.MirrorInterval))
 	m.MirrorUpdated = types.StringValue(r.MirrorUpdated.Format(time.RFC3339))
 
 	if m.HasPullRequests.ValueBool() {
@@ -873,6 +873,8 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					forgejoStringValidator.RequiresTrueIfConfigured(path.Expressions{
 						path.MatchRoot("mirror"),
 					}...),
+					// Must stay in sync with canonicalizeMirrorInterval(), which
+					// normalizes API responses into this format — see mirror_interval.go
 					stringvalidator.RegexMatches(
 						regexp.MustCompile("^(0|[1-9][0-9]*)h[1-5]?[0-9]m[1-5]?[0-9]s$"),
 						"must follow '23h59m59s' format",
@@ -1579,7 +1581,7 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Map response body to model
-	data.from(rep)
+	data.from(ctx, rep)
 	diags = data.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
@@ -1619,7 +1621,7 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Map response body to model
-	data.from(rep)
+	data.from(ctx, rep)
 	diags = data.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
@@ -1766,7 +1768,7 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Map response body to model
-	data.from(rep)
+	data.from(ctx, rep)
 	diags = data.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
@@ -1903,7 +1905,7 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	}
 
 	// Map response body to model
-	state.from(rep)
+	state.from(ctx, rep)
 	diags = state.permissionsFrom(ctx, rep.Permissions)
 	diags.Append(state.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(state.externalTrackerFrom(ctx, rep.ExternalTracker)...)

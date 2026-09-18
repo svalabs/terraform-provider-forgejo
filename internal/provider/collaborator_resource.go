@@ -145,7 +145,7 @@ func (r *collaboratorResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Create collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),
@@ -247,7 +247,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Read collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),
@@ -336,7 +336,7 @@ func (r *collaboratorResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Update collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),
@@ -438,7 +438,7 @@ func (r *collaboratorResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Delete collaborator", map[string]any{
 		"owner":        repo.Owner.ValueString(),

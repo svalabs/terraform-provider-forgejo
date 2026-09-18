@@ -140,7 +140,7 @@ func (r *repositoryActionVariableResource) Create(ctx context.Context, req resou
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Create repository action variable", map[string]any{
 		"repository_id": data.RepositoryID.ValueInt64(),
@@ -256,7 +256,7 @@ func (r *repositoryActionVariableResource) Read(ctx context.Context, req resourc
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	// Use Forgejo client to get repository action variable
 	variable, diags := r.getVariable(
@@ -318,7 +318,7 @@ func (r *repositoryActionVariableResource) Update(ctx context.Context, req resou
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Update repository action variable", map[string]any{
 		"repository_id": plan.RepositoryID.ValueInt64(),
@@ -414,7 +414,7 @@ func (r *repositoryActionVariableResource) Delete(ctx context.Context, req resou
 	}
 
 	// Map response body to model
-	repo.from(rep)
+	repo.from(ctx, rep)
 
 	tflog.Info(ctx, "Delete repository action variable", map[string]any{
 		"repository_id": data.RepositoryID.ValueInt64(),
