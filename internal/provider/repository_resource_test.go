@@ -451,7 +451,8 @@ resource "forgejo_repository" "test" {
 	default_merge_style         = "rebase"
 	ignore_whitespace_conflicts = true
 
-	has_wiki = true
+	has_wiki    = true
+	wiki_branch = "docs"
 }`,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -474,7 +475,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("default_update_style"), knownvalue.StringExact("merge")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("enable_prune"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("globally_editable_wiki"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("docs")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/test_user/tftest1.git")),
@@ -574,7 +575,8 @@ resource "forgejo_repository" "test" {
 	default_merge_style         = "squash"
 	ignore_whitespace_conflicts = true
 
-	has_wiki = true
+	has_wiki    = true
+	wiki_branch = "docs"
 	external_wiki = {
 		external_wiki_url = "https://some.wiki"
 	}
@@ -600,7 +602,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("default_update_style"), knownvalue.StringExact("merge")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("enable_prune"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("globally_editable_wiki"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("docs")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/test_user/tftest2.git")),
@@ -703,7 +705,8 @@ resource "forgejo_repository" "test" {
 	default_merge_style         = "rebase"
 	ignore_whitespace_conflicts = false
 
-	has_wiki = true
+	has_wiki    = true
+	wiki_branch = "docs"
 	external_wiki = {
 		external_wiki_url = "https://another.wiki"
 	}
@@ -729,7 +732,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("default_update_style"), knownvalue.StringExact("merge")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("enable_prune"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("globally_editable_wiki"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("docs")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/test_user/tftest3.git")),
@@ -832,7 +835,8 @@ resource "forgejo_repository" "test" {
 	default_merge_style         = "fast-forward-only"
 	ignore_whitespace_conflicts = false
 
-	has_wiki = true
+	has_wiki    = true
+	wiki_branch = "docs"
 	external_wiki = {
 		external_wiki_url = "https://yet.another.wiki"
 	}
@@ -858,7 +862,7 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("default_update_style"), knownvalue.StringExact("merge")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("enable_prune"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("globally_editable_wiki"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("wiki_branch"), knownvalue.StringExact("docs")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("avatar_url"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_url"), knownvalue.StringExact(forgejoTestHost+"/test_user/tftest3.git")),
@@ -2140,6 +2144,67 @@ import {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("watchers_count"), knownvalue.Int64Exact(1)),
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
+				},
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
+// Regression test for issue #169: updating an archived repository must not
+// send an empty wiki_branch.
+func TestAccRepositoryArchivedWikiBranch(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing (wiki enabled, non-default wiki branch)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_archived_wiki"
+
+	has_wiki    = true
+	wiki_branch = "docs"
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Update and Read testing (archive repository, wiki branch unchanged)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_archived_wiki"
+
+	has_wiki    = true
+	wiki_branch = "docs"
+
+	archived = true
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Update and Read testing (archived repository, wiki disabled)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_archived_wiki"
+
+	has_wiki = false
+
+	archived    = true
+	description = "Purely for testing..."
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
 				},
 			},
 			// Delete testing automatically occurs in TestCase
