@@ -1,6 +1,6 @@
 FROM registry.access.redhat.com/ubi9/ubi:latest
 
-ARG goversion=1.25.12
+ARG goversion=1.26.8
 
 RUN useradd --create-home vscode
 
