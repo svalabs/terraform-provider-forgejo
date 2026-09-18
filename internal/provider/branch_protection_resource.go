@@ -923,11 +923,9 @@ func (r *branchProtectionResource) toEditOption(ctx context.Context, data *branc
 
 	opts.RequireSignedCommits = data.RequireSignedCommits.ValueBoolPointer()
 
-	patterns := data.ProtectedFilePatterns.ValueString()
-	opts.ProtectedFilePatterns = &patterns
+	opts.ProtectedFilePatterns = new(data.ProtectedFilePatterns.ValueString())
 
-	unprotectedPatterns := data.UnprotectedFilePatterns.ValueString()
-	opts.UnprotectedFilePatterns = &unprotectedPatterns
+	opts.UnprotectedFilePatterns = new(data.UnprotectedFilePatterns.ValueString())
 
 	opts.EnableMergeWhitelist = data.EnableMergeWhitelist.ValueBoolPointer()
 
@@ -949,8 +947,7 @@ func (r *branchProtectionResource) toEditOption(ctx context.Context, data *branc
 	data.ApprovalsWhitelistTeams.ElementsAs(ctx, &approvalsWhitelistTeams, false)
 	opts.ApprovalsWhitelistTeams = approvalsWhitelistTeams
 
-	approvals := data.RequiredApprovals.ValueInt64()
-	opts.RequiredApprovals = &approvals
+	opts.RequiredApprovals = new(data.RequiredApprovals.ValueInt64())
 
 	opts.BlockOnRejectedReviews = data.BlockOnRejectedReviews.ValueBoolPointer()
 
