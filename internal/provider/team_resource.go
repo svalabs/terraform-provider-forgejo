@@ -598,44 +598,40 @@ func editTeam(ctx context.Context, client *forgejo.Client, id int64, opts forgej
 
 	// Use Forgejo client to update existing team
 	res, err := client.EditTeam(id, opts)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
+	if err == nil {
+		// Use Forgejo client to fetch updated team
+		return getOrgTeamByID(
+			ctx,
+			client,
+			id,
+		)
+	}
 
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Team with ID %d not found: %s",
-					id,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
-			}
+	// Handle errors
+	var msg string
+	if res == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 404:
+			msg = fmt.Sprintf(
+				"Team with ID %d not found: %s",
+				id,
+				err,
+			)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
 		}
-		diags.AddError("Unable to update team", msg)
-
-		return nil, diags
 	}
+	diags.AddError("Unable to update team", msg)
 
-	// Use Forgejo client to fetch updated team
-	team, diags := getOrgTeamByID(
-		ctx,
-		client,
-		id,
-	)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return team, diags
+	return nil, diags
 }
