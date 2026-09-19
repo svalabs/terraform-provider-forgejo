@@ -469,7 +469,7 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	// Update model with response data to ensure computed fields are correctly populated
-	diags = r.from(protection, &data)
+	diags = r.from(ctx, protection, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -523,7 +523,7 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 	}
 
 	// Update model with response data
-	diags = r.from(protection, &data)
+	diags = r.from(ctx, protection, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -640,7 +640,7 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	// Update model with response data
-	diags = r.from(protection, &data)
+	diags = r.from(ctx, protection, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -774,7 +774,7 @@ func (r *branchProtectionResource) ImportState(ctx context.Context, req resource
 	// Map response to model
 	data.BranchName = types.StringValue(branchName)
 	data.RepositoryID = types.Int64Value(repository.ID)
-	diags = r.from(protection, &data)
+	diags = r.from(ctx, protection, &data)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -961,7 +961,7 @@ func (r *branchProtectionResource) toEditOption(ctx context.Context, data *branc
 }
 
 // from is a helper function to load an API struct into Terraform data model.
-func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, data *branchProtectionResourceModel) (diags diag.Diagnostics) {
+func (r *branchProtectionResource) from(ctx context.Context, protection *forgejo.BranchProtection, data *branchProtectionResourceModel) (diags diag.Diagnostics) {
 	if protection == nil || data == nil {
 		return diags
 	}
@@ -983,43 +983,26 @@ func (r *branchProtectionResource) from(protection *forgejo.BranchProtection, da
 
 	// Handle Lists
 	var d diag.Diagnostics
-	data.PushWhitelistUsernames, d = r.stringSliceToSet(protection.PushWhitelistUsernames)
+	data.PushWhitelistUsernames, d = types.SetValueFrom(ctx, types.StringType, protection.PushWhitelistUsernames)
 	diags.Append(d...)
 
-	data.PushWhitelistTeams, d = r.stringSliceToSet(protection.PushWhitelistTeams)
+	data.PushWhitelistTeams, d = types.SetValueFrom(ctx, types.StringType, protection.PushWhitelistTeams)
 	diags.Append(d...)
 
-	data.StatusCheckContexts, d = r.stringSliceToList(protection.StatusCheckContexts)
+	data.StatusCheckContexts, d = types.ListValueFrom(ctx, types.StringType, protection.StatusCheckContexts)
 	diags.Append(d...)
 
-	data.MergeWhitelistUsernames, d = r.stringSliceToSet(protection.MergeWhitelistUsernames)
+	data.MergeWhitelistUsernames, d = types.SetValueFrom(ctx, types.StringType, protection.MergeWhitelistUsernames)
 	diags.Append(d...)
 
-	data.MergeWhitelistTeams, d = r.stringSliceToSet(protection.MergeWhitelistTeams)
+	data.MergeWhitelistTeams, d = types.SetValueFrom(ctx, types.StringType, protection.MergeWhitelistTeams)
 	diags.Append(d...)
 
-	data.ApprovalsWhitelistUsernames, d = r.stringSliceToSet(protection.ApprovalsWhitelistUsernames)
+	data.ApprovalsWhitelistUsernames, d = types.SetValueFrom(ctx, types.StringType, protection.ApprovalsWhitelistUsernames)
 	diags.Append(d...)
 
-	data.ApprovalsWhitelistTeams, d = r.stringSliceToSet(protection.ApprovalsWhitelistTeams)
+	data.ApprovalsWhitelistTeams, d = types.SetValueFrom(ctx, types.StringType, protection.ApprovalsWhitelistTeams)
 	diags.Append(d...)
 
 	return diags
-}
-
-func (r *branchProtectionResource) stringSliceToList(slice []string) (types.List, diag.Diagnostics) {
-	elements := make([]attr.Value, len(slice))
-	for i, v := range slice {
-		elements[i] = types.StringValue(v)
-	}
-
-	return types.ListValue(types.StringType, elements)
-}
-func (r *branchProtectionResource) stringSliceToSet(slice []string) (types.Set, diag.Diagnostics) {
-	elements := make([]attr.Value, len(slice))
-	for i, v := range slice {
-		elements[i] = types.StringValue(v)
-	}
-
-	return types.SetValue(types.StringType, elements)
 }
