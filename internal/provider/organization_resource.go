@@ -377,6 +377,75 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Forgejo's PATCH /orgs/{org} endpoint can silently ignore visibility
+	// changes (see issue #141 — "Provider produced inconsistent result after
+	// apply" when changing visibility). Orgs share the underlying user schema
+	// in Forgejo, so the /admin/users/{user} endpoint handles visibility
+	// writes reliably. Mirror the user_resource pattern and re-apply
+	// visibility through that path when EditOrg's read-back disagrees with
+	// the planned value. Non-admin users for whom EditOrg works correctly
+	// are unaffected.
+	if !data.Visibility.IsNull() && !data.Visibility.IsUnknown() &&
+		org.Visibility != data.Visibility.ValueString() {
+		tflog.Warn(ctx, "EditOrg silently ignored visibility change; retrying via AdminEditUser", map[string]any{
+			"name":     data.Name.ValueString(),
+			"planned":  data.Visibility.ValueString(),
+			"observed": org.Visibility,
+		})
+
+		vt := forgejo.VisibleType(data.Visibility.ValueString())
+		userRes, userErr := r.client.AdminEditUser(
+			data.Name.ValueString(),
+			forgejo.EditUserOption{Visibility: &vt},
+		)
+		if userErr != nil {
+			var msg string
+			if userRes == nil {
+				msg = fmt.Sprintf("Unknown error with nil response: %s", userErr)
+			} else {
+				tflog.Error(ctx, "Error", map[string]any{
+					"status": userRes.Status,
+				})
+
+				switch userRes.StatusCode {
+				case 403:
+					msg = fmt.Sprintf(
+						"Updating organization visibility fell back to /admin/users/%s because PATCH /orgs/%s did not apply the change, but the API token lacks the write:admin scope required for that endpoint: %s",
+						data.Name.ValueString(),
+						data.Name.ValueString(),
+						userErr,
+					)
+				case 404:
+					msg = fmt.Sprintf(
+						"Organization with name %s not found: %s",
+						data.Name.String(),
+						userErr,
+					)
+				default:
+					msg = fmt.Sprintf(
+						"Unknown error (status %d): %s",
+						userRes.StatusCode,
+						userErr,
+					)
+				}
+			}
+			resp.Diagnostics.AddError("Unable to update organization visibility", msg)
+
+			return
+		}
+
+		// Re-read after the fallback so the state reflects the final value.
+		org, diags = getOrganizationByName(
+			ctx,
+			r.client,
+			data.Name.ValueString(),
+		)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	// Map response body to model
 	data.from(org)
 
