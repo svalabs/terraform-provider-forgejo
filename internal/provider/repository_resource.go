@@ -1100,11 +1100,17 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"clone_addr": schema.StringAttribute{
-				// Create-only attribute
+				// Create-only attribute. Deliberately has no Default: Forgejo
+				// reports the original migration URL back via the API for
+				// the lifetime of the repository, so once set this attribute
+				// is populated from upstream on every Read/Update regardless
+				// of configuration. A static Default would force the plan to
+				// "" whenever clone_addr is left unconfigured (the normal
+				// post-migration state), which then never matches the real
+				// value returned after apply.
 				Description: "Migrate / clone from URL. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
