@@ -60,7 +60,10 @@ resource "forgejo_ssh_key" "this" {
 
 - `key` (String) Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function). Changing this forces a new resource to be created.
 - `title` (String) Title of the SSH key. Changing this forces a new resource to be created.
-- `user` (String) Name of the user. Changing this forces a new resource to be created.
+
+### Optional
+
+- `user` (String) Name of the user. Changing this forces a new resource to be created. If set, requires Site Administrator permissions. If unset, adds the key to the currently-authenticated user.
 
 ### Read-Only
 

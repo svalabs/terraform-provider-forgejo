@@ -84,8 +84,8 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{
-				Description: "Name of the user. Changing this forces a new resource to be created.",
-				Required:    true,
+				Description: "Name of the user. Changing this forces a new resource to be created. If set, requires Site Administrator permissions. If unset, adds the key to the currently-authenticated user.",
+				Optional:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -205,10 +205,17 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	// }
 
 	// Use Forgejo client to create new SSH key
-	key, res, err := r.client.AdminCreateUserPublicKey(
-		data.User.ValueString(),
-		opts,
-	)
+	var key *forgejo.PublicKey
+	var res *forgejo.Response
+	var err error
+	if data.User.IsNull() {
+		key, res, err = r.client.CreatePublicKey(opts)
+	} else {
+		key, res, err = r.client.AdminCreateUserPublicKey(
+			data.User.ValueString(),
+			opts,
+		)
+	}
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -348,10 +355,16 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	})
 
 	// Use Forgejo client to delete existing SSH key
-	res, err := r.client.AdminDeleteUserPublicKey(
-		data.User.ValueString(),
-		int(data.KeyID.ValueInt64()),
-	)
+	var res *forgejo.Response
+	var err error
+	if data.User.IsNull() {
+		res, err = r.client.DeletePublicKey(data.KeyID.ValueInt64())
+	} else {
+		res, err = r.client.AdminDeleteUserPublicKey(
+			data.User.ValueString(),
+			int(data.KeyID.ValueInt64()),
+		)
+	}
 	if err != nil {
 		var msg string
 		if res == nil {
