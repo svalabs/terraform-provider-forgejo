@@ -1365,6 +1365,27 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
 			},
+			// Regression test: omitting clone_addr after the initial
+			// migration must not produce a diff or an inconsistent-result
+			// error, since Forgejo keeps reporting the original migration
+			// URL via the API for the life of the repository.
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name        = "tftest"
+	mirror      = false
+	archived    = true
+	description = "Purely for testing..."
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("clone_addr"), knownvalue.StringExact("https://github.com/svalabs/terraform-provider-forgejo")),
+				},
+			},
 			// Recreate and Read testing (mirror repo)
 			{
 				Config: providerConfig + `
