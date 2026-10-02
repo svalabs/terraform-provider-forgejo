@@ -1,4 +1,4 @@
-module terraform-provider-forgejo
+module github.com/svalabs/terraform-provider-forgejo
 
 go 1.25.14
 
