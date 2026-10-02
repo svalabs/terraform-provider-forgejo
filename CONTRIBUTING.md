@@ -27,6 +27,7 @@ terraform-provider-forgejo/
 ├── docs/      # Generated documentation
 ├── examples/  # Provider usage examples
 ├── internal/  # Provider source code and tests
+├── pkg/       # Public Go packages
 └── tools/     # Scripts for generating documentation
 ```
 

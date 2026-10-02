@@ -27,9 +27,9 @@ import (
 
 	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
 
-	forgejoBoolValidator "terraform-provider-forgejo/internal/boolvalidator"
-	forgejoListValidator "terraform-provider-forgejo/internal/listvalidator"
-	forgejoSetValidator "terraform-provider-forgejo/internal/setvalidator"
+	forgejoBoolValidator "github.com/svalabs/terraform-provider-forgejo/internal/boolvalidator"
+	forgejoListValidator "github.com/svalabs/terraform-provider-forgejo/internal/listvalidator"
+	forgejoSetValidator "github.com/svalabs/terraform-provider-forgejo/internal/setvalidator"
 )
 
 // Ensure the implementation satisfies the expected interfaces.

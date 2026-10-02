@@ -205,6 +205,17 @@ Each resource defines its own import identifier, which uniquely identifies the r
 
 Refer to the `examples/` directory for more import examples.
 
+## Using the Provider from Go
+
+The provider can also be used in another Go project through the public
+`pkg/provider` package:
+
+```go
+import forgejoprovider "github.com/svalabs/terraform-provider-forgejo/pkg/provider"
+
+forgejoProvider := forgejoprovider.New(version)()
+```
+
 ## Preventing Accidental Destruction
 
 Once repositories contain important data, you need to protect them against accidental destruction.
