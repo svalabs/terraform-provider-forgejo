@@ -255,6 +255,7 @@ func (r *collaboratorResource) Read(ctx context.Context, req resource.ReadReques
 	})
 
 	// Use Forgejo client to get collaborator permission
+	// SDK offers no native ID-based lookup, collaborators are keyed by username
 	perms, res, err := r.client.CollaboratorPermission(
 		repo.Owner.ValueString(),
 		repo.Name.ValueString(),

@@ -304,6 +304,7 @@ func (r *personalAccessTokenResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	// Use Forgejo client to get personal access token
+	// SDK offers no token lookup at all; list-then-filter is the only option
 	token, diags := getPersonalAccessToken(
 		ctx,
 		r.client,

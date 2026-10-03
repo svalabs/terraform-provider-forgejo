@@ -511,6 +511,7 @@ func (r *branchProtectionResource) Read(ctx context.Context, req resource.ReadRe
 	repo.from(rep)
 
 	// Use Forgejo client to get branch protection
+	// SDK offers no native ID-based lookup, only GetBranchProtection(owner, repo, name)
 	protection, diags := r.getBranchProtection(
 		ctx,
 		repo.Owner.ValueString(),

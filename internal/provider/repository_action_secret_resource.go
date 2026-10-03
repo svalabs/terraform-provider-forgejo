@@ -269,6 +269,7 @@ func (r *repositoryActionSecretResource) Read(ctx context.Context, req resource.
 	repo.from(rep)
 
 	// Use Forgejo client to get repository action secret
+	// SDK offers no secret lookup at all; list-then-filter is the only option
 	secret, diags := r.getSecret(
 		ctx,
 		repo.Owner.ValueString(),

@@ -274,6 +274,7 @@ func (r *organizationActionSecretResource) Read(ctx context.Context, req resourc
 	}
 
 	// Use Forgejo client to get organization action secret
+	// SDK offers no secret lookup at all; list-then-filter is the only option
 	secret, diags := r.getSecret(
 		ctx,
 		data.Organization.ValueString(),
