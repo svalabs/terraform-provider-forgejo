@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -56,6 +58,9 @@ func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
 	m.Created = types.StringValue(k.Created.Format(time.RFC3339))
 	m.ReadOnly = types.BoolValue(k.ReadOnly)
 	m.KeyType = types.StringValue(k.KeyType)
+	if m.User.IsNull() {
+		m.User = types.StringValue(k.Owner.UserName)
+	}
 }
 
 // to is a helper function to save Terraform data model into an API struct.
@@ -80,15 +85,18 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Forgejo user SSH key resource.
 
-**Note**: Managing user SSH keys requires administrative privileges!`,
+**Note**: Managing other users' SSH keys requires administrative privileges! When the user attribute is omitted (or set to null) will this resource manage the currently-authenticated user's SSH keys, which does not require admin privileges.`,
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{
-				Description: "Name of the user. Changing this forces a new resource to be created.",
-				Required:    true,
+				Description: "Name of the user. Changing this forces a new resource to be created. If set, requires Site Administrator permissions. If unset, adds the key to the currently-authenticated user.",
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
 			"key_id": schema.Int64Attribute{
 				Description: "Numeric identifier of the SSH key.",
@@ -205,10 +213,17 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 	// }
 
 	// Use Forgejo client to create new SSH key
-	key, res, err := r.client.AdminCreateUserPublicKey(
-		data.User.ValueString(),
-		opts,
-	)
+	var key *forgejo.PublicKey
+	var res *forgejo.Response
+	var err error
+	if data.User.IsNull() {
+		key, res, err = r.client.CreatePublicKey(opts)
+	} else {
+		key, res, err = r.client.AdminCreateUserPublicKey(
+			data.User.ValueString(),
+			opts,
+		)
+	}
 	if err != nil {
 		var msg string
 		if res == nil {
@@ -218,17 +233,21 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 				"status": res.Status,
 			})
 
+			details := func() string { return fmt.Sprintf("for authenticated user") }
+			if !data.User.IsNull() {
+				details = func() string { return fmt.Sprintf("with user %s", data.User.String()) }
+			}
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"SSH key with user %s forbidden: %s",
-					data.User.String(),
+					"SSH key %s forbidden: %s",
+					details(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"SSH key with user %s not found: %s",
-					data.User.String(),
+					"SSH key %s not found: %s",
+					details(),
 					err,
 				)
 			case 422:
@@ -348,10 +367,16 @@ func (r *sshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	})
 
 	// Use Forgejo client to delete existing SSH key
-	res, err := r.client.AdminDeleteUserPublicKey(
-		data.User.ValueString(),
-		int(data.KeyID.ValueInt64()),
-	)
+	var res *forgejo.Response
+	var err error
+	if data.User.IsNull() {
+		res, err = r.client.DeletePublicKey(data.KeyID.ValueInt64())
+	} else {
+		res, err = r.client.AdminDeleteUserPublicKey(
+			data.User.ValueString(),
+			int(data.KeyID.ValueInt64()),
+		)
+	}
 	if err != nil {
 		var msg string
 		if res == nil {
