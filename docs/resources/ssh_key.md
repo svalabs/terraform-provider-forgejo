@@ -4,14 +4,14 @@ page_title: "forgejo_ssh_key Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo user SSH key resource.
-  Note: Managing user SSH keys requires administrative privileges!
+  Note: Managing other users' SSH keys requires administrative privileges! When the user attribute is omitted (or set to null) will this resource manage the currently-authenticated user's SSH keys, which does not require admin privileges.
 ---
 
 # forgejo_ssh_key (Resource)
 
 Forgejo user SSH key resource.
 
-**Note**: Managing user SSH keys requires administrative privileges!
+**Note**: Managing other users' SSH keys requires administrative privileges! When the user attribute is omitted (or set to null) will this resource manage the currently-authenticated user's SSH keys, which does not require admin privileges.
 
 ## Example Usage
 

@@ -82,7 +82,7 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Forgejo user SSH key resource.
 
-**Note**: Managing user SSH keys requires administrative privileges!`,
+**Note**: Managing other users' SSH keys requires administrative privileges! When the user attribute is omitted (or set to null) will this resource manage the currently-authenticated user's SSH keys, which does not require admin privileges.`,
 
 		Attributes: map[string]schema.Attribute{
 			"user": schema.StringAttribute{
