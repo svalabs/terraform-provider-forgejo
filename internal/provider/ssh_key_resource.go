@@ -228,17 +228,21 @@ func (r *sshKeyResource) Create(ctx context.Context, req resource.CreateRequest,
 				"status": res.Status,
 			})
 
+			details := func() string { return fmt.Sprintf("for authenticated user") }
+			if !data.User.IsNull() {
+				details = func() string { return fmt.Sprintf("with user %s", data.User.String()) }
+			}
 			switch res.StatusCode {
 			case 403:
 				msg = fmt.Sprintf(
-					"SSH key with user %s forbidden: %s",
-					data.User.String(),
+					"SSH key %s forbidden: %s",
+					details(),
 					err,
 				)
 			case 404:
 				msg = fmt.Sprintf(
-					"SSH key with user %s not found: %s",
-					data.User.String(),
+					"SSH key %s not found: %s",
+					details(),
 					err,
 				)
 			case 422:
