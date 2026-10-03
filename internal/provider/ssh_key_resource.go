@@ -58,6 +58,9 @@ func (m *sshKeyResourceModel) from(k *forgejo.PublicKey) {
 	m.Created = types.StringValue(k.Created.Format(time.RFC3339))
 	m.ReadOnly = types.BoolValue(k.ReadOnly)
 	m.KeyType = types.StringValue(k.KeyType)
+	if m.User.IsNull() {
+		m.User = types.StringValue(k.Owner.UserName)
+	}
 }
 
 // to is a helper function to save Terraform data model into an API struct.
@@ -88,8 +91,10 @@ func (r *sshKeyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"user": schema.StringAttribute{
 				Description: "Name of the user. Changing this forces a new resource to be created. If set, requires Site Administrator permissions. If unset, adds the key to the currently-authenticated user.",
 				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{stringvalidator.LengthAtLeast(1)},
 			},
