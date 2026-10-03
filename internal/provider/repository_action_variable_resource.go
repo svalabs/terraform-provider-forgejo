@@ -259,6 +259,7 @@ func (r *repositoryActionVariableResource) Read(ctx context.Context, req resourc
 	repo.from(rep)
 
 	// Use Forgejo client to get repository action variable
+	// SDK offers no native ID-based lookup, only GetRepoActionVariable(owner, repo, name)
 	variable, diags := r.getVariable(
 		ctx,
 		repo.Owner.ValueString(),

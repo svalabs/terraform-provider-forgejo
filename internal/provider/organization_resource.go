@@ -280,6 +280,7 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	// Use Forgejo client to get organization
+	// SDK offers no native ID-based lookup, only GetOrg(orgname)
 	org, diags := getOrganizationByName(
 		ctx,
 		r.client,

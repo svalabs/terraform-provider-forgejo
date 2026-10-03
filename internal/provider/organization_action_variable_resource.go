@@ -263,6 +263,7 @@ func (r *organizationActionVariableResource) Read(ctx context.Context, req resou
 	}
 
 	// Use Forgejo client to get organization action variable
+	// SDK offers no native ID-based lookup, only GetOrgActionVariable(org, name)
 	variable, diags := r.getVariable(
 		ctx,
 		data.Organization.ValueString(),
