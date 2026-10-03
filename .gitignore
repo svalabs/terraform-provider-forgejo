@@ -46,3 +46,6 @@ coverage.out
 !CONTRIBUTING.md
 !README.md
 !docs/**/*.md
+
+# Exclude bug-reproduction examples
+examples/**/issue*
