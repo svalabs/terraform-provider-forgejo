@@ -1365,15 +1365,18 @@ resource "forgejo_repository" "test" {
 					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("website"), knownvalue.StringExact("")),
 				},
 			},
-			// Regression test: omitting clone_addr after the initial
-			// migration must not produce a diff or an inconsistent-result
-			// error, since Forgejo keeps reporting the original migration
-			// URL via the API for the life of the repository.
+			// Regression test: omitting clone_addr (and mirror) after the
+			// initial migration must not produce a diff or an
+			// inconsistent-result error, since Forgejo keeps reporting the
+			// original migration URL via the API for the life of the
+			// repository. mirror is deliberately left unconfigured here too:
+			// configuring it would trigger the AlsoRequires(clone_addr)
+			// validator on "mirror", which is exactly the normal
+			// post-migration shape this test guards against.
 			{
 				Config: providerConfig + `
 resource "forgejo_repository" "test" {
 	name        = "tftest"
-	mirror      = false
 	archived    = true
 	description = "Purely for testing..."
 }`,
