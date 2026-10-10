@@ -84,9 +84,9 @@ jobs:
       matrix:
         # list whatever Terraform versions here you would like to support
         terraform:
+          - "1.16.*"
           - "1.15.*"
           - "1.14.*"
-          - "1.13.*"
 
     steps:
       - name: Checkout repository
@@ -162,9 +162,9 @@ jobs:
       matrix:
         # list whatever OpenTofu versions here you would like to support
         opentofu:
+          - "1.13.*"
           - "1.12.*"
           - "1.11.*"
-          - "1.10.*"
 
     steps:
       - name: Checkout repository
