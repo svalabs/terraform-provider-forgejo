@@ -35,10 +35,12 @@ type repositoryActionSecretResource struct {
 // repositoryActionSecretResourceModel maps the resource schema data.
 // https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateSecretOption
 type repositoryActionSecretResourceModel struct {
-	RepositoryID types.Int64  `tfsdk:"repository_id"`
-	Name         types.String `tfsdk:"name"`
-	Data         types.String `tfsdk:"data"`
-	CreatedAt    types.String `tfsdk:"created_at"`
+	RepositoryID  types.Int64  `tfsdk:"repository_id"`
+	Name          types.String `tfsdk:"name"`
+	Data          types.String `tfsdk:"data"`
+	DataWO        types.String `tfsdk:"data_wo"`
+	DataWOVersion types.Int64  `tfsdk:"data_wo_version"`
+	CreatedAt     types.String `tfsdk:"created_at"`
 }
 
 // from is a helper function to load an API struct into Terraform data model.
@@ -73,7 +75,7 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 	resp.Schema = schema.Schema{
 		Description: "Forgejo repository action secret resource.",
 
-		Attributes: map[string]schema.Attribute{
+		Attributes: mergeAttributes(actionSecretDataAttributes(), map[string]schema.Attribute{
 			"repository_id": schema.Int64Attribute{
 				Description: "Numeric identifier of the repository. Changing this forces a new resource to be created.",
 				Required:    true,
@@ -91,12 +93,6 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 					stringvalidator.LengthBetween(1, 255),
 				},
 			},
-			"data": schema.StringAttribute{
-				// Write-only attribute
-				Description: "Data of the secret.",
-				Required:    true,
-				Sensitive:   true,
-			},
 			"created_at": schema.StringAttribute{
 				Description: "Time at which the secret was created.",
 				Computed:    true,
@@ -104,7 +100,7 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-		},
+		}),
 	}
 }
 
@@ -161,16 +157,24 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 	// Map response body to model
 	repo.from(rep)
 
+	// Resolve secret value (write-only "data_wo" is only available in config)
+	secretData, diags := actionSecretData(ctx, req.Config, data.Data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Create repository action secret", map[string]any{
 		"user": repo.Owner.ValueString(),
 		"repo": repo.Name.ValueString(),
 		"name": data.Name.ValueString(),
-		"data": strings.Repeat("*", len(data.Data.ValueString())),
+		"data": strings.Repeat("*", len(secretData)),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.CreateSecretOption{}
 	data.to(&opts)
+	opts.Data = secretData
 
 	// Validate API request body
 	err := opts.Validate()
@@ -232,6 +236,9 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 
 	// Map response body to model
 	data.from(secret)
+
+	// Write-only values must never be persisted
+	data.DataWO = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -323,16 +330,24 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 	// Map response body to model
 	repo.from(rep)
 
+	// Resolve secret value (write-only "data_wo" is only available in config)
+	secretData, diags := actionSecretData(ctx, req.Config, data.Data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Update repository action secret", map[string]any{
 		"user": repo.Owner.ValueString(),
 		"repo": repo.Name.ValueString(),
 		"name": data.Name.ValueString(),
-		"data": strings.Repeat("*", len(data.Data.ValueString())),
+		"data": strings.Repeat("*", len(secretData)),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.CreateSecretOption{}
 	data.to(&opts)
+	opts.Data = secretData
 
 	// Validate API request body
 	err := opts.Validate()
@@ -380,6 +395,9 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 
 		return
 	}
+
+	// Write-only values must never be persisted
+	data.DataWO = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)

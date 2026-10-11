@@ -41,6 +41,8 @@ type organizationActionSecretResourceModel struct {
 	OrganizationID types.Int64  `tfsdk:"organization_id"`
 	Name           types.String `tfsdk:"name"`
 	Data           types.String `tfsdk:"data"`
+	DataWO         types.String `tfsdk:"data_wo"`
+	DataWOVersion  types.Int64  `tfsdk:"data_wo_version"`
 	CreatedAt      types.String `tfsdk:"created_at"`
 }
 
@@ -78,7 +80,7 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 
 **Note**: The authenticated user must be a member of the managed organization(s) or have administrative privileges!`,
 
-		Attributes: map[string]schema.Attribute{
+		Attributes: mergeAttributes(actionSecretDataAttributes(), map[string]schema.Attribute{
 			"organization": schema.StringAttribute{
 				MarkdownDescription: "Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.",
 				Computed:            true,
@@ -115,12 +117,6 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 					stringvalidator.LengthBetween(1, 255),
 				},
 			},
-			"data": schema.StringAttribute{
-				// Write-only attribute
-				Description: "Data of the secret.",
-				Required:    true,
-				Sensitive:   true,
-			},
 			"created_at": schema.StringAttribute{
 				Description: "Time at which the secret was created.",
 				Computed:    true,
@@ -128,7 +124,7 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-		},
+		}),
 	}
 }
 
@@ -187,15 +183,23 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 		data.OrganizationID = types.Int64Value(0)
 	}
 
+	// Resolve secret value (write-only "data_wo" is only available in config)
+	secretData, diags := actionSecretData(ctx, req.Config, data.Data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Create organization action secret", map[string]any{
 		"organization": data.Organization.ValueString(),
 		"name":         data.Name.ValueString(),
-		"data":         strings.Repeat("*", len(data.Data.ValueString())),
+		"data":         strings.Repeat("*", len(secretData)),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.CreateSecretOption{}
 	data.to(&opts)
+	opts.Data = secretData
 
 	// Validate API request body
 	err := opts.Validate()
@@ -254,6 +258,9 @@ func (r *organizationActionSecretResource) Create(ctx context.Context, req resou
 
 	// Map response body to model
 	data.from(secret)
+
+	// Write-only values must never be persisted
+	data.DataWO = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -316,15 +323,23 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Resolve secret value (write-only "data_wo" is only available in config)
+	secretData, diags := actionSecretData(ctx, req.Config, plan.Data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Info(ctx, "Update organization action secret", map[string]any{
 		"organization": plan.Organization.ValueString(),
 		"name":         plan.Name.ValueString(),
-		"data":         strings.Repeat("*", len(plan.Data.ValueString())),
+		"data":         strings.Repeat("*", len(secretData)),
 	})
 
 	// Generate API request body from plan
 	opts := forgejo.CreateSecretOption{}
 	plan.to(&opts)
+	opts.Data = secretData
 
 	// Validate API request body
 	err := opts.Validate()
@@ -374,6 +389,9 @@ func (r *organizationActionSecretResource) Update(ctx context.Context, req resou
 	// Copy organization info to plan data
 	plan.Organization = state.Organization
 	plan.OrganizationID = state.OrganizationID
+
+	// Write-only values must never be persisted
+	plan.DataWO = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &plan)

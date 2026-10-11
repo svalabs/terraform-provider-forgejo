@@ -1,3 +1,9 @@
+## Unreleased
+
+FEATURES:
+
+- `forgejo_repository_action_secret`, `forgejo_organization_action_secret`: Add write-only `data_wo` argument (with `data_wo_version`) as an alternative to `data`, so the secret value is never stored in the Terraform/OpenTofu state or plan (requires Terraform >= 1.11 or OpenTofu >= 1.11)
+
 ## 1.6.1 (September 18, 2026)
 
 BUG FIXES:
