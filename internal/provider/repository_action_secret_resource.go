@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -52,7 +54,7 @@ func (m *repositoryActionSecretResourceModel) from(s *forgejo.Secret) {
 	// Name is omitted here, to maintain the user's configuration casing
 	m.CreatedAt = types.StringValue(s.Created.Format(time.RFC3339))
 
-	// Data intentionally omitted (write-only)
+	// Intentionally omitted (write-only): Data, DataWO, DataWOVersion
 }
 
 // to is a helper function to save Terraform data model into an API struct.
@@ -63,6 +65,9 @@ func (m *repositoryActionSecretResourceModel) to(o *forgejo.CreateSecretOption) 
 
 	o.Name = m.Name.ValueString()
 	o.Data = m.Data.ValueString()
+	if !m.DataWO.IsNull() {
+		o.Data = m.DataWO.ValueString()
+	}
 }
 
 // Metadata returns the resource type name.
@@ -75,7 +80,37 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 	resp.Schema = schema.Schema{
 		Description: "Forgejo repository action secret resource.",
 
-		Attributes: mergeAttributes(actionSecretDataAttributes(), map[string]schema.Attribute{
+		Attributes: map[string]schema.Attribute{
+			"data": schema.StringAttribute{
+				MarkdownDescription: "Data of the secret. The value is stored in the Terraform state. **Note**: Exactly one of `data` or `data_wo` must be specified.",
+				Optional:            true,
+				Sensitive:           true,
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("data_wo"),
+					}...),
+				},
+			},
+			"data_wo": schema.StringAttribute{
+				MarkdownDescription: "Write-only data of the secret. The value is never stored in the Terraform state or plan; change `data_wo_version` to update it. Requires Terraform >= 1.11 or OpenTofu >= 1.11. **Note**: Exactly one of `data` or `data_wo` must be specified.",
+				Optional:            true,
+				Sensitive:           true,
+				WriteOnly:           true,
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("data"),
+					}...),
+				},
+			},
+			"data_wo_version": schema.Int64Attribute{
+				MarkdownDescription: "Version of `data_wo`. Terraform cannot detect changes of write-only values, so the secret is only updated when this value changes. **Note**: Only effective if `data_wo` is set.",
+				Optional:            true,
+				Validators: []validator.Int64{
+					int64validator.AlsoRequires(path.Expressions{
+						path.MatchRoot("data_wo"),
+					}...),
+				},
+			},
 			"repository_id": schema.Int64Attribute{
 				Description: "Numeric identifier of the repository. Changing this forces a new resource to be created.",
 				Required:    true,
@@ -100,7 +135,7 @@ func (r *repositoryActionSecretResource) Schema(_ context.Context, _ resource.Sc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-		}),
+		},
 	}
 }
 
@@ -157,24 +192,25 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 	// Map response body to model
 	repo.from(rep)
 
-	// Resolve secret value (write-only "data_wo" is only available in config)
-	secretData, diags := actionSecretData(ctx, req.Config, data.Data)
+	// Read write-only attributes from configuration (never part of the plan)
+	var config repositoryActionSecretResourceModel
+	diags = req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	data.DataWO = config.DataWO
+
+	// Generate API request body from plan
+	opts := forgejo.CreateSecretOption{}
+	data.to(&opts)
 
 	tflog.Info(ctx, "Create repository action secret", map[string]any{
 		"user": repo.Owner.ValueString(),
 		"repo": repo.Name.ValueString(),
 		"name": data.Name.ValueString(),
-		"data": strings.Repeat("*", len(secretData)),
+		"data": strings.Repeat("*", len(opts.Data)),
 	})
-
-	// Generate API request body from plan
-	opts := forgejo.CreateSecretOption{}
-	data.to(&opts)
-	opts.Data = secretData
 
 	// Validate API request body
 	err := opts.Validate()
@@ -236,9 +272,6 @@ func (r *repositoryActionSecretResource) Create(ctx context.Context, req resourc
 
 	// Map response body to model
 	data.from(secret)
-
-	// Write-only values must never be persisted
-	data.DataWO = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
@@ -330,24 +363,29 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 	// Map response body to model
 	repo.from(rep)
 
-	// Resolve secret value (write-only "data_wo" is only available in config)
-	secretData, diags := actionSecretData(ctx, req.Config, data.Data)
+	// An in-place update only happens when data, data_wo or data_wo_version
+	// changes (all other attributes force replacement), so data_wo can be sent
+	// without comparing data_wo_version against prior state.
+
+	// Read write-only attributes from configuration (never part of the plan)
+	var config repositoryActionSecretResourceModel
+	diags = req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	data.DataWO = config.DataWO
+
+	// Generate API request body from plan
+	opts := forgejo.CreateSecretOption{}
+	data.to(&opts)
 
 	tflog.Info(ctx, "Update repository action secret", map[string]any{
 		"user": repo.Owner.ValueString(),
 		"repo": repo.Name.ValueString(),
 		"name": data.Name.ValueString(),
-		"data": strings.Repeat("*", len(secretData)),
+		"data": strings.Repeat("*", len(opts.Data)),
 	})
-
-	// Generate API request body from plan
-	opts := forgejo.CreateSecretOption{}
-	data.to(&opts)
-	opts.Data = secretData
 
 	// Validate API request body
 	err := opts.Validate()
@@ -395,9 +433,6 @@ func (r *repositoryActionSecretResource) Update(ctx context.Context, req resourc
 
 		return
 	}
-
-	// Write-only values must never be persisted
-	data.DataWO = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
