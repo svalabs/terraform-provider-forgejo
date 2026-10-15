@@ -178,7 +178,7 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	m.HasActions = types.BoolValue(r.HasActions)
 	m.AvatarURL = types.StringValue(r.AvatarURL)
 	m.Internal = types.BoolValue(r.Internal)
-	m.MirrorInterval = types.StringValue(r.MirrorInterval)
+	m.MirrorInterval = types.StringValue(canonicalizeMirrorInterval(r.MirrorInterval))
 	m.MirrorUpdated = types.StringValue(r.MirrorUpdated.Format(time.RFC3339))
 
 	if m.HasPullRequests.ValueBool() {
