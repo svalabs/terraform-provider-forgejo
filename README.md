@@ -205,17 +205,6 @@ Each resource defines its own import identifier, which uniquely identifies the r
 
 Refer to the `examples/` directory for more import examples.
 
-## Using the Provider from Go
-
-The provider can also be used in another Go project through the public
-`pkg/provider` package:
-
-```go
-import forgejoprovider "github.com/svalabs/terraform-provider-forgejo/pkg/provider"
-
-forgejoProvider := forgejoprovider.New(version)()
-```
-
 ## Preventing Accidental Destruction
 
 Once repositories contain important data, you need to protect them against accidental destruction.
@@ -235,6 +224,63 @@ resource "forgejo_repository" "important" {
 
 **Note**: With `prevent_destroy` enabled, Terraform will refuse to destroy the resource and return an error if destruction is attempted.
 You must explicitly remove this setting before the resource can be destroyed.
+
+## Using the Provider from Go
+
+The provider can be embedded in other Go programs (e.g. a [Crossplane](https://www.crossplane.io/) provider) through the public `pkg/provider` package.
+This is available since **v1.7.0**; earlier releases used a module path that can't be imported.
+
+```shell
+go get github.com/svalabs/terraform-provider-forgejo@latest
+```
+
+`New` returns a factory function that creates provider instances, which can be passed to [`providerserver.Serve`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-framework/providerserver#Serve), or called to obtain a provider instance (e.g. for `providerserver.NewProtocol6WithError`).
+The `version` argument is the version the provider reports about itself:
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+
+	forgejoprovider "github.com/svalabs/terraform-provider-forgejo/pkg/provider"
+)
+
+func main() {
+	newProvider := forgejoprovider.New("1.7.0")
+
+	// For example, serve the provider in-process using Terraform protocol v6
+	server, err := providerserver.NewProtocol6WithError(newProvider())()
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = server
+}
+```
+
+> **Note**: The provider falls back to the `FORGEJO_HOST`, `FORGEJO_API_TOKEN`, `FORGEJO_USERNAME`, and `FORGEJO_PASSWORD` environment variables of the host process for any value not set in the provider configuration.
+> When embedding the provider in a shared process, always set credentials explicitly, or make sure these variables are unset.
+
+### API Stability
+
+The public Go API is deliberately minimal. The following is covered by [Semantic Versioning](https://semver.org/), and won't change in a backwards-incompatible way within a major version:
+
+- The import path `github.com/svalabs/terraform-provider-forgejo/pkg/provider`
+- The signature and behavior of `New(version string) func() provider.Provider`
+
+The following is **not** covered:
+
+- Packages under `internal/` (not importable by Go)
+- The concrete type behind the returned `provider.Provider` interface — use the interface only
+- The [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) version required by the provider, which may be updated in any release
+- The minimum Go version declared in `go.mod`, which follows current Go releases
+- Log messages and diagnostic texts
+
+Resource and data source schemas are the same as for Terraform/OpenTofu users; any breaking changes are listed under **BREAKING CHANGES** in the [CHANGELOG](CHANGELOG.md).
+
+A new major version (v2.0.0 or later) will change the import path to `github.com/svalabs/terraform-provider-forgejo/v2`, as required by Go modules.
 
 ## Troubleshooting
 
