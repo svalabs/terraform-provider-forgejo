@@ -67,7 +67,7 @@ resource "forgejo_organization_action_secret" "write_only" {
 
 - `data` (String, Sensitive) Data of the secret. The value is stored in the Terraform state. **Note**: Exactly one of `data` or `data_wo` must be specified.
 - `data_wo` (String, Sensitive) Write-only data of the secret. The value is never stored in the Terraform state or plan; change `data_wo_version` to update it. Requires Terraform >= 1.11 or OpenTofu >= 1.11. **Note**: Exactly one of `data` or `data_wo` must be specified.
-- `data_wo_version` (Number) Version of `data_wo`. Terraform cannot detect changes of write-only values, so the secret is only updated when this value changes.
+- `data_wo_version` (Number) Version of `data_wo`. Terraform cannot detect changes of write-only values, so the secret is only updated when this value changes. **Note**: Only effective if `data_wo` is set.
 - `organization` (String) Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
 - `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
 

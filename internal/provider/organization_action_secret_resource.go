@@ -85,6 +85,7 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 
 		Attributes: map[string]schema.Attribute{
 			"data": schema.StringAttribute{
+				// Write-only attribute
 				MarkdownDescription: "Data of the secret. The value is stored in the Terraform state. **Note**: Exactly one of `data` or `data_wo` must be specified.",
 				Optional:            true,
 				Sensitive:           true,
@@ -95,6 +96,7 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 				},
 			},
 			"data_wo": schema.StringAttribute{
+				// Write-only attribute
 				MarkdownDescription: "Write-only data of the secret. The value is never stored in the Terraform state or plan; change `data_wo_version` to update it. Requires Terraform >= 1.11 or OpenTofu >= 1.11. **Note**: Exactly one of `data` or `data_wo` must be specified.",
 				Optional:            true,
 				Sensitive:           true,
@@ -106,6 +108,7 @@ func (r *organizationActionSecretResource) Schema(_ context.Context, _ resource.
 				},
 			},
 			"data_wo_version": schema.Int64Attribute{
+				// Provider behavior flag
 				MarkdownDescription: "Version of `data_wo`. Terraform cannot detect changes of write-only values, so the secret is only updated when this value changes. **Note**: Only effective if `data_wo` is set.",
 				Optional:            true,
 				Validators: []validator.Int64{
