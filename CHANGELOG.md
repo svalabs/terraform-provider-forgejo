@@ -1,8 +1,29 @@
-## Unreleased
+## 1.7.0 (October 15, 2026)
 
 FEATURES:
 
-- `forgejo_repository_action_secret`, `forgejo_organization_action_secret`: Add write-only `data_wo` argument (with `data_wo_version`) as an alternative to `data`, so the secret value is never stored in the Terraform/OpenTofu state or plan (requires Terraform >= 1.11 or OpenTofu >= 1.11)
+- Add public Go constructor (`provider.New`) for embedding the provider in external Go programs, and update the module path so the package can be imported
+
+ENHANCEMENTS:
+
+- `forgejo_repository_action_secret`, `forgejo_organization_action_secret`: Add write-only `data_wo` argument (with `data_wo_version`) as an alternative to `data`, so the secret value is never stored in Terraform/OpenTofu state or plan (requires Terraform >= 1.11 or OpenTofu >= 1.11) (partially fixes [#48](https://github.com/svalabs/terraform-provider-forgejo/issues/48))
+
+BUG FIXES:
+
+- `forgejo_repository`: Remove static `clone_addr` default, fixing a perpetual plan diff and inconsistent result errors for repositories created from a migration URL once the attribute is left unconfigured
+
+DEPENDENCIES:
+
+- Update to Go 1.26.8
+- Bump docker/setup-compose-action from 2.3.0 to 2.4.0
+- Bump github/codeql-action from 4.38.0 to 4.38.3
+- Bump the latest Terraform in the CI test matrix from 1.15.* to 1.16.* and the latest OpenTofu from 1.12.* to 1.13.*
+
+NEW CONTRIBUTORS 🎉:
+
+- [@brennanneoh](https://github.com/brennanneoh) — [#209: fix(repository): remove static default from clone_addr](https://github.com/svalabs/terraform-provider-forgejo/pull/209)
+- [@ChBLA](https://github.com/ChBLA) — [#211: feat(provider): expose public constructor](https://github.com/svalabs/terraform-provider-forgejo/pull/211)
+- [@vitaliytv](https://github.com/vitaliytv) — [#213: feat(action-secret): add write-only data_wo argument](https://github.com/svalabs/terraform-provider-forgejo/pull/213)
 
 ## 1.6.1 (September 18, 2026)
 
@@ -480,7 +501,7 @@ DEPENDENCIES:
 
 - Update to Go version 1.24.6
 - Bump actions/checkout from 4.2.2 to 5.0.0
-- Bump github.com/hashicorp/terraform-plugin-framework 1.15.0 to 1.15.1
+- Bump github.com/hashicorp/terraform-plugin-framework from 1.15.0 to 1.15.1
 - Bump github.com/hashicorp/terraform-plugin-testing from 1.13.2 to 1.13.3
 - Bump goreleaser/goreleaser-action from 6.3.0 to 6.4.0
 
