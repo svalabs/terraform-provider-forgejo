@@ -4,14 +4,14 @@ page_title: "forgejo_ssh_key Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo user SSH key resource.
-  Note: Managing user SSH keys requires administrative privileges!
+  Note: Managing other users' SSH keys requires administrative privileges! When the user attribute is omitted (or set to null) will this resource manage the currently-authenticated user's SSH keys, which does not require admin privileges.
 ---
 
 # forgejo_ssh_key (Resource)
 
 Forgejo user SSH key resource.
 
-**Note**: Managing user SSH keys requires administrative privileges!
+**Note**: Managing other users' SSH keys requires administrative privileges! When the user attribute is omitted (or set to null) will this resource manage the currently-authenticated user's SSH keys, which does not require admin privileges.
 
 ## Example Usage
 
@@ -45,9 +45,15 @@ resource "tls_private_key" "ed25519" {
   algorithm = "ED25519"
 }
 
-# SSH key
+# SSH key for any site user, managed using admin permissions
 resource "forgejo_ssh_key" "this" {
   user  = forgejo_user.test.login
+  key   = trimspace(tls_private_key.ed25519.public_key_openssh)
+  title = "test_key"
+}
+
+# SSH key for the user currently authenticated to the API
+resource "forgejo_ssh_key" "this" {
   key   = trimspace(tls_private_key.ed25519.public_key_openssh)
   title = "test_key"
 }
@@ -60,7 +66,10 @@ resource "forgejo_ssh_key" "this" {
 
 - `key` (String) Armored SSH key. Trailing newlines must be removed (e.g. using trimspace() function). Changing this forces a new resource to be created.
 - `title` (String) Title of the SSH key. Changing this forces a new resource to be created.
-- `user` (String) Name of the user. Changing this forces a new resource to be created.
+
+### Optional
+
+- `user` (String) Name of the user. Changing this forces a new resource to be created. If set, requires Site Administrator permissions. If unset, adds the key to the currently-authenticated user.
 
 ### Read-Only
 
