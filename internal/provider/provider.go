@@ -271,6 +271,7 @@ func (p *forgejoProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewRepositoryWebhookResource,
 		NewSSHKeyResource,
 		NewBranchProtectionResource,
+		NewTagProtectionResource,
 		NewTeamResource,
 		NewTeamMemberResource,
 		NewUserResource,
