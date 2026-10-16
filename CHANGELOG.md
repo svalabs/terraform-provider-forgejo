@@ -1,3 +1,13 @@
+## Unreleased
+
+ENHANCEMENTS:
+
+- `forgejo_branch_protection`: Add `apply_to_admins` argument to control whether the protection rules also apply to repository administrators (defaults to `false`, matching the Forgejo API default), and detect drift of this setting
+
+DEPENDENCIES:
+
+- Bump codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3 from v3.0.0 to v3.0.1-0.20260831173858-2e954cd80166 (unreleased `main`, required for `apply_to_admins`)
+
 ## 1.7.0 (October 15, 2026)
 
 FEATURES:

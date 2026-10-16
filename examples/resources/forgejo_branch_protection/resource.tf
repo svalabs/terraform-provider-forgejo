@@ -37,6 +37,7 @@ resource "forgejo_branch_protection" "non_defaults" {
   branch_name   = "main"
   repository_id = forgejo_repository.test_repo.id
 
+  apply_to_admins           = true
   block_on_outdated_branch  = true
   block_on_rejected_reviews = true
   dismiss_stale_approvals   = true

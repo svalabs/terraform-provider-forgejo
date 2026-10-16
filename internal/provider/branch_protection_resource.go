@@ -70,6 +70,7 @@ type branchProtectionResourceModel struct {
 	BlockOnOfficialReviewRequests types.Bool   `tfsdk:"block_on_official_review_requests"`
 	BlockOnOutdatedBranch         types.Bool   `tfsdk:"block_on_outdated_branch"`
 	DismissStaleApprovals         types.Bool   `tfsdk:"dismiss_stale_approvals"`
+	ApplyToAdmins                 types.Bool   `tfsdk:"apply_to_admins"`
 }
 
 // Metadata returns the resource type name.
@@ -337,6 +338,12 @@ func (r *branchProtectionResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Default:     booldefault.StaticBool(false),
 			},
+			"apply_to_admins": schema.BoolAttribute{
+				Description: "Apply the protection rules to repository administrators as well.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
+			},
 		},
 	}
 }
@@ -414,6 +421,7 @@ func (r *branchProtectionResource) Create(ctx context.Context, req resource.Crea
 		"block_on_official_review_requests": opts.BlockOnOfficialReviewRequests,
 		"block_on_outdated_branch":          opts.BlockOnOutdatedBranch,
 		"dismiss_stale_approvals":           opts.DismissStaleApprovals,
+		"apply_to_admins":                   opts.ApplyToAdmins,
 	})
 
 	// Use Forgejo client to create branch protection
@@ -585,6 +593,7 @@ func (r *branchProtectionResource) Update(ctx context.Context, req resource.Upda
 		"block_on_official_review_requests": opts.BlockOnOfficialReviewRequests,
 		"block_on_outdated_branch":          opts.BlockOnOutdatedBranch,
 		"dismiss_stale_approvals":           opts.DismissStaleApprovals,
+		"apply_to_admins":                   opts.ApplyToAdmins,
 	})
 
 	// Use Forgejo client to update branch protection
@@ -894,6 +903,7 @@ func (r *branchProtectionResource) toCreateOption(ctx context.Context, data *bra
 	opts.BlockOnOfficialReviewRequests = data.BlockOnOfficialReviewRequests.ValueBool()
 	opts.BlockOnOutdatedBranch = data.BlockOnOutdatedBranch.ValueBool()
 	opts.DismissStaleApprovals = data.DismissStaleApprovals.ValueBool()
+	opts.ApplyToAdmins = data.ApplyToAdmins.ValueBool()
 
 	return opts
 }
@@ -958,6 +968,8 @@ func (r *branchProtectionResource) toEditOption(ctx context.Context, data *branc
 
 	opts.DismissStaleApprovals = data.DismissStaleApprovals.ValueBoolPointer()
 
+	opts.ApplyToAdmins = data.ApplyToAdmins.ValueBoolPointer()
+
 	return opts
 }
 
@@ -981,6 +993,7 @@ func (r *branchProtectionResource) from(ctx context.Context, protection *forgejo
 	data.BlockOnOfficialReviewRequests = types.BoolValue(protection.BlockOnOfficialReviewRequests)
 	data.BlockOnOutdatedBranch = types.BoolValue(protection.BlockOnOutdatedBranch)
 	data.DismissStaleApprovals = types.BoolValue(protection.DismissStaleApprovals)
+	data.ApplyToAdmins = types.BoolValue(protection.ApplyToAdmins)
 
 	// Handle Lists
 	var d diag.Diagnostics

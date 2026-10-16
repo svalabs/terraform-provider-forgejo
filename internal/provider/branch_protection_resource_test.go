@@ -56,6 +56,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false)),
 				},
 			},
 			// Create and Read testing (duplicate branch_name)
@@ -151,6 +152,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false)),
 				},
 			},
 			// Recreate and Read testing since the branch name has changed
@@ -199,6 +201,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false)),
 				},
 			},
 			// Recreate and Read testing (organization repo)
@@ -244,6 +247,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false)),
 				},
 			},
 			// Update and Read testing (custom sort order)
@@ -279,6 +283,7 @@ resource "forgejo_branch_protection" "test" {
   block_on_outdated_branch  = true
   block_on_rejected_reviews = true
   dismiss_stale_approvals   = true
+  apply_to_admins           = true
   required_approvals        = 1
 
   enable_approvals_whitelist = true
@@ -335,6 +340,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(true)),
 				},
 			},
 			// Recreate and Read testing (user repo)
@@ -382,6 +388,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false)),
 				},
 			},
 		},
@@ -410,6 +417,7 @@ resource "forgejo_branch_protection" "test" {
 	block_on_rejected_reviews         = true
 	block_on_official_review_requests = true
 	dismiss_stale_approvals           = true
+	apply_to_admins                   = true
 	protected_file_patterns           = "*.tf"
 	unprotected_file_patterns         = "*.log"
 }`,
@@ -438,6 +446,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("enable_push_whitelist"), knownvalue.Bool(true)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("require_signed_commits"), knownvalue.Bool(true)),
@@ -483,6 +492,7 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false)),
 				},
 			},
 			// Create and Read testing (invalid repo)
@@ -650,7 +660,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false))},
 			},
 		},
 	})
@@ -711,7 +722,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false))},
 			},
 			// Valid. status_check_enabled is enabled and contexts are set
 			{
@@ -748,7 +760,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false))},
 			},
 		},
 	})
@@ -809,7 +822,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false))},
 			},
 			// Valid. merge configuration is disabled
 			{
@@ -846,7 +860,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false))},
 			},
 		},
 	})
@@ -907,7 +922,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false))},
 			},
 			// Valid. merge configuration is disabled
 			{
@@ -944,7 +960,8 @@ resource "forgejo_branch_protection" "test" {
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_rejected_reviews"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_official_review_requests"), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("block_on_outdated_branch"), knownvalue.Bool(false)),
-					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false))},
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("dismiss_stale_approvals"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue("forgejo_branch_protection.test", tfjsonpath.New("apply_to_admins"), knownvalue.Bool(false))},
 			},
 		},
 	})
