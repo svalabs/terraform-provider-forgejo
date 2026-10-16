@@ -1,3 +1,9 @@
+## Unreleased
+
+BUG FIXES:
+
+- `forgejo_team_member`: Verify membership after adding a user, so a pending team invitation (Forgejo >= 16 with `ADD_MEMBERS_BY_INVITATIONS`) is no longer recorded as membership and no longer fails the next refresh with a 404
+
 ## 1.7.0 (October 15, 2026)
 
 FEATURES:

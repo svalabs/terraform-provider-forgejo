@@ -41,7 +41,10 @@ func (r *teamMemberResource) Metadata(_ context.Context, req resource.MetadataRe
 // Schema defines the schema for the resource.
 func (r *teamMemberResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo team member resource.",
+		MarkdownDescription: "Forgejo team member resource.\n\n" +
+			"**Note**: This resource manages accepted team membership, not pending team invitations. " +
+			"On Forgejo >= 16 with `[service] ADD_MEMBERS_BY_INVITATIONS` enabled, adding a user who is not yet a member of the organization only sends a team invitation. " +
+			"The apply then fails with an error until the user accepts the invitation; the pending invitation is not recorded in Terraform state.",
 
 		Attributes: map[string]schema.Attribute{
 			"team_id": schema.Int64Attribute{
@@ -195,6 +198,45 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 	// Use Forgejo client to set a team member
 	res, err := client.AddTeamMember(teamID, userName)
 	if err == nil {
+		// On Forgejo >= 16 with `[service] ADD_MEMBERS_BY_INVITATIONS` enabled, a
+		// successful PUT may only send a team invitation instead of adding the
+		// member. Verify membership before recording it in Terraform state.
+		_, memberRes, memberErr := client.GetTeamMember(teamID, userName)
+		if memberErr == nil {
+			return diags
+		}
+
+		// Handle errors
+		var msg string
+		if memberRes == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", memberErr)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": memberRes.Status,
+			})
+
+			switch memberRes.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Forgejo accepted the request to add user '%s' to team %d, but the user is not a team member yet. "+
+						"If `[service] ADD_MEMBERS_BY_INVITATIONS` is enabled, the user must accept the team invitation before applying again. "+
+						"This resource manages accepted membership, not pending invitations; the invitation is not recorded in Terraform state: %s",
+					userName,
+					teamID,
+					memberErr,
+				)
+			default:
+				msg = fmt.Sprintf(
+					"Forgejo accepted the request to add user '%s' to team %d, but membership could not be verified (status %d): %s",
+					userName,
+					teamID,
+					memberRes.StatusCode,
+					memberErr,
+				)
+			}
+		}
+		diags.AddError("Unable to create team member", msg)
+
 		return diags
 	}
 
@@ -208,6 +250,14 @@ func setTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, us
 		})
 
 		switch res.StatusCode {
+		case 409:
+			// Forgejo >= 17 returns 409 Conflict when a team invitation is already pending.
+			msg = fmt.Sprintf(
+				"A team invitation for user '%s' to team %d is already pending. The user must accept the invitation before applying again. This resource manages accepted membership, not pending invitations: %s",
+				userName,
+				teamID,
+				err,
+			)
 		case 404:
 			msg = fmt.Sprintf(
 				"Either user '%s' or team with ID %d not found: %s",
