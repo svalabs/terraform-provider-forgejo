@@ -32,6 +32,7 @@ Resources:
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_team` ([documentation](docs/resources/team.md))
 - `forgejo_team_member` ([documentation](docs/resources/team_member.md))
+- `forgejo_team_repository` ([documentation](docs/resources/team_repository.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
 Data Sources:
@@ -202,6 +203,7 @@ Each resource defines its own import identifier, which uniquely identifies the r
 | `forgejo_branch_protection`  | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>`     |
 | `forgejo_user`               | `<<<login>>>`                                       |
 | `forgejo_team`               | `<<<org_name>>>/<<<team_name>>>`                    |
+| `forgejo_team_repository`    | `<<<org_name>>>/<<<team_name>>>/<<<repo_name>>>`    |
 
 Refer to the `examples/` directory for more import examples.
 
