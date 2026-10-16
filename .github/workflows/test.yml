@@ -154,7 +154,9 @@ jobs:
           FORGEJO_USERNAME: tfadmin
           FORGEJO_PASSWORD: ${{ steps.admin.outputs.password }}
           FORGEJO_API_TOKEN: ${{ steps.token.outputs.token }}
-        run: go test -v -cover ./internal/provider/
+        run: |
+          export TF_ACC_TERRAFORM_PATH="$(command -v terraform)"
+          go test -v -cover ./internal/provider/
         timeout-minutes: 10
 
   test-opentofu:
@@ -237,5 +239,7 @@ jobs:
           FORGEJO_USERNAME: tfadmin
           FORGEJO_PASSWORD: ${{ steps.admin.outputs.password }}
           FORGEJO_API_TOKEN: ${{ steps.token.outputs.token }}
-        run: go test -v -cover ./internal/provider/
+        run: |
+          export TF_ACC_TERRAFORM_PATH="$(command -v tofu)"
+          go test -v -cover ./internal/provider/
         timeout-minutes: 10
