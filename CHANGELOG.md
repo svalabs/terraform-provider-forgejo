@@ -1,3 +1,9 @@
+## Unreleased
+
+DEPENDENCIES:
+
+- Add Forgejo 17 to the CI acceptance test matrix and run the OpenTofu jobs with the OpenTofu CLI instead of a downloaded Terraform CLI
+
 ## 1.7.0 (October 15, 2026)
 
 FEATURES:

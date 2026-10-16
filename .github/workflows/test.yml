@@ -75,18 +75,23 @@ jobs:
 
   # Run acceptance tests in a matrix with Terraform CLI versions
   test-terraform:
-    name: Terraform Provider Acceptance Tests
+    name: Terraform ${{ matrix.terraform }} / Forgejo ${{ matrix.forgejo }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
+        forgejo: ["15", "17"]
         # list whatever Terraform versions here you would like to support
         terraform:
           - "1.16.*"
           - "1.15.*"
           - "1.14.*"
+
+    env:
+      FORGEJO_VERSION: ${{ matrix.forgejo }}
+      TF_ACC_PROVIDER_NAMESPACE: svalabs
 
     steps:
       - name: Checkout repository
@@ -153,18 +158,23 @@ jobs:
         timeout-minutes: 10
 
   test-opentofu:
-    name: OpenTofu Provider Acceptance Tests
+    name: OpenTofu ${{ matrix.opentofu }} / Forgejo ${{ matrix.forgejo }}
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
+        forgejo: ["15", "17"]
         # list whatever OpenTofu versions here you would like to support
         opentofu:
           - "1.13.*"
           - "1.12.*"
           - "1.11.*"
+
+    env:
+      FORGEJO_VERSION: ${{ matrix.forgejo }}
+      TF_ACC_PROVIDER_NAMESPACE: svalabs
 
     steps:
       - name: Checkout repository
