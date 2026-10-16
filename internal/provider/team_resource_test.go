@@ -62,6 +62,7 @@ resource "forgejo_team" "test_by_id" {
 	}
 }
 resource "forgejo_team" "test_by_name" {
+	depends_on = [forgejo_team.test_by_id]
 	name                      = "test_team_by_name"
 	organization              = forgejo_organization.test.name
 	can_create_org_repo       = true
@@ -133,6 +134,7 @@ resource "forgejo_team" "test_by_id2" {
 	}
 }
 resource "forgejo_team" "test_by_name" {
+	depends_on = [forgejo_team.test_by_id]
 	name                      = "test_team_by_name"
 	organization              = forgejo_organization.test.name
 	can_create_org_repo       = true
@@ -211,6 +213,7 @@ resource "forgejo_team" "test_by_id" {
 	}
 }
 resource "forgejo_team" "test_by_name" {
+	depends_on = [forgejo_team.test_by_id]
 	name                      = "test_team_by_name"
 	organization              = forgejo_organization.test.name
 	can_create_org_repo       = false
@@ -270,6 +273,7 @@ resource "forgejo_team" "test_by_id" {
 	}
 }
 resource "forgejo_team" "test_by_name" {
+	depends_on = [forgejo_team.test_by_id]
 	name         = "renamed_test_team_by_name"
 	organization = forgejo_organization.test.name
 	description  = "Updated test team."
@@ -329,6 +333,7 @@ resource "forgejo_team" "test_by_id" {
 	}
 }
 resource "forgejo_team" "test_by_name" {
+	depends_on = [forgejo_team.test_by_id]
 	name         = "renamed_test_team_by_name"
 	organization = forgejo_organization.new_test.name
 	permission   = "write"
@@ -393,6 +398,7 @@ resource "forgejo_team" "test_by_id" {
 	}
 }
 resource "forgejo_team" "test_by_name" {
+	depends_on = [forgejo_team.test_by_id]
 	name         = "renamed_test_team_by_name"
 	organization = forgejo_organization.new_test.name
 	permission   = "admin"

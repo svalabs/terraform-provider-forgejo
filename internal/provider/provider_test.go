@@ -27,8 +27,9 @@ const (
 		password = ""
 	}
 `
+	// Reattach tests share one server per provider address, so use a single
+	// configuration per test instead of mixing aliases with different auth.
 	providerBasicAuthConfig = `provider "forgejo" {
-		alias     = "basicAuth"
 		host      = "` + forgejoTestHost + `"
 		api_token = ""
 	}

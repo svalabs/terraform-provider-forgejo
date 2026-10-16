@@ -41,15 +41,13 @@ data "forgejo_personal_access_token" "test" {
 			},
 			// Read testing
 			{
-				Config: providerConfig + providerBasicAuthConfig + `
+				Config: providerBasicAuthConfig + `
 resource "forgejo_user" "test" {
 	login    = "test_user"
 	password = "password"
 	email    = "test_user@example.com"
 }
 resource "forgejo_personal_access_token" "test" {
-	provider = forgejo.basicAuth
-
 	user   = forgejo_user.test.login
 	name   = "tftest"
 	scopes = [

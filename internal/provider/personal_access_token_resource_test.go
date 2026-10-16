@@ -28,15 +28,13 @@ resource "forgejo_personal_access_token" "test" {
 			},
 			// Create and Read testing
 			{
-				Config: providerConfig + providerBasicAuthConfig + `
+				Config: providerBasicAuthConfig + `
 resource "forgejo_user" "test" {
 	login    = "test_user"
 	password = "password"
 	email    = "test_user@example.com"
 }
 resource "forgejo_personal_access_token" "test" {
-	provider = forgejo.basicAuth
-
 	user   = forgejo_user.test.login
 	name   = "tftest"
 	scopes = ["all"]
@@ -58,22 +56,18 @@ resource "forgejo_personal_access_token" "test" {
 			},
 			// Duplicate token names are not allowed.
 			{
-				Config: providerConfig + providerBasicAuthConfig + `
+				Config: providerBasicAuthConfig + `
 resource "forgejo_user" "test" {
 	login    = "test_user"
 	password = "password"
 	email    = "test_user@example.com"
 }
 resource "forgejo_personal_access_token" "test" {
-	provider = forgejo.basicAuth
-
 	user   = forgejo_user.test.login
 	name   = "tftest"
 	scopes = ["all"]
 }
 resource "forgejo_personal_access_token" "test1" {
-	provider = forgejo.basicAuth
-
 	user   = forgejo_user.test.login
 	name   = "tftest"
 	scopes = ["all"]
@@ -82,15 +76,13 @@ resource "forgejo_personal_access_token" "test1" {
 			},
 			// Changing scope recreates the token.
 			{
-				Config: providerConfig + providerBasicAuthConfig + `
+				Config: providerBasicAuthConfig + `
 resource "forgejo_user" "test" {
 	login    = "test_user"
 	password = "password"
 	email    = "test_user@example.com"
 }
 resource "forgejo_personal_access_token" "test" {
-	provider = forgejo.basicAuth
-
 	user   = forgejo_user.test.login
 	name   = "tftest"
 	scopes = [
@@ -116,15 +108,13 @@ resource "forgejo_personal_access_token" "test" {
 			},
 			// Changing name recreates the token.
 			{
-				Config: providerConfig + providerBasicAuthConfig + `
+				Config: providerBasicAuthConfig + `
 resource "forgejo_user" "test" {
 	login    = "test_user"
 	password = "password"
 	email    = "test_user@example.com"
 }
 resource "forgejo_personal_access_token" "test" {
-	provider = forgejo.basicAuth
-
 	user   = forgejo_user.test.login
 	name   = "tftest1"
 	scopes = [
@@ -149,5 +139,22 @@ resource "forgejo_personal_access_token" "test" {
 				},
 			},
 		},
+	})
+}
+
+func TestAccPersonalAccessTokenRequiresBasicAuth(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{{
+			Config: providerConfig + `
+resource "forgejo_personal_access_token" "token_auth" {
+	user   = "tfadmin"
+	name   = "test_token_auth_not_allowed"
+	scopes = ["read:repository"]
+}
+`,
+			ExpectError: regexp.MustCompile("Authentication method not allowed, use basic-auth"),
+		}},
 	})
 }
