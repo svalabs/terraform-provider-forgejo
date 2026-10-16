@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -59,6 +60,46 @@ type repositoryWebhookResourceModel struct {
 // "content_type").
 var repositoryWebhookWriteOnlyConfigKeys = []string{"secret"}
 
+// repositoryWebhookEventGroups lists webhook events which the Forgejo API
+// treats as groups: enabling the key event also enables all listed events, and
+// the API reports the whole group when the hook is read back ("issuesHook" and
+// "pullHook" in Forgejo's routers/api/v1/utils/hook.go, "EventCheckers" in
+// models/webhook/webhook.go).
+var repositoryWebhookEventGroups = map[string][]string{
+	"issues": {
+		"issue_assign",
+		"issue_comment",
+		"issue_label",
+		"issue_milestone",
+	},
+	"pull_request": {
+		"pull_request_assign",
+		"pull_request_comment",
+		"pull_request_label",
+		"pull_request_milestone",
+		"pull_request_review_approved",
+		"pull_request_review_comment",
+		"pull_request_review_rejected",
+		"pull_request_review_request",
+		"pull_request_sync",
+	},
+	"pull_request_comment": {
+		"pull_request_review_comment",
+	},
+}
+
+// expandRepositoryWebhookEvents returns the sorted set of events the Forgejo
+// API reports for a hook configured with the given events.
+func expandRepositoryWebhookEvents(events []string) []string {
+	expanded := slices.Clone(events)
+	for _, event := range events {
+		expanded = append(expanded, repositoryWebhookEventGroups[event]...)
+	}
+	slices.Sort(expanded)
+
+	return slices.Compact(expanded)
+}
+
 // redactRepositoryWebhookConfig returns a copy of a webhook "config" map with
 // the values of all write-only keys obfuscated, for safe use in log output.
 func redactRepositoryWebhookConfig(config map[string]string) map[string]string {
@@ -108,7 +149,21 @@ func (m *repositoryWebhookResourceModel) from(h *forgejo.Hook, ctx context.Conte
 	m.Config, d = types.MapValueFrom(ctx, types.StringType, config)
 	diags.Append(d...)
 	m.CreatedAt = types.StringValue(h.Created.Format(time.RFC3339))
-	m.Events, d = types.SetValueFrom(ctx, types.StringType, h.Events)
+
+	// The API expands grouped events (see repositoryWebhookEventGroups), so a
+	// hook configured with "issues" is read back with all "issue_*" events.
+	// Keep the events from the prior model when they describe the same hook,
+	// so the applied value matches what was planned and no drift is reported.
+	events := h.Events
+	if !m.Events.IsNull() && !m.Events.IsUnknown() {
+		var priorEvents []string
+		d = m.Events.ElementsAs(ctx, &priorEvents, false)
+		diags.Append(d...)
+		if slices.Equal(expandRepositoryWebhookEvents(priorEvents), expandRepositoryWebhookEvents(h.Events)) {
+			events = priorEvents
+		}
+	}
+	m.Events, d = types.SetValueFrom(ctx, types.StringType, events)
 	diags.Append(d...)
 	m.Type = types.StringValue(h.Type)
 	m.UpdatedAt = types.StringValue(h.Updated.Format(time.RFC3339))
@@ -194,7 +249,7 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 				},
 			},
 			"events": schema.SetAttribute{
-				Description: "List of events which trigger the webhook.",
+				Description: "List of events which trigger the webhook. The Forgejo API treats `issues` and `pull_request` as groups which also enable all `issue_*` and `pull_request_*` events respectively, and `pull_request_comment` also enables `pull_request_review_comment`. `pull_request_review_approved` and `pull_request_review_rejected` can only be enabled through `pull_request`.",
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,

@@ -67,7 +67,7 @@ import {
 - `active` (Boolean) Boolean indicating if the webhook is active.
 - `authorization_header` (String, Sensitive) Authorization header to send to the target.
 - `branch_filter` (String) List of allowed branches for push, branch creation and branch deletion events, specified as glob pattern. If empty or *, events for all branches are reported.
-- `events` (Set of String) List of events which trigger the webhook.
+- `events` (Set of String) List of events which trigger the webhook. The Forgejo API treats `issues` and `pull_request` as groups which also enable all `issue_*` and `pull_request_*` events respectively, and `pull_request_comment` also enables `pull_request_review_comment`. `pull_request_review_approved` and `pull_request_review_rejected` can only be enabled through `pull_request`.
 
 ### Read-Only
 
