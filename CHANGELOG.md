@@ -1,3 +1,9 @@
+## Unreleased
+
+FEATURES:
+
+- **New Resource**: `forgejo_tag_protection` ([documentation](docs/resources/tag_protection.md))
+
 ## 1.7.0 (October 15, 2026)
 
 FEATURES:

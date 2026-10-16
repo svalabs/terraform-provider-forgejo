@@ -30,6 +30,7 @@ Resources:
 - `forgejo_repository_action_variable` ([documentation](docs/resources/repository_action_variable.md))
 - `forgejo_repository_webhook` ([documentation](docs/resources/repository_webhook.md))
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
+- `forgejo_tag_protection` ([documentation](docs/resources/tag_protection.md))
 - `forgejo_team` ([documentation](docs/resources/team.md))
 - `forgejo_team_member` ([documentation](docs/resources/team_member.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
@@ -195,13 +196,14 @@ Some resources support import into Terraform state.
 Importing is useful for bringing existing, manually created resources under Terraform management.
 Each resource defines its own import identifier, which uniquely identifies the resource to be imported:
 
-| Resource                     | Import Identifier                                   |
-| ---------------------------- | --------------------------------------------------- |
-| `forgejo_repository`         | `<<<repo_owner>>>/<<<repo_name>>>`                  |
-| `forgejo_repository_webhook` | `<<<repo_owner>>>/<<<repo_name>>>/<<<webhook_id>>>` |
-| `forgejo_branch_protection`  | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>`     |
-| `forgejo_user`               | `<<<login>>>`                                       |
-| `forgejo_team`               | `<<<org_name>>>/<<<team_name>>>`                    |
+| Resource                     | Import Identifier                                      |
+| ---------------------------- | ------------------------------------------------------ |
+| `forgejo_repository`         | `<<<repo_owner>>>/<<<repo_name>>>`                     |
+| `forgejo_repository_webhook` | `<<<repo_owner>>>/<<<repo_name>>>/<<<webhook_id>>>`    |
+| `forgejo_branch_protection`  | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>`        |
+| `forgejo_tag_protection`     | `<<<repo_owner>>>/<<<repo_name>>>/<<<protection_id>>>` |
+| `forgejo_user`               | `<<<login>>>`                                          |
+| `forgejo_team`               | `<<<org_name>>>/<<<team_name>>>`                       |
 
 Refer to the `examples/` directory for more import examples.
 
