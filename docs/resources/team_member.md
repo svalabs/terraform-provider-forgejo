@@ -4,11 +4,14 @@ page_title: "forgejo_team_member Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo team member resource.
+  Note: This resource manages accepted team membership, not pending team invitations. On Forgejo >= 16 with [service] ADD_MEMBERS_BY_INVITATIONS enabled, adding a user who is not yet a member of the organization only sends a team invitation. The apply then fails with an error until the user accepts the invitation; the pending invitation is not recorded in Terraform state.
 ---
 
 # forgejo_team_member (Resource)
 
 Forgejo team member resource.
+
+**Note**: This resource manages accepted team membership, not pending team invitations. On Forgejo >= 16 with `[service] ADD_MEMBERS_BY_INVITATIONS` enabled, adding a user who is not yet a member of the organization only sends a team invitation. The apply then fails with an error until the user accepts the invitation; the pending invitation is not recorded in Terraform state.
 
 ## Example Usage
 
