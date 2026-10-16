@@ -181,7 +181,9 @@ import {
 - `allow_squash_merge` (Boolean) Allowed to create squash commit? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `archive_on_destroy` (Boolean) Archive the repo instead of delete?
 - `archived` (Boolean) Is the repository archived?
+- `auth_password` (String, Sensitive) Password for authenticating with migrate / clone URL. The Forgejo API requires `auth_token` for the `github`, `gitlab`, `gitea`, `forgejo` and `gogs` services, so username / password authentication applies to `git` and the remaining services. **Note**: Requires `clone_addr` and `auth_username`; conflicts with `auth_token`.
 - `auth_token` (String, Sensitive) API token for authenticating with migrate / clone URL. **Note**: This setting is only effective if `clone_addr` is set.
+- `auth_username` (String) Username for authenticating with migrate / clone URL. The Forgejo API requires `auth_token` for the `github`, `gitlab`, `gitea`, `forgejo` and `gogs` services, so username / password authentication applies to `git` and the remaining services. **Note**: Requires `clone_addr` and `auth_password`; conflicts with `auth_token`.
 - `auto_init` (Boolean) Whether the repository should be auto-intialized? Changing this forces a new resource to be created.
 - `autodetect_manual_merge` (Boolean) Auto-detect manual pull request merges? **Note**: This setting is only effective if `has_pull_requests` is `true`.
 - `clone_addr` (String) Migrate / clone from URL. Changing this forces a new resource to be created.
@@ -216,7 +218,7 @@ import {
 - `owner` (String) Owner of the repository (user or organization). Changing this forces a new resource to be created.
 - `private` (Boolean) Is the repository private?
 - `readme` (String) Readme of the repository to create. Changing this forces a new resource to be created.
-- `service` (String) Service to migrate from. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
+- `service` (String) Service to migrate from (`git`, `github`, `gitlab`, `forgejo`, `gitea`, `gogs`, `onedev`, `gitbucket`, `codebase`, `pagure` or `bitbucketdc`). Bitbucket Data Center (`bitbucketdc`) requires Forgejo 17 or later. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
 - `template` (Boolean) Is the repository a template?
 - `trust_model` (String) TrustModel of the repository. Changing this forces a new resource to be created.
 - `website` (String) Website of the repository.

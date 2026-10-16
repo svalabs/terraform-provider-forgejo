@@ -2481,3 +2481,58 @@ resource "forgejo_repository" "test" {
 		},
 	})
 }
+
+func TestAccRepositoryValidationMigrationConfig(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Check auth_password attribute without auth_username
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name          = "test_repo_migration_validation"
+	clone_addr    = "https://example.com/repo.git"
+	auth_password = "secret"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Attribute "auth_username" must be specified when`),
+			},
+			// Check auth_username attribute without clone_addr
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name          = "test_repo_migration_validation"
+	auth_username = "user"
+	auth_password = "secret"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Attribute "clone_addr" must be specified when`),
+			},
+			// Check auth_username attribute together with auth_token
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name          = "test_repo_migration_validation"
+	clone_addr    = "https://example.com/repo.git"
+	auth_username = "user"
+	auth_password = "secret"
+	auth_token    = "token"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Attribute "auth_token" cannot be specified when`),
+			},
+			// Check service attribute with unsupported value
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name       = "test_repo_migration_validation"
+	clone_addr = "https://example.com/repo.git"
+	service    = "bitbucket"
+}`,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`value must be one of`),
+			},
+		},
+	})
+}

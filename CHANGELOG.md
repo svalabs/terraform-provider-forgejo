@@ -1,3 +1,9 @@
+## Unreleased
+
+ENHANCEMENTS:
+
+- `forgejo_repository`: Allow the `onedev`, `gitbucket`, `codebase`, `pagure` and `bitbucketdc` migration services, and add `auth_username` / `auth_password` arguments for migrating from sources that authenticate with credentials instead of a token
+
 ## 1.7.0 (October 15, 2026)
 
 FEATURES:

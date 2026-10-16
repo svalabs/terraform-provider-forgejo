@@ -113,6 +113,8 @@ type repositoryResourceModel struct {
 	TrustModel                    types.String `tfsdk:"trust_model"`
 	CloneAddr                     types.String `tfsdk:"clone_addr"`
 	AuthToken                     types.String `tfsdk:"auth_token"`
+	AuthUsername                  types.String `tfsdk:"auth_username"`
+	AuthPassword                  types.String `tfsdk:"auth_password"`
 	LFS                           types.Bool   `tfsdk:"lfs"`
 	LFSEndpoint                   types.String `tfsdk:"lfs_endpoint"`
 	Milestones                    types.Bool   `tfsdk:"milestones"`
@@ -192,11 +194,12 @@ func (m *repositoryResourceModel) from(r *forgejo.Repository) {
 	}
 
 	// Intentionally omitted (write-only): IssueLabels, AutoInit, Gitignores,
-	// License, Readme, TrustModel, AuthToken, LFS, LFSEndpoint, Milestones,
-	// Labels, Service, AllowManualMerge, AutodetectManualMerge,
-	// DefaultDeleteBranchAfterMerge, AllowFastForwardOnly, AllowRebaseUpdate,
-	// DefaultAllowMaintainerEdit, DefaultUpdateStyle, EnablePrune,
-	// GloballyEditableWiki, WikiBranch, ArchiveOnDestroy
+	// License, Readme, TrustModel, AuthToken, AuthUsername, AuthPassword, LFS,
+	// LFSEndpoint, Milestones, Labels, Service, AllowManualMerge,
+	// AutodetectManualMerge, DefaultDeleteBranchAfterMerge,
+	// AllowFastForwardOnly, AllowRebaseUpdate, DefaultAllowMaintainerEdit,
+	// DefaultUpdateStyle, EnablePrune, GloballyEditableWiki, WikiBranch,
+	// ArchiveOnDestroy
 }
 
 // to is a helper function to save Terraform data model into an API struct.
@@ -1114,6 +1117,35 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
+			"auth_username": schema.StringAttribute{
+				// Write-only attribute
+				Description: "Username for authenticating with migrate / clone URL. The Forgejo API requires `auth_token` for the `github`, `gitlab`, `gitea`, `forgejo` and `gogs` services, so username / password authentication applies to `git` and the remaining services. **Note**: Requires `clone_addr` and `auth_password`; conflicts with `auth_token`.",
+				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+						path.MatchRoot("auth_password"),
+					}...),
+					stringvalidator.ConflictsWith(path.Expressions{
+						path.MatchRoot("auth_token"),
+					}...),
+				},
+			},
+			"auth_password": schema.StringAttribute{
+				// Write-only attribute
+				Description: "Password for authenticating with migrate / clone URL. The Forgejo API requires `auth_token` for the `github`, `gitlab`, `gitea`, `forgejo` and `gogs` services, so username / password authentication applies to `git` and the remaining services. **Note**: Requires `clone_addr` and `auth_username`; conflicts with `auth_token`.",
+				Optional:    true,
+				Sensitive:   true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.Expressions{
+						path.MatchRoot("clone_addr"),
+						path.MatchRoot("auth_username"),
+					}...),
+					stringvalidator.ConflictsWith(path.Expressions{
+						path.MatchRoot("auth_token"),
+					}...),
+				},
+			},
 			"auth_token": schema.StringAttribute{
 				// Write-only attribute
 				Description: "API token for authenticating with migrate / clone URL. **Note**: This setting is only effective if `clone_addr` is set.",
@@ -1190,7 +1222,7 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			},
 			"service": schema.StringAttribute{
 				// Create-only attribute
-				Description: "Service to migrate from. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.",
+				Description: "Service to migrate from (`git`, `github`, `gitlab`, `forgejo`, `gitea`, `gogs`, `onedev`, `gitbucket`, `codebase`, `pagure` or `bitbucketdc`). Bitbucket Data Center (`bitbucketdc`) requires Forgejo 17 or later. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.",
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
@@ -1208,6 +1240,11 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 						"forgejo",
 						"gitea",
 						"gogs",
+						"onedev",
+						"gitbucket",
+						"codebase",
+						"pagure",
+						"bitbucketdc",
 					),
 				},
 			},
@@ -1272,6 +1309,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			"clone_addr":        data.CloneAddr.ValueString(),
 			"service":           data.Service.ValueString(),
 			"auth_token":        strings.Repeat("*", len(data.AuthToken.ValueString())),
+			"auth_username":     data.AuthUsername.ValueString(),
+			"auth_password":     strings.Repeat("*", len(data.AuthPassword.ValueString())),
 			"mirror":            data.Mirror.ValueBool(),
 			"private":           data.Private.ValueBool(),
 			"description":       data.Description.ValueString(),
@@ -1293,6 +1332,8 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			CloneAddr:      data.CloneAddr.ValueString(),
 			Service:        forgejo.GitServiceType(data.Service.ValueString()),
 			AuthToken:      data.AuthToken.ValueString(),
+			AuthUsername:   data.AuthUsername.ValueString(),
+			AuthPassword:   data.AuthPassword.ValueString(),
 			Mirror:         data.Mirror.ValueBool(),
 			Private:        data.Private.ValueBool(),
 			Description:    data.Description.ValueString(),
@@ -1944,8 +1985,10 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 	state.Service = types.StringValue("")
 	state.TrustModel = types.StringValue("default")
 
-	// Initialize sensitive write-only fields to null value
+	// Initialize write-only authentication fields to null value
 	state.AuthToken = types.StringNull()
+	state.AuthUsername = types.StringNull()
+	state.AuthPassword = types.StringNull()
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &state)
