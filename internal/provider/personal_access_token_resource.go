@@ -357,7 +357,8 @@ func (r *personalAccessTokenResource) Delete(ctx context.Context, req resource.D
 	})
 
 	// Use Forgejo client to delete existing personal access token
-	res, err := r.client.DeleteAccessToken(
+	res, err := r.client.DeleteAccessTokenByID(
+		ctx,
 		data.User.ValueString(),
 		data.ID.ValueInt64(),
 	)
@@ -366,7 +367,7 @@ func (r *personalAccessTokenResource) Delete(ctx context.Context, req resource.D
 	}
 
 	var msg string
-	if res == nil {
+	if res.Response == nil {
 		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
 	} else {
 		tflog.Error(ctx, "Error", map[string]any{
