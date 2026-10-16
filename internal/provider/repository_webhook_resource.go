@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -58,6 +60,80 @@ type repositoryWebhookResourceModel struct {
 // responses (a GET on the hook only echoes back e.g. "url" and
 // "content_type").
 var repositoryWebhookWriteOnlyConfigKeys = []string{"secret"}
+
+// repositoryWebhookReplaceOnlyEvents lists webhook events that the Forgejo
+// API only honours when a hook is created: "editHook" in Forgejo's
+// routers/api/v1/utils/hook.go never assigns the corresponding event flags,
+// so a PATCH silently ignores any change to them. The "workflow_*" events
+// are available on Forgejo 17 and later.
+var repositoryWebhookReplaceOnlyEvents = []string{
+	"action_run_failure",
+	"action_run_success",
+	"package",
+	"workflow_job_blocked",
+	"workflow_job_cancelled",
+	"workflow_job_failure",
+	"workflow_job_running",
+	"workflow_job_skipped",
+	"workflow_job_success",
+	"workflow_job_waiting",
+	"workflow_run_blocked",
+	"workflow_run_cancelled",
+	"workflow_run_failure",
+	"workflow_run_running",
+	"workflow_run_skipped",
+	"workflow_run_success",
+	"workflow_run_waiting",
+}
+
+// repositoryWebhookEventsRequireReplaceDescription explains why changing a
+// replace-only event forces a new resource.
+const repositoryWebhookEventsRequireReplaceDescription = "Changing `package`, `action_run_*` or `workflow_*` events forces a new resource to be created, because the Forgejo API does not update these events in place."
+
+// repositoryWebhookReplaceOnlyEventSubset returns the sorted replace-only
+// events contained in a set of webhook events; a null set yields no events.
+func repositoryWebhookReplaceOnlyEventSubset(ctx context.Context, events types.Set) (subset []string, diags diag.Diagnostics) {
+	if events.IsNull() {
+		return subset, diags
+	}
+
+	var all []string
+	diags.Append(events.ElementsAs(ctx, &all, false)...)
+	for _, event := range all {
+		if slices.Contains(repositoryWebhookReplaceOnlyEvents, event) {
+			subset = append(subset, event)
+		}
+	}
+	slices.Sort(subset)
+
+	return subset, diags
+}
+
+// repositoryWebhookEventsRequireReplace returns a plan modifier that requires
+// replacement when the replace-only subset of the webhook events changes.
+// Other event changes are applied in place.
+func repositoryWebhookEventsRequireReplace() planmodifier.Set {
+	return setplanmodifier.RequiresReplaceIf(
+		func(ctx context.Context, req planmodifier.SetRequest, resp *setplanmodifier.RequiresReplaceIfFuncResponse) {
+			if req.PlanValue.IsUnknown() {
+				resp.RequiresReplace = true
+				return
+			}
+
+			stateEvents, diags := repositoryWebhookReplaceOnlyEventSubset(ctx, req.StateValue)
+			resp.Diagnostics.Append(diags...)
+			planEvents, diags := repositoryWebhookReplaceOnlyEventSubset(ctx, req.PlanValue)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			resp.RequiresReplace = !slices.Equal(stateEvents, planEvents)
+		},
+		repositoryWebhookEventsRequireReplaceDescription,
+		repositoryWebhookEventsRequireReplaceDescription,
+	)
+}
 
 // redactRepositoryWebhookConfig returns a copy of a webhook "config" map with
 // the values of all write-only keys obfuscated, for safe use in log output.
@@ -194,7 +270,7 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 				},
 			},
 			"events": schema.SetAttribute{
-				Description: "List of events which trigger the webhook.",
+				Description: "List of events which trigger the webhook. " + repositoryWebhookEventsRequireReplaceDescription,
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
@@ -206,6 +282,9 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 						},
 					),
 				),
+				PlanModifiers: []planmodifier.Set{
+					repositoryWebhookEventsRequireReplace(),
+				},
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(
 						stringvalidator.OneOf(
@@ -235,6 +314,20 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 							"release",
 							"repository",
 							"wiki",
+							"workflow_job_blocked",
+							"workflow_job_cancelled",
+							"workflow_job_failure",
+							"workflow_job_running",
+							"workflow_job_skipped",
+							"workflow_job_success",
+							"workflow_job_waiting",
+							"workflow_run_blocked",
+							"workflow_run_cancelled",
+							"workflow_run_failure",
+							"workflow_run_running",
+							"workflow_run_skipped",
+							"workflow_run_success",
+							"workflow_run_waiting",
 						),
 					),
 				},
@@ -254,8 +347,10 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 						"gitea",
 						"gogs",
 						"msteams",
+						"packagist",
 						"slack",
 						"telegram",
+						"wechatwork",
 					),
 				},
 			},

@@ -67,7 +67,7 @@ import {
 - `active` (Boolean) Boolean indicating if the webhook is active.
 - `authorization_header` (String, Sensitive) Authorization header to send to the target.
 - `branch_filter` (String) List of allowed branches for push, branch creation and branch deletion events, specified as glob pattern. If empty or *, events for all branches are reported.
-- `events` (Set of String) List of events which trigger the webhook.
+- `events` (Set of String) List of events which trigger the webhook. Changing `package`, `action_run_*` or `workflow_*` events forces a new resource to be created, because the Forgejo API does not update these events in place.
 
 ### Read-Only
 
