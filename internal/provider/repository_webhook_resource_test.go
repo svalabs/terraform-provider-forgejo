@@ -194,6 +194,64 @@ resource "forgejo_repository_webhook" "test" {
 	})
 }
 
+func TestAccRepositoryWebhookResourceEventGroups(t *testing.T) {
+	config := func(events string) string {
+		return providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_event_groups"
+}
+resource "forgejo_repository_webhook" "test" {
+	repository_id = forgejo_repository.test.id
+	type          = "forgejo"
+	events        = ` + events + `
+	config        = {
+		"content_type" = "json"
+		"url"          = "http://example.com/event-groups"
+	}
+}`
+	}
+	expectEvents := func(events ...string) statecheck.StateCheck {
+		checks := make([]knownvalue.Check, 0, len(events))
+		for _, event := range events {
+			checks = append(checks, knownvalue.StringExact(event))
+		}
+
+		return statecheck.ExpectKnownValue("forgejo_repository_webhook.test", tfjsonpath.New("events"), knownvalue.SetExact(checks))
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing (issues group)
+			{
+				Config:            config(`["issues"]`),
+				ConfigStateChecks: []statecheck.StateCheck{expectEvents("issues")},
+			},
+			// Update and Read testing (pull_request group)
+			{
+				Config:            config(`["pull_request", "push"]`),
+				ConfigStateChecks: []statecheck.StateCheck{expectEvents("pull_request", "push")},
+			},
+			// Update and Read testing (pull_request_comment implies pull_request_review_comment)
+			{
+				Config:            config(`["pull_request_comment"]`),
+				ConfigStateChecks: []statecheck.StateCheck{expectEvents("pull_request_comment")},
+			},
+			// Update and Read testing (group and member listed together)
+			{
+				Config:            config(`["issues", "issue_assign"]`),
+				ConfigStateChecks: []statecheck.StateCheck{expectEvents("issues", "issue_assign")},
+			},
+			// Update and Read testing (members without their group)
+			{
+				Config:            config(`["issue_assign", "pull_request_sync"]`),
+				ConfigStateChecks: []statecheck.StateCheck{expectEvents("issue_assign", "pull_request_sync")},
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
 // retrieves the dynamically generated repository webhook ID from state for testing import.
 func testAccRepositoryWebhookConfigImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {

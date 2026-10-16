@@ -1,3 +1,9 @@
+## Unreleased
+
+BUG FIXES:
+
+- `forgejo_repository_webhook`: Accept the Forgejo API expanding the `issues` and `pull_request` events into their `issue_*` and `pull_request_*` sub-events (and `pull_request_comment` into `pull_request_review_comment`), fixing "Provider produced inconsistent result after apply" errors and perpetual diffs for webhooks configured with these events
+
 ## 1.7.0 (October 15, 2026)
 
 FEATURES:
