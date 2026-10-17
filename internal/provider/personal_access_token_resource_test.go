@@ -149,7 +149,7 @@ func TestAccPersonalAccessTokenRequiresBasicAuth(t *testing.T) {
 		Steps: []resource.TestStep{{
 			Config: providerConfig + `
 resource "forgejo_personal_access_token" "token_auth" {
-	user   = "tfadmin"
+	user   = "` + forgejoTestUser + `"
 	name   = "test_token_auth_not_allowed"
 	scopes = ["read:repository"]
 }
