@@ -270,7 +270,7 @@ func (r *repositoryWebhookResource) Schema(_ context.Context, _ resource.SchemaR
 				},
 			},
 			"events": schema.SetAttribute{
-				Description: "List of events which trigger the webhook. " + repositoryWebhookEventsRequireReplaceDescription,
+				Description: "List of events which trigger the webhook. " + repositoryWebhookEventsRequireReplaceDescription + " **Note**: `workflow_*` events require Forgejo >= 17; `action_run_recover` was removed in Forgejo 17.",
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
