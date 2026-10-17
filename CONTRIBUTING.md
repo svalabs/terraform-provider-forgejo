@@ -71,7 +71,7 @@ make testacc
 
 ## Forgejo Versions in Acceptance Tests
 
-CI runs the acceptance tests against Forgejo 15 and 17 with each supported Terraform and OpenTofu version.
+CI runs the acceptance tests against Forgejo LTS (15) and latest (17) version with each supported Terraform and OpenTofu version.
 The local Docker Compose environment defaults to Forgejo 15; set `FORGEJO_VERSION` to test another version:
 
 ```shell
