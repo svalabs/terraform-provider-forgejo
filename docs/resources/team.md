@@ -73,7 +73,6 @@ import {
 ### Required
 
 - `name` (String) Name of the team.
-- `units_map` (Map of String) Map of access units. **Note**: If the `permission` is `admin` or `owner` all units must be set to `admin` as well.
 
 ### Optional
 
@@ -82,7 +81,8 @@ import {
 - `includes_all_repositories` (Boolean) Has access to all repositories?
 - `organization` (String) Name of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
 - `organization_id` (Number) Numeric identifier of the owning organization. Changing this forces a new resource to be created. **Note**: One of `organization` or `organization_id` must be specified.
-- `permission` (String) Permissions within the owning organization. **Note**: If you set `admin` or `owner` here, make sure to set the correct `units_map`.
+- `permission` (String) Permissions within the owning organization. **Note**: Exactly one of `units_map` or `permission` must be defined.
+- `units_map` (Map of String) Map of access units. **Note**: Exactly one of `permission` or `units_map` must be defined.
 
 ### Read-Only
 
