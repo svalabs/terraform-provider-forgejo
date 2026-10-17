@@ -52,6 +52,7 @@ resource "forgejo_branch_protection" "non_defaults" {
   branch_name   = "main"
   repository_id = forgejo_repository.test_repo.id
 
+  apply_to_admins           = true
   block_on_outdated_branch  = true
   block_on_rejected_reviews = true
   dismiss_stale_approvals   = true
@@ -95,6 +96,7 @@ import {
 
 ### Optional
 
+- `apply_to_admins` (Boolean) Apply the protection rules to repository administrators as well.
 - `approvals_whitelist_teams` (Set of String) Whitelisted teams for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
 - `approvals_whitelist_usernames` (Set of String) Whitelisted users for reviewing. **Note**: This setting is only effective if `enable_approvals_whitelist` is `true`.
 - `block_on_official_review_requests` (Boolean) Block merge on official review requests.
