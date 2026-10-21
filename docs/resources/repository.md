@@ -42,6 +42,7 @@ resource "forgejo_repository" "personal_non_defaults" {
   name           = "personal_test_repo_non_defaults"
   description    = "Terraform Test Repo owned by user with non-default attributes"
   website        = "http://localhost:3000"
+  topics         = ["terraform", "example"]
   private        = true
   template       = true
   default_branch = "custom"
@@ -218,6 +219,7 @@ import {
 - `readme` (String) Readme of the repository to create. Changing this forces a new resource to be created.
 - `service` (String) Service to migrate from. Changing this forces a new resource to be created. **Note**: This setting is only effective if `clone_addr` is set.
 - `template` (Boolean) Is the repository a template?
+- `topics` (Set of String) Topics of the repository.
 - `trust_model` (String) TrustModel of the repository. Changing this forces a new resource to be created.
 - `website` (String) Website of the repository.
 - `wiki_branch` (String) Branch used for the repository wiki. **Note**: This setting is only effective if `has_wiki` is `true`.
