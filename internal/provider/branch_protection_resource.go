@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 
 	forgejoBoolValidator "github.com/svalabs/terraform-provider-forgejo/internal/boolvalidator"
 	forgejoListValidator "github.com/svalabs/terraform-provider-forgejo/internal/listvalidator"
@@ -45,7 +45,7 @@ type branchProtectionResource struct {
 }
 
 // branchProtectionResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateBranchProtectionOption
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4#CreateBranchProtectionOption
 type branchProtectionResourceModel struct {
 	RepositoryID                  types.Int64  `tfsdk:"repository_id"`
 	BranchName                    types.String `tfsdk:"branch_name"`
