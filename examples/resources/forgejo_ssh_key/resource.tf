@@ -27,9 +27,15 @@ resource "tls_private_key" "ed25519" {
   algorithm = "ED25519"
 }
 
-# SSH key
+# SSH key for any site user, managed using admin permissions
 resource "forgejo_ssh_key" "this" {
   user  = forgejo_user.test.login
+  key   = trimspace(tls_private_key.ed25519.public_key_openssh)
+  title = "test_key"
+}
+
+# SSH key for the user currently authenticated to the API
+resource "forgejo_ssh_key" "this" {
   key   = trimspace(tls_private_key.ed25519.public_key_openssh)
   title = "test_key"
 }
