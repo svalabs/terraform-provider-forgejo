@@ -4,11 +4,24 @@ page_title: "forgejo_organization Resource - forgejo"
 subcategory: ""
 description: |-
   Forgejo organization resource.
+  Import uses the organization name and does not modify the organization. After import, omit
+  repo_admin_change_team_access: it is create-only and cannot be read through the SDK,
+  so its imported value is null. Setting it after import requires replacement, even if it
+  matches the server. Changes made outside Terraform cannot be detected for this attribute.
+  Set the other profile attributes to their existing values; omitted full_name, description,
+  website, and location default to empty strings.
 ---
 
 # forgejo_organization (Resource)
 
 Forgejo organization resource.
+
+Import uses the organization name and does not modify the organization. After import, omit
+`repo_admin_change_team_access`: it is create-only and cannot be read through the SDK,
+so its imported value is null. Setting it after import requires replacement, even if it
+matches the server. Changes made outside Terraform cannot be detected for this attribute.
+Set the other profile attributes to their existing values; omitted full_name, description,
+website, and location default to empty strings.
 
 ## Example Usage
 
@@ -53,7 +66,7 @@ resource "forgejo_organization" "non_defaults" {
 - `description` (String) Description of the organization.
 - `full_name` (String) Full name of the organization.
 - `location` (String) Location of the organization.
-- `repo_admin_change_team_access` (Boolean) Whether repository admin can add and remove access for teams. Changing this forces a new resource to be created.
+- `repo_admin_change_team_access` (Boolean) Whether repository admin can add and remove access for teams. Defaults to true on creation. Create-only and not readable through the SDK; omit after import. Changing this forces a new resource to be created.
 - `visibility` (String) Visibility of the organization. Possible values are 'public' (default), 'limited', or 'private'.
 - `website` (String) Website of the organization.
 
@@ -61,3 +74,12 @@ resource "forgejo_organization" "non_defaults" {
 
 - `avatar_url` (String) Avatar URL of the organization.
 - `id` (Number) Numeric identifier of the organization.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Import using the organization name. Omit repo_admin_change_team_access after import.
+terraform import forgejo_organization.defaults test_org_defaults
+```

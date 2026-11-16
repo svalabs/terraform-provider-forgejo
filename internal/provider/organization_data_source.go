@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -26,7 +26,7 @@ type organizationDataSource struct {
 }
 
 // organizationDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Organization
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4#Organization
 type organizationDataSourceModel struct {
 	ID          types.Int64  `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
@@ -122,7 +122,7 @@ func (d *organizationDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	// Use Forgejo client to get organization
-	org, diags := getOrganizationByName(
+	org, _, diags := getOrganizationByName(
 		ctx,
 		d.client,
 		data.Name.ValueString(),
@@ -213,7 +213,7 @@ func getOrganizationByID(ctx context.Context, client *forgejo.Client, id int64) 
 }
 
 // getOrganizationByName fetches an organization by its name and handles errors consistently.
-func getOrganizationByName(ctx context.Context, client *forgejo.Client, name string) (*forgejo.Organization, diag.Diagnostics) {
+func getOrganizationByName(ctx context.Context, client *forgejo.Client, name string) (*forgejo.Organization, *forgejo.Response, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "Read organization", map[string]any{
@@ -223,7 +223,7 @@ func getOrganizationByName(ctx context.Context, client *forgejo.Client, name str
 	// Use Forgejo client to get organization
 	org, res, err := client.GetOrg(name)
 	if err == nil {
-		return org, diags
+		return org, res, diags
 	}
 
 	// Handle errors
@@ -252,5 +252,5 @@ func getOrganizationByName(ctx context.Context, client *forgejo.Client, name str
 	}
 	diags.AddError("Unable to read organization", msg)
 
-	return nil, diags
+	return nil, res, diags
 }

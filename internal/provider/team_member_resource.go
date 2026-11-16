@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -13,13 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &teamMemberResource{}
-	_ resource.ResourceWithConfigure = &teamMemberResource{}
+	_ resource.Resource                = &teamMemberResource{}
+	_ resource.ResourceWithConfigure   = &teamMemberResource{}
+	_ resource.ResourceWithImportState = &teamMemberResource{}
 )
 
 // teamMemberResource is the resource implementation.
@@ -29,6 +32,7 @@ type teamMemberResource struct {
 
 // teamMemberResourceModel maps the resource schema data.
 type teamMemberResourceModel struct {
+	ID     types.String `tfsdk:"id"`
 	TeamID types.Int64  `tfsdk:"team_id"`
 	User   types.String `tfsdk:"user"`
 }
@@ -44,6 +48,13 @@ func (r *teamMemberResource) Schema(_ context.Context, _ resource.SchemaRequest,
 		Description: "Forgejo team member resource.",
 
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Description: "Identifier of the membership in team_id/username format.",
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"team_id": schema.Int64Attribute{
 				Description: "Numeric identifier of the team. Changing this forces a new resource to be created.",
 				Required:    true,
@@ -111,6 +122,7 @@ func (r *teamMemberResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Save data into Terraform state
+	data.ID = types.StringValue(teamMemberID(data.TeamID.ValueInt64(), data.User.ValueString()))
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -129,18 +141,24 @@ func (r *teamMemberResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	// Use Forgejo client to check a team member
-	diags = checkTeamMember(
+	res, diags := checkTeamMember(
 		ctx,
 		r.client,
 		data.TeamID.ValueInt64(),
 		data.User.ValueString(),
 	)
+	if res != nil && res.StatusCode == 404 {
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	// Save data into Terraform state
+	data.ID = types.StringValue(teamMemberID(data.TeamID.ValueInt64(), data.User.ValueString()))
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 }
@@ -178,9 +196,43 @@ func (r *teamMemberResource) Delete(ctx context.Context, req resource.DeleteRequ
 	resp.Diagnostics.Append(diags...)
 }
 
+// ImportState verifies an existing membership without adding the user to the team.
+func (r *teamMemberResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	defer un(trace(ctx, "Import team member resource"))
+
+	parts := strings.Split(req.ID, "/")
+	if len(parts) != 2 || strings.TrimSpace(parts[1]) == "" {
+		resp.Diagnostics.AddError("Unable to parse import identifier", "Expected import identifier with format: 'team_id/username'.")
+
+		return
+	}
+	teamID, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil || teamID <= 0 {
+		resp.Diagnostics.AddError("Unable to parse import identifier", "team_id must be a positive integer in 'team_id/username'.")
+
+		return
+	}
+
+	_, diags := checkTeamMember(ctx, r.client, teamID, parts[1])
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &teamMemberResourceModel{
+		ID:     types.StringValue(teamMemberID(teamID, parts[1])),
+		TeamID: types.Int64Value(teamID),
+		User:   types.StringValue(parts[1]),
+	})...)
+}
+
 // NewTeamMemberResource is a helper function to simplify the provider implementation.
 func NewTeamMemberResource() resource.Resource {
 	return &teamMemberResource{}
+}
+
+func teamMemberID(teamID int64, user string) string {
+	return fmt.Sprintf("%d/%s", teamID, user)
 }
 
 // setTeamMember is a helper function to add a user to a team.
@@ -239,7 +291,7 @@ func deleteTeamMember(ctx context.Context, client *forgejo.Client, teamID int64,
 
 	// Use Forgejo client to delete a team member
 	res, err := client.RemoveTeamMember(teamID, userName)
-	if err == nil {
+	if err == nil || (res != nil && res.StatusCode == 404) {
 		return diags
 	}
 
