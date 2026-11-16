@@ -3,11 +3,11 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -17,13 +17,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &organizationResource{}
-	_ resource.ResourceWithConfigure = &organizationResource{}
+	_ resource.Resource                = &organizationResource{}
+	_ resource.ResourceWithConfigure   = &organizationResource{}
+	_ resource.ResourceWithImportState = &organizationResource{}
 )
 
 // organizationResource is the resource implementation.
@@ -32,7 +33,7 @@ type organizationResource struct {
 }
 
 // organizationResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Organization
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4#Organization
 type organizationResourceModel struct {
 	ID                        types.Int64  `tfsdk:"id"`
 	Name                      types.String `tfsdk:"name"`
@@ -84,7 +85,14 @@ func (r *organizationResource) Metadata(_ context.Context, req resource.Metadata
 // Schema defines the schema for the resource.
 func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Forgejo organization resource.",
+		MarkdownDescription: `Forgejo organization resource.
+
+Import uses the organization name and does not modify the organization. After import, omit
+` + "`repo_admin_change_team_access`" + `: it is create-only and cannot be read through the SDK,
+so its imported value is null. Setting it after import requires replacement, even if it
+matches the server. Changes made outside Terraform cannot be detected for this attribute.
+Set the other profile attributes to their existing values; omitted full_name, description,
+website, and location default to empty strings.`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
@@ -148,11 +156,11 @@ func (r *organizationResource) Schema(_ context.Context, _ resource.SchemaReques
 			},
 			"repo_admin_change_team_access": schema.BoolAttribute{
 				// Create-only attribute
-				Description: "Whether repository admin can add and remove access for teams. Changing this forces a new resource to be created.",
+				Description: "Whether repository admin can add and remove access for teams. Defaults to true on creation. Create-only and not readable through the SDK; omit after import. Changing this forces a new resource to be created.",
 				Optional:    true,
 				Computed:    true,
-				Default:     booldefault.StaticBool(true),
 				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
@@ -194,6 +202,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Apply the creation default without inventing a value during import.
+	if data.RepoAdminChangeTeamAccess.IsNull() || data.RepoAdminChangeTeamAccess.IsUnknown() {
+		data.RepoAdminChangeTeamAccess = types.BoolValue(true)
 	}
 
 	tflog.Info(ctx, "Create organization", map[string]any{
@@ -281,11 +294,16 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 
 	// Use Forgejo client to get organization
 	// SDK offers no native ID-based lookup, only GetOrg(orgname)
-	org, diags := getOrganizationByName(
+	org, res, diags := getOrganizationByName(
 		ctx,
 		r.client,
 		data.Name.ValueString(),
 	)
+	if res != nil && res.StatusCode == 404 {
+		resp.State.RemoveResource(ctx)
+
+		return
+	}
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -368,7 +386,7 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	// Use Forgejo client to get organization
-	org, diags := getOrganizationByName(
+	org, _, diags := getOrganizationByName(
 		ctx,
 		r.client,
 		data.Name.ValueString(),
@@ -433,6 +451,31 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 
 		return
 	}
+}
+
+// ImportState reads an existing resource and adds it to Terraform state on success.
+func (r *organizationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	defer un(trace(ctx, "Import organization resource"))
+
+	if strings.TrimSpace(req.ID) == "" || strings.Contains(req.ID, "/") {
+		resp.Diagnostics.AddError(
+			"Unable to parse import identifier",
+			fmt.Sprintf("Expected an organization name, got: '%s'", req.ID),
+		)
+
+		return
+	}
+
+	org, _, diags := getOrganizationByName(ctx, r.client, req.ID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var data organizationResourceModel
+	data.from(org)
+	data.RepoAdminChangeTeamAccess = types.BoolNull()
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 // NewOrganizationResource is a helper function to simplify the provider implementation.

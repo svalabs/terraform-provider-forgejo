@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -90,7 +90,7 @@ func (d *teamMemberDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	// Use Forgejo client to check a team member
-	diags = checkTeamMember(
+	_, diags = checkTeamMember(
 		ctx,
 		d.client,
 		data.TeamID.ValueInt64(),
@@ -112,7 +112,7 @@ func NewTeamMemberDataSource() datasource.DataSource {
 }
 
 // checkTeamMember fetches a team member and handles errors consistently.
-func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, userName string) diag.Diagnostics {
+func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, userName string) (*forgejo.Response, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	tflog.Info(ctx, "Read team member", map[string]any{
@@ -123,7 +123,7 @@ func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, 
 	// Use Forgejo client to get team member
 	_, res, err := client.GetTeamMember(teamID, userName)
 	if err == nil {
-		return diags
+		return res, diags
 	}
 
 	// Handle errors
@@ -153,5 +153,5 @@ func checkTeamMember(ctx context.Context, client *forgejo.Client, teamID int64, 
 	}
 	diags.AddError("Unable to read team member", msg)
 
-	return diags
+	return res, diags
 }

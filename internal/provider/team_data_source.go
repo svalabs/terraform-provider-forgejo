@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -15,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -30,7 +29,7 @@ type teamDataSource struct {
 }
 
 // teamDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#Team
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4#Team
 type teamDataSourceModel struct {
 	ID                      types.Int64  `tfsdk:"id"`
 	Name                    types.String `tfsdk:"name"`
@@ -255,56 +254,60 @@ func getOrgTeamByName(ctx context.Context, client *forgejo.Client, org, name str
 		"name":         name,
 	})
 
-	// Use Forgejo client to list teams in organization
-	teams, res, err := client.ListOrgTeams(
-		org,
-		forgejo.ListTeamsOptions{
-			ListOptions: forgejo.ListOptions{
-				Page: -1,
+	// A short page may be server-capped; only an empty page proves exhaustion.
+	for page := 1; ; page++ {
+		teams, res, err := client.ListOrgTeams(
+			org,
+			forgejo.ListTeamsOptions{
+				ListOptions: forgejo.ListOptions{
+					Page:     page,
+					PageSize: 50,
+				},
 			},
-		},
-	)
-	if err != nil {
-		var msg string
-		if res == nil {
-			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-		} else {
-			tflog.Error(ctx, "Error", map[string]any{
-				"status": res.Status,
-			})
+		)
+		if err != nil {
+			var msg string
+			if res == nil {
+				msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+			} else {
+				tflog.Error(ctx, "Error", map[string]any{
+					"status": res.Status,
+				})
 
-			switch res.StatusCode {
-			case 404:
-				msg = fmt.Sprintf(
-					"Organization with name '%s' not found: %s",
-					org,
-					err,
-				)
-			default:
-				msg = fmt.Sprintf(
-					"Unknown error (status %d): %s",
-					res.StatusCode,
-					err,
-				)
+				switch res.StatusCode {
+				case 404:
+					msg = fmt.Sprintf(
+						"Organization with name '%s' not found: %s",
+						org,
+						err,
+					)
+				default:
+					msg = fmt.Sprintf(
+						"Unknown error (status %d): %s",
+						res.StatusCode,
+						err,
+					)
+				}
+			}
+			diags.AddError("Unable to list teams", msg)
+
+			return nil, diags
+		}
+
+		for _, team := range teams {
+			if team != nil && team.Name == name {
+				return team, diags
 			}
 		}
-		diags.AddError("Unable to list teams", msg)
-
-		return nil, diags
+		if len(teams) == 0 {
+			break
+		}
 	}
 
-	// Search for team with given name
-	idx := slices.IndexFunc(teams, func(t *forgejo.Team) bool {
-		return t.Name == name
-	})
-	if idx == -1 {
-		diags.AddError(
-			"Unable to find team by name",
-			fmt.Sprintf("Team with name '%s' not found", name),
-		)
+	diags.AddError(
+		"Unable to find team by name",
+		fmt.Sprintf("Team with name '%s' not found", name),
+	)
 
-		return nil, diags
-	}
-
-	return teams[idx], diags
+	return nil, diags
 }

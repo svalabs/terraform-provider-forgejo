@@ -32,6 +32,7 @@ Resources:
 - `forgejo_ssh_key` ([documentation](docs/resources/ssh_key.md))
 - `forgejo_team` ([documentation](docs/resources/team.md))
 - `forgejo_team_member` ([documentation](docs/resources/team_member.md))
+- `forgejo_team_repository` ([documentation](docs/resources/team_repository.md))
 - `forgejo_user` ([documentation](docs/resources/user.md))
 
 Data Sources:
@@ -202,8 +203,27 @@ Each resource defines its own import identifier, which uniquely identifies the r
 | `forgejo_branch_protection`  | `<<<repo_owner>>>/<<<repo_name>>>/<<<branch>>>`     |
 | `forgejo_user`               | `<<<login>>>`                                       |
 | `forgejo_team`               | `<<<org_name>>>/<<<team_name>>>`                    |
+| `forgejo_organization`       | `<<<org_name>>>`                                    |
+| `forgejo_team_member`        | `<<<team_id>>>/<<<username>>>`                      |
+| `forgejo_team_repository`    | `<<<org_name>>>/<<<team_name>>>/<<<repo_name>>>`    |
 
 Refer to the `examples/` directory for more import examples.
+
+Import and refresh only read Forgejo configuration. Match the resource configuration
+to the existing server before applying. For imported organizations, omit the
+create-only `repo_admin_change_team_access` attribute: the SDK cannot read it
+(see [SDK issue #204](https://codeberg.org/mvdkleijn/forgejo-sdk/issues/204)), so
+import leaves it null. Configuring it afterward requires replacement even when it
+matches the server. Other omitted organization profile fields retain their normal
+empty-string defaults; see the [organization resource documentation](docs/resources/organization.md).
+
+When using Pulumi's standard Terraform bridge, the same import identifiers apply.
+The organization resource keeps its existing numeric `id` for Terraform compatibility.
+The generic bridge v1.5.1 reports a placeholder Pulumi resource ID (`missing ID`)
+for that numeric attribute, even though import, refresh, and no-change previews work.
+Do not pass that placeholder to numeric Forgejo attributes; use the organization
+resource's `organizationId` output or the organization data source's numeric ID
+instead. Memberships and assignments expose composite string IDs.
 
 ## Preventing Accidental Destruction
 
