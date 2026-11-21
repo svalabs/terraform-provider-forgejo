@@ -366,34 +366,40 @@ func (r *personalAccessTokenResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	tflog.Error(ctx, "Error", map[string]any{
-		"status": res.Status,
-	})
-
 	var msg string
-	switch res.StatusCode {
-	case 403:
-		msg = fmt.Sprintf(
-			"Personal access token with user %s and ID %d forbidden: %s",
-			data.User.String(),
-			data.ID.ValueInt64(),
-			err,
-		)
-	case 404:
-		msg = fmt.Sprintf(
-			"Personal access token with user %s and ID %d not found: %s",
-			data.User.String(),
-			data.ID.ValueInt64(),
-			err,
-		)
-	case 422:
-		msg = fmt.Sprintf("Input validation error: %s", err)
-	default:
-		msg = fmt.Sprintf(
-			"Unknown error (status %d): %s",
-			res.StatusCode,
-			err,
-		)
+	// The SDK returns a zero-value Response (nil embedded *http.Response) on
+	// transport errors, so check the embedded pointer instead of res itself.
+	if res.Response == nil {
+		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+	} else {
+		tflog.Error(ctx, "Error", map[string]any{
+			"status": res.Status,
+		})
+
+		switch res.StatusCode {
+		case 403:
+			msg = fmt.Sprintf(
+				"Personal access token with user %s and ID %d forbidden: %s",
+				data.User.String(),
+				data.ID.ValueInt64(),
+				err,
+			)
+		case 404:
+			msg = fmt.Sprintf(
+				"Personal access token with user %s and ID %d not found: %s",
+				data.User.String(),
+				data.ID.ValueInt64(),
+				err,
+			)
+		case 422:
+			msg = fmt.Sprintf("Input validation error: %s", err)
+		default:
+			msg = fmt.Sprintf(
+				"Unknown error (status %d): %s",
+				res.StatusCode,
+				err,
+			)
+		}
 	}
 	resp.Diagnostics.AddError("Unable to delete personal access token", msg)
 }
