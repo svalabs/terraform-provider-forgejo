@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -32,7 +32,7 @@ type personalAccessTokenResource struct {
 }
 
 // personalAccessTokenResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#AccessToken
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4#AccessToken
 type personalAccessTokenResourceModel struct {
 	User           types.String `tfsdk:"user"`
 	ID             types.Int64  `tfsdk:"id"`
@@ -357,7 +357,8 @@ func (r *personalAccessTokenResource) Delete(ctx context.Context, req resource.D
 	})
 
 	// Use Forgejo client to delete existing personal access token
-	res, err := r.client.DeleteAccessToken(
+	res, err := r.client.DeleteAccessTokenByID(
+		ctx,
 		data.User.ValueString(),
 		data.ID.ValueInt64(),
 	)
@@ -365,38 +366,34 @@ func (r *personalAccessTokenResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	var msg string
-	if res == nil {
-		msg = fmt.Sprintf("Unknown error with nil response: %s", err)
-	} else {
-		tflog.Error(ctx, "Error", map[string]any{
-			"status": res.Status,
-		})
+	tflog.Error(ctx, "Error", map[string]any{
+		"status": res.Status,
+	})
 
-		switch res.StatusCode {
-		case 403:
-			msg = fmt.Sprintf(
-				"Personal access token with user %s and ID %d forbidden: %s",
-				data.User.String(),
-				data.ID.ValueInt64(),
-				err,
-			)
-		case 404:
-			msg = fmt.Sprintf(
-				"Personal access token with user %s and ID %d not found: %s",
-				data.User.String(),
-				data.ID.ValueInt64(),
-				err,
-			)
-		case 422:
-			msg = fmt.Sprintf("Input validation error: %s", err)
-		default:
-			msg = fmt.Sprintf(
-				"Unknown error (status %d): %s",
-				res.StatusCode,
-				err,
-			)
-		}
+	var msg string
+	switch res.StatusCode {
+	case 403:
+		msg = fmt.Sprintf(
+			"Personal access token with user %s and ID %d forbidden: %s",
+			data.User.String(),
+			data.ID.ValueInt64(),
+			err,
+		)
+	case 404:
+		msg = fmt.Sprintf(
+			"Personal access token with user %s and ID %d not found: %s",
+			data.User.String(),
+			data.ID.ValueInt64(),
+			err,
+		)
+	case 422:
+		msg = fmt.Sprintf("Input validation error: %s", err)
+	default:
+		msg = fmt.Sprintf(
+			"Unknown error (status %d): %s",
+			res.StatusCode,
+			err,
+		)
 	}
 	resp.Diagnostics.AddError("Unable to delete personal access token", msg)
 }

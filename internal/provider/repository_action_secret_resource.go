@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -35,7 +35,7 @@ type repositoryActionSecretResource struct {
 }
 
 // repositoryActionSecretResourceModel maps the resource schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#CreateSecretOption
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4#CreateSecretOption
 type repositoryActionSecretResourceModel struct {
 	RepositoryID  types.Int64  `tfsdk:"repository_id"`
 	Name          types.String `tfsdk:"name"`
