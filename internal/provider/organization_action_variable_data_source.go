@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -28,7 +28,7 @@ type organizationActionVariableDataSource struct {
 }
 
 // organizationActionVariableDataSourceModel maps the data source schema data.
-// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3#ActionVariable
+// https://pkg.go.dev/codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4#ActionVariable
 type organizationActionVariableDataSourceModel struct {
 	Organization   types.String `tfsdk:"organization"`
 	OrganizationID types.Int64  `tfsdk:"organization_id"`

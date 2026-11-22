@@ -1,7 +1,21 @@
 ## Unreleased
 
+FEATURES:
+
+- Add `forgejo_team_repository` to manage individual team-to-repository assignments, with import using `org/team/repo`
+
+ENHANCEMENTS:
+
+- `forgejo_organization`: Add import by organization name; keep the unreadable create-only `repo_admin_change_team_access` attribute null after import
+- `forgejo_team_member`: Add import using `team_id/username` and a computed composite string `id` for stable bridged resource identity
+
+BUG FIXES:
+
+- Paginate name-based team lookups and distinguish absent organizations and memberships from failed reads without discarding state on permission errors
+
 DEPENDENCIES:
 
+- Upgrade the Forgejo SDK from v3.0.0 to the published v4.0.0 release
 - Add Forgejo 17 to the CI acceptance test matrix and run the OpenTofu jobs with the OpenTofu CLI instead of a downloaded Terraform CLI
 
 ## 1.7.0 (October 15, 2026)

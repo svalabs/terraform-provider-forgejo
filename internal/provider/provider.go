@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v4"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -273,6 +273,7 @@ func (p *forgejoProvider) Resources(_ context.Context) []func() resource.Resourc
 		NewBranchProtectionResource,
 		NewTeamResource,
 		NewTeamMemberResource,
+		NewTeamRepositoryResource,
 		NewUserResource,
 	}
 }
