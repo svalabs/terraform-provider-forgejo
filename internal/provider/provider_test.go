@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"codeberg.org/mvdkleijn/forgejo-sdk/forgejo/v3"
+
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 
@@ -58,5 +60,17 @@ func testAccPreCheck(t *testing.T) {
 	}
 	if v := os.Getenv("FORGEJO_PASSWORD"); v == "" {
 		t.Fatal("FORGEJO_PASSWORD must be set for acceptance tests")
+	}
+}
+
+// testAccSkipUnlessServerVersion skips acceptance tests on unsupported servers.
+func testAccSkipUnlessServerVersion(t *testing.T, constraint string) {
+	t.Helper()
+	client, err := forgejo.NewClient(forgejoTestHost, forgejo.SetToken(os.Getenv("FORGEJO_API_TOKEN")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.CheckServerVersionConstraint(constraint); err != nil {
+		t.Skipf("Forgejo server version does not satisfy %s: %s", constraint, err)
 	}
 }
