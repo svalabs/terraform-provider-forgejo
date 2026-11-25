@@ -2304,6 +2304,104 @@ resource "forgejo_repository" "test" {
 	})
 }
 
+func TestAccRepositoryTopics(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Validation testing (invalid topic)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name   = "test_repo_topics"
+	topics = ["Terraform"]
+}`,
+				ExpectError: regexp.MustCompile("Invalid Attribute Value Match"),
+			},
+			// Create and Read testing
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name   = "test_repo_topics"
+	topics = ["terraform", "go"]
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("topics"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("go"),
+						knownvalue.StringExact("terraform"),
+					})),
+				},
+			},
+			// Import testing
+			{
+				ResourceName:      "forgejo_repository.test",
+				ImportState:       true,
+				ImportStateId:     forgejoTestUser + "/test_repo_topics",
+				ImportStateVerify: true,
+			},
+			// Update and Read testing (replace topics)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name   = "test_repo_topics"
+	topics = ["terraform", "forgejo-provider"]
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("topics"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("forgejo-provider"),
+						knownvalue.StringExact("terraform"),
+					})),
+				},
+			},
+			// Update and Read testing (remove topics)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name = "test_repo_topics"
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("topics"), knownvalue.SetSizeExact(0)),
+				},
+			},
+			// Update and Read testing (archive repository while setting topics)
+			{
+				Config: providerConfig + `
+resource "forgejo_repository" "test" {
+	name     = "test_repo_topics"
+	topics   = ["archived"]
+	archived = true
+}`,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_repository.test", tfjsonpath.New("topics"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("archived"),
+					})),
+				},
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
 func TestAccRepositoryValidationPullRequestConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

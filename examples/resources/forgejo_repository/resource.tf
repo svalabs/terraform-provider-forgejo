@@ -24,6 +24,7 @@ resource "forgejo_repository" "personal_non_defaults" {
   name           = "personal_test_repo_non_defaults"
   description    = "Terraform Test Repo owned by user with non-default attributes"
   website        = "http://localhost:3000"
+  topics         = ["terraform", "example"]
   private        = true
   template       = true
   default_branch = "custom"

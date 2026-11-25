@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -64,6 +66,7 @@ type repositoryResourceModel struct {
 	SSHURL                        types.String `tfsdk:"ssh_url"`
 	CloneURL                      types.String `tfsdk:"clone_url"`
 	Website                       types.String `tfsdk:"website"`
+	Topics                        types.Set    `tfsdk:"topics"`
 	Stars                         types.Int64  `tfsdk:"stars_count"`
 	Forks                         types.Int64  `tfsdk:"forks_count"`
 	Watchers                      types.Int64  `tfsdk:"watchers_count"`
@@ -593,6 +596,25 @@ func (r *repositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:    true,
 				Computed:    true,
 				Default:     stringdefault.StaticString(""),
+			},
+			"topics": schema.SetAttribute{
+				Description: "Topics of the repository.",
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Default: setdefault.StaticValue(
+					types.SetValueMust(types.StringType, []attr.Value{}),
+				),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(25),
+					setvalidator.ValueStringsAre(
+						stringvalidator.LengthAtMost(35),
+						stringvalidator.RegexMatches(
+							regexp.MustCompile("^[a-z0-9][-.a-z0-9]*$"),
+							"must start with a lowercase letter or digit and contain only lowercase letters, digits, dashes and dots",
+						),
+					),
+				},
 			},
 			"stars_count": schema.Int64Attribute{
 				Description: "Number of stars of the repository.",
@@ -1597,6 +1619,15 @@ func (r *repositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Use Forgejo client to set repository topics
+	if len(data.Topics.Elements()) > 0 {
+		diags = setRepositoryTopics(ctx, r.client, rep.Owner.UserName, rep.Name, data.Topics)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -1632,6 +1663,13 @@ func (r *repositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	diags.Append(data.internalTrackerFrom(ctx, rep.InternalTracker)...)
 	diags.Append(data.externalTrackerFrom(ctx, rep.ExternalTracker)...)
 	diags.Append(data.externalWikiFrom(ctx, rep.ExternalWiki)...)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Use Forgejo client to get repository topics
+	data.Topics, diags = getRepositoryTopics(ctx, r.client, rep.Owner.UserName, rep.Name)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1784,6 +1822,15 @@ func (r *repositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Use Forgejo client to update repository topics
+	if !data.Topics.Equal(state.Topics) {
+		diags = setRepositoryTopics(ctx, r.client, rep.Owner.UserName, rep.Name, data.Topics)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -1920,6 +1967,13 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 		return
 	}
 
+	// Use Forgejo client to get repository topics
+	state.Topics, diags = getRepositoryTopics(ctx, r.client, rep.Owner.UserName, rep.Name)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Initialize write-only fields to their default values
 	state.AllowManualMerge = types.BoolValue(false)
 	state.ArchiveOnDestroy = types.BoolValue(false)
@@ -1955,4 +2009,118 @@ func (r *repositoryResource) ImportState(ctx context.Context, req resource.Impor
 // NewRepositoryResource is a helper function to simplify the provider implementation.
 func NewRepositoryResource() resource.Resource {
 	return &repositoryResource{}
+}
+
+// getRepositoryTopics fetches the topics of a repository and handles errors consistently.
+func getRepositoryTopics(ctx context.Context, client *forgejo.Client, owner, name string) (types.Set, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	tflog.Info(ctx, "Read repository topics", map[string]any{
+		"owner": owner,
+		"name":  name,
+	})
+
+	// Use Forgejo client to list repository topics
+	topics, res, err := client.ListRepoTopics(owner, name, forgejo.ListRepoTopicsOptions{
+		ListOptions: forgejo.ListOptions{
+			Page: -1,
+		},
+	})
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' not found: %s",
+					owner,
+					name,
+					err,
+				)
+			default:
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
+			}
+		}
+		diags.AddError("Unable to list repository topics", msg)
+
+		return types.SetNull(types.StringType), diags
+	}
+
+	// A nil slice would map to a null set
+	if topics == nil {
+		topics = []string{}
+	}
+
+	set, d := types.SetValueFrom(ctx, types.StringType, topics)
+	diags.Append(d...)
+
+	return set, diags
+}
+
+// setRepositoryTopics replaces the topics of a repository and handles errors consistently.
+func setRepositoryTopics(ctx context.Context, client *forgejo.Client, owner, name string, set types.Set) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	topics := []string{}
+	diags.Append(set.ElementsAs(ctx, &topics, false)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	tflog.Info(ctx, "Set repository topics", map[string]any{
+		"owner":  owner,
+		"name":   name,
+		"topics": topics,
+	})
+
+	// Use Forgejo client to replace repository topics
+	res, err := client.SetRepoTopics(owner, name, topics)
+	if err != nil {
+		var msg string
+		if res == nil {
+			msg = fmt.Sprintf("Unknown error with nil response: %s", err)
+		} else {
+			tflog.Error(ctx, "Error", map[string]any{
+				"status": res.Status,
+			})
+
+			switch res.StatusCode {
+			case 403:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' forbidden: %s",
+					owner,
+					name,
+					err,
+				)
+			case 404:
+				msg = fmt.Sprintf(
+					"Repository with owner '%s' and name '%s' not found: %s",
+					owner,
+					name,
+					err,
+				)
+			case 422:
+				msg = fmt.Sprintf("Input validation error: %s", err)
+			default:
+				msg = fmt.Sprintf(
+					"Unknown error (status %d): %s",
+					res.StatusCode,
+					err,
+				)
+			}
+		}
+		diags.AddError("Unable to set repository topics", msg)
+	}
+
+	return diags
 }
