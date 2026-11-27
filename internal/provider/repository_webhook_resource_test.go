@@ -194,6 +194,168 @@ resource "forgejo_repository_webhook" "test" {
 	})
 }
 
+// Package events require replacement on supported Forgejo versions, including 15.
+func TestAccRepositoryWebhookResourcePackageEventReplacement(t *testing.T) {
+	config := func(events string) string {
+		return providerConfig + fmt.Sprintf(`
+resource "forgejo_repository" "package_events" {
+  name = "test_package_events"
+}
+resource "forgejo_repository_webhook" "package_events" {
+  repository_id = forgejo_repository.package_events.id
+  type = "forgejo"
+  events = %s
+  config = {
+    content_type = "json"
+    url = "http://example.com/package-events"
+  }
+}
+`, events)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config(`["push"]`)},
+			{
+				Config: config(`["push", "package"]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction("forgejo_repository_webhook.package_events", plancheck.ResourceActionReplace),
+				}},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("forgejo_repository_webhook.package_events", tfjsonpath.New("events"), knownvalue.SetExact([]knownvalue.Check{knownvalue.StringExact("push"), knownvalue.StringExact("package")})),
+				},
+			},
+			{
+				Config: config(`["push"]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction("forgejo_repository_webhook.package_events", plancheck.ResourceActionReplace),
+				}},
+			},
+		},
+	})
+}
+
+func TestAccRepositoryWebhookResourceWorkflowEvents(t *testing.T) {
+	const allEvents = `["workflow_job_blocked", "workflow_job_cancelled", "workflow_job_failure", "workflow_job_running", "workflow_job_skipped", "workflow_job_success", "workflow_job_waiting", "workflow_run_blocked", "workflow_run_cancelled", "workflow_run_failure", "workflow_run_running", "workflow_run_skipped", "workflow_run_success", "workflow_run_waiting"]`
+	config := func(events string) string {
+		return providerConfig + fmt.Sprintf(`
+resource "forgejo_repository" "workflow_events" {
+	name = "test_workflow_events"
+}
+resource "forgejo_repository_webhook" "workflow_events" {
+	repository_id = forgejo_repository.workflow_events.id
+	type          = "forgejo"
+	events        = %s
+	config = {
+		content_type = "json"
+		url          = "http://example.com/workflow-events"
+	}
+}
+`, events)
+	}
+	stateChecks := func(events ...string) []statecheck.StateCheck {
+		eventChecks := make([]knownvalue.Check, 0, len(events))
+		for _, event := range events {
+			eventChecks = append(eventChecks, knownvalue.StringExact(event))
+		}
+
+		return []statecheck.StateCheck{
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("created_at"), knownvalue.NotNull()),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("updated_at"), knownvalue.NotNull()),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("webhook_id"), knownvalue.NotNull()),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("active"), knownvalue.Bool(false)),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("repository_id"), knownvalue.NotNull()),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("branch_filter"), knownvalue.StringExact("")),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("authorization_header"), knownvalue.Null()),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("type"), knownvalue.StringExact("forgejo")),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("events"), knownvalue.SetExact(eventChecks)),
+			statecheck.ExpectKnownValue("forgejo_repository_webhook.workflow_events", tfjsonpath.New("config"), knownvalue.MapExact(map[string]knownvalue.Check{
+				"content_type": knownvalue.StringExact("json"),
+				"url":          knownvalue.StringExact("http://example.com/workflow-events"),
+			})),
+		}
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccSkipUnlessServerVersion(t, ">= 17.0.0")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config:            config(`["push"]`),
+				ConfigStateChecks: stateChecks("push"),
+			},
+			// Recreate and Read testing (first workflow events added)
+			{
+				Config: config(allEvents),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository_webhook.workflow_events", plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: stateChecks(
+					"workflow_job_blocked",
+					"workflow_job_cancelled",
+					"workflow_job_failure",
+					"workflow_job_running",
+					"workflow_job_skipped",
+					"workflow_job_success",
+					"workflow_job_waiting",
+					"workflow_run_blocked",
+					"workflow_run_cancelled",
+					"workflow_run_failure",
+					"workflow_run_running",
+					"workflow_run_skipped",
+					"workflow_run_success",
+					"workflow_run_waiting",
+				),
+			},
+			// ImportState testing
+			{
+				ResourceName:                         "forgejo_repository_webhook.workflow_events",
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccRepositoryWebhookConfigImportStateIdFunc("forgejo_repository_webhook.workflow_events"),
+				ImportStateIdPrefix:                  "tfadmin/test_workflow_events/",
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "webhook_id",
+			},
+			// Recreate and Read testing (workflow events removed)
+			{
+				Config: config(`["push", "workflow_job_failure", "workflow_run_failure"]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository_webhook.workflow_events", plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: stateChecks("push", "workflow_job_failure", "workflow_run_failure"),
+			},
+			// Update and Read testing (workflow events unchanged, push replaced by create)
+			{
+				Config: config(`["create", "workflow_job_failure", "workflow_run_failure"]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository_webhook.workflow_events", plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: stateChecks("create", "workflow_job_failure", "workflow_run_failure"),
+			},
+			// Recreate and Read testing (last workflow events removed)
+			{
+				Config: config(`["create"]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("forgejo_repository_webhook.workflow_events", plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: stateChecks("create"),
+			},
+		},
+	})
+}
+
 // retrieves the dynamically generated repository webhook ID from state for testing import.
 func testAccRepositoryWebhookConfigImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {

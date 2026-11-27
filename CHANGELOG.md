@@ -1,5 +1,9 @@
 ## Unreleased
 
+ENHANCEMENTS:
+
+- `forgejo_repository_webhook`: Support the Forgejo 17 `workflow_run_*` and `workflow_job_*` events and the `packagist` and `wechatwork` webhook types; changing `package`, `action_run_*` or `workflow_*` events now forces a new resource, because the Forgejo API does not update these events in place
+
 DEPENDENCIES:
 
 - Add Forgejo 17 to the CI acceptance test matrix and run the OpenTofu jobs with the OpenTofu CLI instead of a downloaded Terraform CLI
