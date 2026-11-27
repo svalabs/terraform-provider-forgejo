@@ -62,7 +62,6 @@ resource "forgejo_team" "test_by_id" {
 	organization_id           = forgejo_organization.test.id
 	can_create_org_repo       = true
 	includes_all_repositories = true
-	permission                = "read"
 	units_map                 = {
 		"repo.code" = "read"
 	}
@@ -76,7 +75,6 @@ resource "forgejo_team" "test_by_name" {
 	organization              = forgejo_organization.test.name
 	can_create_org_repo       = true
 	includes_all_repositories = true
-	permission                = "read"
 	units_map                 = {
 		"repo.code" = "read"
 	}

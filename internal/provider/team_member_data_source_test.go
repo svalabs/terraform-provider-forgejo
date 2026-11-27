@@ -41,7 +41,6 @@ resource "forgejo_team" "test" {
 	organization_id           = forgejo_organization.test.id
 	can_create_org_repo       = true
 	includes_all_repositories = true
-	permission                = "read"
 	units_map                 = {
 		"repo.code" = "read"
 	}
@@ -63,7 +62,6 @@ resource "forgejo_team" "test" {
 	organization_id           = forgejo_organization.test.id
 	can_create_org_repo       = true
 	includes_all_repositories = true
-	permission                = "read"
 	units_map                 = {
 		"repo.code" = "read"
 	}
@@ -90,7 +88,6 @@ resource "forgejo_team" "test" {
 	organization_id           = forgejo_organization.test.id
 	can_create_org_repo       = true
 	includes_all_repositories = true
-	permission                = "read"
 	units_map                 = {
 		"repo.code" = "read"
 	}
